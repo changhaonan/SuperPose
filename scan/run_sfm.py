@@ -197,7 +197,7 @@ def postprocess(cfg, img_lists, root_dir, outputs_dir_root):
     feature_process.get_kpt_ann(cfg, img_lists, feature_out, outputs_dir, merge_idxs, merge_xyzs)
     
 
-@hydra.main(config_path='configs/', config_name='config.yaml')
+@hydra.main(config_path='../cfg/', config_name='config.yaml')
 def main(cfg: DictConfig):
     globals()[cfg.type](cfg)
 

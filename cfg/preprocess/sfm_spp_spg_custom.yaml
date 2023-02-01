@@ -4,14 +4,14 @@ type: sfm
 work_dir: ${hydra:runtime.cwd}
 redo: False
 
-scan_data_dir: /home/robot-learning/Projects/ScenePose/data/
+scan_data_dir: ${work_dir}/data/
 
 dataset:
     max_num_kp3d: 2500
     max_num_kp2d: 1000
 
     data_dir: 
-        - ${scan_data_dir}/cracker_box_icg cracker_box_icg_1
+        - ${scan_data_dir}/cracker_box cracker_box_1
 
     outputs_dir: ${work_dir}/data/sfm_model/{}
 

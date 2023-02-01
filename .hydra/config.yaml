@@ -1,0 +1,22 @@
+work_dir: ${hydra:runtime.cwd}
+data_dir: ${work_dir}/data
+print_config: true
+type: sfm
+redo: true
+scan_data_dir: ${work_dir}/data/
+dataset:
+  max_num_kp3d: 2500
+  max_num_kp2d: 1000
+  data_dir:
+  - ${scan_data_dir}/cracker_box cracker_box_1
+  outputs_dir: ${work_dir}/data/sfm_model/{}
+network:
+  detection: superpoint
+  detection_model_path: ${work_dir}/data/models/extractors/SuperPoint/superpoint_v1.pth
+  matching: superglue
+  matching_model_path: ${work_dir}/data/models/matchers/SuperGlue/superglue_outdoor.pth
+sfm:
+  down_ratio: 1
+  covis_num: 10
+  rotation_thresh: 50
+disable_lightning_logs: true

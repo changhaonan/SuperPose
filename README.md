@@ -13,7 +13,8 @@ The demo version is going to connected using python. If everything is good, will
 ## Plan
 
 Feb.1st to Feb.4th
-
+- [x] Align the MeshModel with the SparseModel.
+- [ ] Check How OnePose is working on KF frames. Is it still able to provide proper Estimation.
 - [ ] Finish the Scan phase. Generate model from Video Sequence, existing CAD Model or NeRF model.
 
 Feb.5th to Feb.11th
