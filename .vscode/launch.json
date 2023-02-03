@@ -19,13 +19,29 @@
             "justMyCode": true
         },
         {
-            "name": "Transfer [star]",
+            "name": "Transfer [op]",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/utils/star_to_colmap.py",
+            "program": "${workspaceFolder}/utils/star_to_one_pose.py",
             "args": [
                 "--data_dir",
                 "${workspaceFolder}/data/cracker_box/cracker_box_1"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Transfer [icg]",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/utils/star_to_icg.py",
+            "args": [
+                "--tracker_name",
+                "cracker_box",
+                "--data_dir",
+                "${workspaceFolder}/data/cracker_box/cracker_box_1",
+                "--icg_dir",
+                "/home/robot-learning/Projects/3DObjectTracking/ICG/examples/generator_example_v2"
             ],
             "console": "integratedTerminal",
             "justMyCode": true

@@ -1,11 +1,11 @@
-""" STAR data format to colmap data format
+""" STAR data format to OnePose data format
 STAR data: 
 - images: star/cam-00/frame-%06d.color.png (color image)
 - images: star/cam-00/frame-%06d.depth.png (depth image)
 - intrinsics: star/context.json (camera intrinsics)
 - poses: star/kf_results.npz (camera poses)
 - reconstruct: star/reconstruct.pcd (point cloud)
-Colmap data:
+OnePose data:
 - color images: color/%d.png
 - depth images: depth/%d.png
 - poses: poses_ba/%d.txt
