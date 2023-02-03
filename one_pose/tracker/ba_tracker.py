@@ -3,9 +3,9 @@ import numpy as np
 import torch
 from DeepLM.TorchLM.solver import Solve
 
-from src.models.matchers.nn.nearest_neighbour import NearestNeighbour
-from src.utils.eval_utils import ransac_PnP
-from src.tracker.tracking_utils import Timer, project, SnavelyReprojectionErrorV2, MovieWriter
+from one_pose.models.matchers.nn.nearest_neighbour import NearestNeighbour
+from one_pose.utils.eval_utils import ransac_PnP
+from one_pose.tracker.tracking_utils import Timer, project, SnavelyReprojectionErrorV2, MovieWriter
 
 
 device = 'cuda'
@@ -69,19 +69,19 @@ class BATracker:
         self.win_size = 20  # for static scene
         # self.win_size = 10 # for dynamic scene
         self.frame_interval = 3
-        # from src.utils.movie_writer import MovieWriter
+        # from one_pose.utils.movie_writer import MovieWriter
         # self.mw = MovieWriter()
         # self.out = './track_kpt.mp4'
         self.init_cnt = 3
         self.use_motion_cnt = 0
-        # from src.tracker.vis_utils import Timer
+        # from one_pose.tracker.vis_utils import Timer
         # self.tm = Timer()
 
     def load_extractor_model(self, cfg, model_path):
         """ Load extractor model(SuperGlue) """
-        from src.sfm.extract_features import confs
-        from src.utils.model_io import load_network
-        from src.models.extractors.SuperPoint.superpoint import SuperPoint
+        from one_pose.sfm.extract_features import confs
+        from one_pose.utils.model_io import load_network
+        from one_pose.models.extractors.SuperPoint.superpoint import SuperPoint
 
         extractor_model = SuperPoint(confs[cfg.network.detection]['conf'])
         extractor_model.cuda()
@@ -293,7 +293,7 @@ class BATracker:
         return pose_new
 
     def flow_track(self, frame_info_dict, kf_frame_info):
-        from src.tracker.tracking_utils import draw_kpt2d, put_text
+        from one_pose.tracker.tracking_utils import draw_kpt2d, put_text
 
         self.tm.tick('0-1-load image')
 

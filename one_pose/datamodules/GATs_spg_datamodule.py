@@ -1,6 +1,6 @@
 from pytorch_lightning import LightningDataModule
 from torch.utils.data.dataloader import DataLoader
-from src.datasets.GATs_spg_dataset import GATsSPGDataset
+from one_pose.datasets.GATs_spg_dataset import GATsSPGDataset
 
 
 class GATsSPGDataModule(LightningDataModule):

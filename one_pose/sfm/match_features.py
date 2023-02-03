@@ -24,9 +24,9 @@ def names_to_pair(name0, name1):
 @torch.no_grad()
 def spg(cfg, feature_path, covis_pairs, matches_out, vis_match=False):
     """Match features by SuperGlue"""
-    from src.models.matchers.SuperGlue.superglue import SuperGlue as spg_matcher
-    from src.utils.model_io import load_network
-    from src.utils.vis_utils import vis_match_pairs
+    from one_pose.models.matchers.SuperGlue.superglue import SuperGlue as spg_matcher
+    from one_pose.utils.model_io import load_network
+    from one_pose.utils.vis_utils import vis_match_pairs
     
     assert osp.exists(feature_path), feature_path
     feature_file = h5py.File(feature_path, 'r')

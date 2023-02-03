@@ -3,9 +3,9 @@ import time
 import cv2
 import torch
 import numpy as np
-from src.utils.colmap.read_write_model import read_model
-from src.utils.data_utils import get_K_crop_resize, get_image_crop_resize
-from src.utils.vis_utils import reproj
+from one_pose.utils.colmap.read_write_model import read_model
+from one_pose.utils.data_utils import get_K_crop_resize, get_image_crop_resize
+from one_pose.utils.vis_utils import reproj
 
 
 def pack_extract_data(img_path):

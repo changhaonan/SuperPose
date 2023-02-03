@@ -8,7 +8,7 @@ import numpy as np
 
 from pycocotools.coco import COCO
 from torch.utils.data import Dataset
-from src.utils import data_utils
+from one_pose.utils import data_utils
 
 
 class GATsSPGDataset(Dataset):

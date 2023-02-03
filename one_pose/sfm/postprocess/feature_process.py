@@ -6,8 +6,8 @@ import numpy as np
 from collections import defaultdict
 from pathlib import Path
 
-from src.utils.colmap import read_write_model
-from src.utils import path_utils
+from one_pose.utils.colmap import read_write_model
+from one_pose.utils import path_utils
 
 
 def get_default_path(cfg, outputs_dir):

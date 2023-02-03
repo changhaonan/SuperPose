@@ -116,7 +116,7 @@ hydra:
     - object_detect_mode=GT_box
     - save_wis3d=True
   job:
-    name: inference_online
+    name: one_pose_inference
     chdir: null
     override_dirname: +experiment=test_GATsSPG_custom.yaml,object_detect_mode=GT_box,save_wis3d=True
     id: ???

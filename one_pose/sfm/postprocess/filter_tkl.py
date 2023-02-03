@@ -3,7 +3,7 @@ import numpy as np
 import os.path as osp
 import matplotlib.pyplot as plt
 
-from src.utils.colmap.read_write_model import write_model
+from one_pose.utils.colmap.read_write_model import write_model
 
 
 def get_points_count(points3D, show=False):
@@ -34,7 +34,7 @@ def get_points_count(points3D, show=False):
 
 def get_tkl(model_path, thres, show=False):
     """ Get the track length value which can limit the number of 3d points below thres"""
-    from src.utils.colmap.read_write_model import read_model
+    from one_pose.utils.colmap.read_write_model import read_model
 
     cameras, images, points3D = read_model(model_path, ext='.bin')
     count_dict, points_count_list = get_points_count(points3D, show)
@@ -57,7 +57,7 @@ def vis_tkl_filtered_pcds(model_path, points_count_list, track_length, output_pa
     Given a track length value, filter 3d points.
     Output filtered pcds for visualization.
     """ 
-    from src.utils.colmap.read_write_model import read_model
+    from one_pose.utils.colmap.read_write_model import read_model
 
     cameras, images, points3D = read_model(model_path, ext='.bin')
     

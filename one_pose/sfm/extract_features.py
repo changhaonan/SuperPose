@@ -29,9 +29,9 @@ confs = {
 @torch.no_grad()
 def spp(img_lists, feature_out, cfg):
     """extract keypoints info by superpoint"""
-    from src.utils.model_io import load_network
-    from src.models.extractors.SuperPoint.superpoint import SuperPoint as spp_det
-    from src.datasets.normalized_dataset import NormalizedDataset
+    from one_pose.utils.model_io import load_network
+    from one_pose.models.extractors.SuperPoint.superpoint import SuperPoint as spp_det
+    from one_pose.datasets.normalized_dataset import NormalizedDataset
     
     conf = confs[cfg.network.detection]
     model = spp_det(conf['conf']).cuda()

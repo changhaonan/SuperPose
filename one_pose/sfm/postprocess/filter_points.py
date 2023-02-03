@@ -2,7 +2,7 @@ import cv2
 import torch
 import numpy as np
 import os.path as osp
-from src.utils.colmap import read_write_model 
+from one_pose.utils.colmap import read_write_model 
 
 
 def filter_by_track_length(points3D, track_length):

@@ -41,9 +41,9 @@ def keypoints_filter(keypoints, seg):
 @torch.no_grad()
 def spp(img_lists, seg_lists, feature_out, cfg):
     """extract keypoints info by superpoint and filter by segmentation"""
-    from src.utils.model_io import load_network
-    from src.models.extractors.SuperPoint.superpoint import SuperPoint as spp_det
-    from src.datasets.normalized_dataset_ext import NormalizedDatasetExt
+    from one_pose.utils.model_io import load_network
+    from one_pose.models.extractors.SuperPoint.superpoint import SuperPoint as spp_det
+    from one_pose.datasets.normalized_dataset_ext import NormalizedDatasetExt
     
     conf = confs[cfg.network.detection]
     model = spp_det(conf['conf']).cuda()

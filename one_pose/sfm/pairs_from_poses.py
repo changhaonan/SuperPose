@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.spatial.distance as distance
-from src.utils import path_utils
+from one_pose.utils import path_utils
 
 
 def get_pairswise_distances(pose_files):

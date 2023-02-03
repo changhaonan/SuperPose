@@ -4,10 +4,10 @@ import os.path as osp
 import numpy as np
 
 from pathlib import Path
-from src.utils import path_utils
-from src.utils.colmap.read_write_model import Camera, Image, Point3D
-from src.utils.colmap.read_write_model import rotmat2qvec
-from src.utils.colmap.read_write_model import write_model
+from one_pose.utils import path_utils
+from one_pose.utils.colmap.read_write_model import Camera, Image, Point3D
+from one_pose.utils.colmap.read_write_model import rotmat2qvec
+from one_pose.utils.colmap.read_write_model import write_model
 
 
 def get_pose_from_txt(img_index, pose_dir):

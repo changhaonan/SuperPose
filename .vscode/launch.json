@@ -34,7 +34,7 @@
             "name": "OnePose: [sfm]",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/run_sfm.py",
+            "program": "${workspaceFolder}/one_pose_sfm.py",
             "args": [
                 "+preprocess=sfm_spp_spg_custom.yaml",
                 "redo=True"
@@ -47,7 +47,7 @@
             "name": "OnePose: [inf]",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/inference_online.py",
+            "program": "${workspaceFolder}/one_pose_inference.py",
             "args": [
                 "+experiment=test_GATsSPG_custom.yaml",
                 "object_detect_mode=GT_box",
