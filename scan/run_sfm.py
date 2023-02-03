@@ -169,21 +169,6 @@ def postprocess(cfg, img_lists, root_dir, outputs_dir_root):
     deep_sfm_dir = osp.join(outputs_dir, 'sfm_ws')
     model_path = osp.join(deep_sfm_dir, 'model')
 
-    # Generate bounding box using extracted features:
-    model_path = osp.join(deep_sfm_dir, 'model')
-    # Read points3D.bin
-    points_model_path = osp.join(model_path, 'points3D.bin')
-    points3D_colmap = read_write_model.read_points3d_binary(points_model_path)
-    points3D_o3d = points_colmap_to_o3d(points3D_colmap)
-    cl, ind = points3D_o3d.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
-    # Run DBSCAN to filter noisy points
-    
-    bbox_o3d = o3d.geometry.OrientedBoundingBox.create_from_points(cl.points)
-    bbox_o3d.color = (1, 0, 0)
-    bbox_corners = bbox_o3d.get_box_points()
-    bbox_corners = bbox_o3d_to_onepose(np.asarray(bbox_corners))  # Convert to onepose format
-    np.savetxt(bbox_path, bbox_corners)
-
     # Select feature track length to limit the number of 3D points below the 'max_num_kp3d' threshold:
     track_length, points_count_list = filter_tkl.get_tkl(model_path, thres=cfg.dataset.max_num_kp3d, show=False) 
     filter_tkl.vis_tkl_filtered_pcds(model_path, points_count_list, track_length, outputs_dir) # For visualization only

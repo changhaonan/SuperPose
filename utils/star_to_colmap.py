@@ -16,6 +16,17 @@ import os
 import open3d as o3d
 import numpy as np
 
+
+def bbox_o3d_to_onepose(bbox_o3d):
+    # order
+    o3d_order = [0, 1, 2, 3, 4, 5, 6, 7]
+    onepose_order = [0, 4, 3, 1, 6, 2, 5, 7]
+    bbox_onepose = np.zeros((8, 3))
+    for i, j in zip(onepose_order, o3d_order):
+        bbox_onepose[i, :] = bbox_o3d[j, :]
+    return bbox_onepose
+
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
@@ -23,10 +34,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     print("Start converting STAR data to colmap data...")
+
     # generating bbox
     pcd = o3d.io.read_point_cloud(os.path.join(args.data_dir, "star", "reconstruct.pcd"))
     bbox = o3d.geometry.AxisAlignedBoundingBox.create_from_points(pcd.points)
     bbox.color = (0, 0, 1)
+    bbox_corners = bbox.get_box_points()
+    bbox_corners = bbox_o3d_to_onepose(np.asarray(bbox_corners))  # Convert to onepose format
+    bbox_path = os.path.join(args.data_dir, "../", "box3d_corners.txt")
+    np.savetxt(bbox_path, bbox_corners)
+
     pcd_frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=0.2)
     # save the bbox to "../corner3d.txt"
     # o3d.visualization.draw_geometries([pcd, bbox, pcd_frame])
