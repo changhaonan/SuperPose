@@ -14,7 +14,7 @@ from PIL import Image
 from loguru import logger
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
-from src.utils import data_utils, path_utils, eval_utils, vis_utils
+from one_pose.utils import data_utils, path_utils, eval_utils, vis_utils
 
 from pytorch_lightning import seed_everything
 seed_everything(12345)
@@ -48,7 +48,7 @@ def load_model(cfg):
     """ Load model """
     def load_matching_model(model_path):
         """ Load onepose model """
-        from src.models.GATsSPG_lightning_model import LitModelGATsSPG
+        from one_pose.models.GATsSPG_lightning_model import LitModelGATsSPG
 
         trained_model = LitModelGATsSPG.load_from_checkpoint(checkpoint_path=model_path)
         trained_model.cuda()
@@ -59,9 +59,9 @@ def load_model(cfg):
 
     def load_extractor_model(cfg, model_path):
         """ Load extractor model(SuperPoint) """
-        from src.models.extractors.SuperPoint.superpoint import SuperPoint
-        from src.sfm.extract_features import confs
-        from src.utils.model_io import load_network
+        from one_pose.models.extractors.SuperPoint.superpoint import SuperPoint
+        from one_pose.sfm.extract_features import confs
+        from one_pose.utils.model_io import load_network
 
         extractor_model = SuperPoint(confs[cfg.network.detection]['conf'])
         extractor_model.cuda()
@@ -106,9 +106,9 @@ def load_intrinsic(intrin_full_path):
 class OnePoseInference:
     @torch.no_grad()
     def __init__(self, cfg, data_dir, sfm_model_dir) -> None:
-        from src.datasets.normalized_dataset import NormalizedDataset
-        from src.sfm.extract_features import confs
-        from src.evaluators.cmd_evaluator import Evaluator
+        from one_pose.datasets.normalized_dataset import NormalizedDataset
+        from one_pose.sfm.extract_features import confs
+        from one_pose.evaluators.cmd_evaluator import Evaluator
 
         self.matching_model, self.extractor_model = load_model(cfg)
         self.paths = get_default_paths(cfg, data_dir, sfm_model_dir)
@@ -179,7 +179,7 @@ class OnePoseInference:
         else:
             print("Not enough inliers!")
 
-@hydra.main(config_path='../cfg/', config_name='config.yaml')
+@hydra.main(config_path='cfg/', config_name='config.yaml')
 def main(cfg):
     data_dirs = cfg.input.data_dirs
     sfm_model_dirs = cfg.input.sfm_model_dirs

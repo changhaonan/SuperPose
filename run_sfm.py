@@ -80,7 +80,7 @@ def merge_anno(cfg):
 
 def sfm(cfg):
     """ Reconstruct and postprocess sparse object point cloud, and store point cloud features"""
-    from src.utils import path_utils
+    from one_pose.utils import path_utils
 
     data_dirs = cfg.dataset.data_dir
     down_ratio = cfg.sfm.down_ratio
@@ -130,7 +130,7 @@ def sfm(cfg):
 
 def sfm_core(cfg, img_lists, seg_lists, outputs_dir_root):
     """ Sparse reconstruction: extract features, match features, triangulation"""
-    from src.sfm import extract_features_ext, match_features, \
+    from one_pose.sfm import extract_features_ext, match_features, \
                          generate_empty, triangulation, pairs_from_poses
 
     # Construct output directory structure:
@@ -157,9 +157,9 @@ def sfm_core(cfg, img_lists, seg_lists, outputs_dir_root):
     
 def postprocess(cfg, img_lists, root_dir, outputs_dir_root):
     """ Filter points and average feature"""
-    from src.sfm.postprocess import filter_points, feature_process, filter_tkl
-    from src.utils.colmap import read_write_model 
-    from src.utils.geo_utils import points_colmap_to_o3d, bbox_o3d_to_onepose
+    from one_pose.sfm.postprocess import filter_points, feature_process, filter_tkl
+    from one_pose.utils.colmap import read_write_model 
+    from one_pose.utils.geo_utils import points_colmap_to_o3d, bbox_o3d_to_onepose
     import open3d as o3d
 
     bbox_path = osp.join(root_dir, "box3d_corners.txt")
@@ -182,7 +182,7 @@ def postprocess(cfg, img_lists, root_dir, outputs_dir_root):
     feature_process.get_kpt_ann(cfg, img_lists, feature_out, outputs_dir, merge_idxs, merge_xyzs)
     
 
-@hydra.main(config_path='../cfg/', config_name='config.yaml')
+@hydra.main(config_path='cfg/', config_name='config.yaml')
 def main(cfg: DictConfig):
     globals()[cfg.type](cfg)
 
