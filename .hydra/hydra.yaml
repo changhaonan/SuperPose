@@ -112,12 +112,13 @@ hydra:
     hydra:
     - hydra.mode=RUN
     task:
-    - +preprocess=sfm_spp_spg_custom.yaml
-    - redo=True
+    - +experiment=test_GATsSPG_custom.yaml
+    - object_detect_mode=GT_box
+    - save_wis3d=True
   job:
-    name: run_sfm
+    name: inference_online
     chdir: null
-    override_dirname: +preprocess=sfm_spp_spg_custom.yaml,redo=True
+    override_dirname: +experiment=test_GATsSPG_custom.yaml,object_detect_mode=GT_box,save_wis3d=True
     id: ???
     num: ???
     config_name: config.yaml
@@ -144,7 +145,7 @@ hydra:
       provider: schema
     output_dir: /home/robot-learning/Projects/SuperPose
     choices:
-      preprocess: sfm_spp_spg_custom.yaml
+      experiment: test_GATsSPG_custom.yaml
       logger: null
       callbacks: null
       datamodule: null

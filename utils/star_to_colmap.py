@@ -13,6 +13,7 @@ Colmap data:
 """
 
 import os
+import open3d as o3d
 import numpy as np
 
 if __name__ == "__main__":
@@ -22,6 +23,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     print("Start converting STAR data to colmap data...")
+    # generating bbox
+    pcd = o3d.io.read_point_cloud(os.path.join(args.data_dir, "star", "reconstruct.pcd"))
+    bbox = o3d.geometry.AxisAlignedBoundingBox.create_from_points(pcd.points)
+    bbox.color = (0, 0, 1)
+    pcd_frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=0.2)
+    # save the bbox to "../corner3d.txt"
+    # o3d.visualization.draw_geometries([pcd, bbox, pcd_frame])
+
     # transfer the pose & intrinsics
     kf_results = np.load(os.path.join(args.data_dir, "star", "kf_results.npz"))
     star_poses = kf_results["cam_poses"]

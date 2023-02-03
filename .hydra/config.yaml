@@ -1,22 +1,28 @@
 work_dir: ${hydra:runtime.cwd}
 data_dir: ${work_dir}/data
 print_config: true
-type: sfm
-redo: true
-scan_data_dir: ${work_dir}/data/
-dataset:
-  max_num_kp3d: 2500
-  max_num_kp2d: 1000
-  data_dir:
-  - ${scan_data_dir}/cracker_box cracker_box_1
-  outputs_dir: ${work_dir}/data/sfm_model/{}
+type: inference
+task_name: test_onepose
+num_leaf: 8
+suffix: ''
+save_demo: false
+save_wis3d: true
+demo_root: ${data_dir}/runs/demo
+model:
+  onepose_model_path: ${data_dir}/models/checkpoints/onepose/GATsSPG.ckpt
+  extractor_model_path: ${data_dir}/models/extractors/SuperPoint/superpoint_v1.pth
 network:
   detection: superpoint
-  detection_model_path: ${work_dir}/data/models/extractors/SuperPoint/superpoint_v1.pth
   matching: superglue
-  matching_model_path: ${work_dir}/data/models/matchers/SuperGlue/superglue_outdoor.pth
-sfm:
-  down_ratio: 1
-  covis_num: 10
-  rotation_thresh: 50
-disable_lightning_logs: true
+object_detect_mode: GT_box
+max_num_kp3d: 2500
+scan_data_dir: ${data_dir}
+sfm_model_dir: ${data_dir}/sfm_model
+input:
+  data_dirs:
+  - ${scan_data_dir}/cracker_box cracker_box_1 cracker_box_1
+  sfm_model_dirs:
+  - ${sfm_model_dir}/cracker_box
+output:
+  vis_dir: ${work_dir}/runs/vis/GATsSPG
+  eval_dir: ${work_dir}/runs/eval/GATsSPG

@@ -19,15 +19,15 @@ network:
 # object_detect_mode: 'GT_box' # ["GT_box", "feature_matching"]
 object_detect_mode: "feature_matching" # ["GT_box", "feature_matching"]
 max_num_kp3d: 2500
-scan_data_dir: /home/robot-learning/Projects/ScenePose/data
+scan_data_dir: ${data_dir}
 sfm_model_dir: ${data_dir}/sfm_model
 
 input:
   data_dirs:
-    - ${scan_data_dir}/cracker_box_icg cracker_box_icg_1 cracker_box_icg_2
+    - ${scan_data_dir}/cracker_box cracker_box_1 cracker_box_1
 
   sfm_model_dirs:
-    - ${sfm_model_dir}/cracker_box_icg
+    - ${sfm_model_dir}/cracker_box
 
 output:
   vis_dir: ${work_dir}/runs/vis/GATsSPG

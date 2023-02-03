@@ -19,7 +19,7 @@
             "justMyCode": true
         },
         {
-            "name": "transfer [star]",
+            "name": "Transfer [star]",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/utils/star_to_colmap.py",
@@ -38,6 +38,20 @@
             "args": [
                 "+preprocess=sfm_spp_spg_custom.yaml",
                 "redo=True"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "OnePose: [inf]",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/scan/inference_online.py",
+            "args": [
+                "+experiment=test_GATsSPG_custom.yaml",
+                "object_detect_mode=GT_box",
+                "save_wis3d=True"
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
