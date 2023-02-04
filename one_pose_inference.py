@@ -194,27 +194,36 @@ def main(cfg):
     one_pose_inference = OnePoseInference(cfg, sfm_data_dir, sfm_model_dir) 
 
     if os.path.exists(f"{test_data_dir}/video.MOV"):
-        vide_mode = "video"
+        video_mode = "video"
     elif os.path.exists(f"{test_data_dir}/images/1.png"):
-        vide_mode = "images"
+        video_mode = "images"
     else:
-        vide_mode = "web_camera"
+        video_mode = "web_camera"
     
     # hard-code
-    vide_mode = "web_camera"
-    if vide_mode == "video":
-        cap = cv2.VideoCapture(f"{test_data_dir}/video.MOV")
+    video_mode = "video"
+    if video_mode == "video":
+        cap = cv2.VideoCapture(f"{test_data_dir}/color.avi")
         while True:
             ret, frame = cap.read()
             if ret:
                 one_pose_inference.inference(cfg, frame)
-    elif vide_mode == "web_camera":
+    elif video_mode == "web_camera":
         cap = cv2.VideoCapture(0)
         while True:
             ret, frame = cap.read()
             if ret:
                 one_pose_inference.inference(cfg, frame)
-    elif vide_mode == "images":
+    elif video_mode == "realsense":
+        from utils.camera_utils import RealSenseCamera
+        camera = RealSenseCamera()
+        while True:
+            depth_image, color_image = camera.get_frame()
+            if depth_image is None or color_image is None:
+                continue
+            if color_image is not None:
+                one_pose_inference.inference(cfg, color_image)
+    elif video_mode == "images":
         cap = cv2.VideoCapture(f"{test_data_dir}/images/%d.png")
         while True:
             ret, frame = cap.read()

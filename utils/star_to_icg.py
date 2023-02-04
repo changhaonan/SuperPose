@@ -13,21 +13,47 @@ import open3d as o3d
 import cv2
 
 
-def np_mat_to_yaml(mat):
-    yaml_mat = {}
-    yaml_mat["rows"] = mat.shape[0]
-    yaml_mat["cols"] = mat.shape[1]
-    yaml_mat["dt"] = "d"
-    yaml_mat["data"] = mat.flatten().tolist()
-    return yaml_mat
+def preprocess(eval_dir):
+    # decode color and depth avi to color and depth png
+    depth_video = os.path.join(eval_dir, "depth.avi")
+    color_video = os.path.join(eval_dir, "color.avi")
+    if not os.path.exists(depth_video) or not os.path.exists(color_video):
+        print("Please download the color and depth video first!")
+        return
+    # decode the video
+    depth_dir = os.path.join(eval_dir, "depth")
+    color_dir = os.path.join(eval_dir, "color")
+    os.makedirs(depth_dir, exist_ok=True)
+    os.makedirs(color_dir, exist_ok=True)
+    # decode color video
+    cap = cv2.VideoCapture(color_video)
+    i = 0
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        cv2.imwrite(os.path.join(color_dir, "%d.png" % i), frame)
+        i += 1
+    cap.release()
+    # decode depth video
+    cap = cv2.VideoCapture(depth_video)
+    i = 0
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        cv2.imwrite(os.path.join(depth_dir, "%d.png" % i), frame)
+        i += 1
 
 
-def generate_icg_tracker(tracker_name, data_dir, icg_dir, redo_obj=False):
+def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, redo_obj=False):
+    # preprocess the video data first
+    preprocess(eval_dir)
     # generate the obj file if not exist
-    obj_path = os.path.join(data_dir, "star", "reconstruct.obj")
+    obj_path = os.path.join(model_dir, "star", "reconstruct.obj")
     if redo_obj or not os.path.exists(obj_path):
         print("Generating the obj file...")
-        pcd_path = os.path.join(data_dir, "star", "reconstruct.pcd")
+        pcd_path = os.path.join(model_dir, "star", "reconstruct.pcd")
         pcd = o3d.io.read_point_cloud(pcd_path)
         # transfer point cloud to obj using possion
         mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(
@@ -126,15 +152,13 @@ def generate_icg_tracker(tracker_name, data_dir, icg_dir, redo_obj=False):
     config_s.release()
 
     # save the cam color
-    context_json_file = os.path.join(data_dir, "star", "context.json")
+    context_json_file = os.path.join(model_dir, "star", "context.json")
     with open(context_json_file, "r") as f:
         context_data = json.load(f)
-    kf_results = np.load(os.path.join(args.data_dir, "star", "kf_results.npz"))
-    cam_poses = kf_results["cam_poses"]
 
     config_yaml_path = os.path.join(icg_dir, "camera_color.yaml")
     cam_color_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
-    cam_color_s.write("load_directory", os.path.join(data_dir, "color"))
+    cam_color_s.write("load_directory", os.path.join(eval_dir, "color"))
     cam_color_s.startWriteStruct("intrinsics", cv2.FileNode_MAP)
     cam_color_s.write("f_u", context_data["cam-00"]["intrinsic"][0])
     cam_color_s.write("f_v", context_data["cam-00"]["intrinsic"][1])
@@ -153,6 +177,11 @@ def generate_icg_tracker(tracker_name, data_dir, icg_dir, redo_obj=False):
     cam_color_s.release()
 
     # save the detector
+    kf_results_file = os.path.join(args.eval_dir, "star", "kf_results.npz")
+    if not os.path.exists(kf_results_file):
+        raise FileNotFoundError("kf_results.npz not found!")
+    kf_results = np.load(kf_results_file)
+    cam_poses = kf_results["cam_poses"]
     config_yaml_path = os.path.join(icg_dir, "detector.yaml")
     detector_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
     init_pose = cam_poses[0]
@@ -189,11 +218,10 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--tracker_name", type=str, default="", help="name")
-    parser.add_argument("--data_dir", type=str, default="", help="src data folder")
-    parser.add_argument(
-        "--icg_dir", type=str, default="", help="exported icg data folder"
-    )
+    parser.add_argument("--model_dir", type=str, default="", help="where the cad model exists")
+    parser.add_argument("--eval_dir", type=str, default="", help="where the eval data exists")
+    parser.add_argument("--icg_dir", type=str, default="", help="exported icg data folder")
     parser.add_argument("--redo_obj", action="store_true", help="redo the obj file")
     args = parser.parse_args()
     # generate the icg tracker config
-    generate_icg_tracker(args.tracker_name, args.data_dir, args.icg_dir, args.redo_obj)
+    generate_icg_tracker(args.tracker_name, args.model_dir, args.eval_dir, args.icg_dir, args.redo_obj)

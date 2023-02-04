@@ -20,7 +20,7 @@ scan_data_dir: ${data_dir}
 sfm_model_dir: ${data_dir}/sfm_model
 input:
   data_dirs:
-  - ${scan_data_dir}/cracker_box cracker_box_1 cracker_box_1
+  - ${scan_data_dir}/cracker_box cracker_box_1 cracker_box_3
   sfm_model_dirs:
   - ${sfm_model_dir}/cracker_box
 output:

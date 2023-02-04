@@ -19,7 +19,13 @@ Feb.1st to Feb.4th
 
 Feb.5th to Feb.11th
 
-- [ ] Test ICG algorithm.
+- [x] Test ICG algorithm.
+- [ ] Test ICG in real-world. Combine OnePose with ICG.
+    - [ ] The current problem is that how can we combine them.
+    - [x] Create a video recorder to record the video.
+    - [ ] Build a hybrid pipeline for video.
+        - [ ] 
+        - [ ] An easy way to think is that we can record some keyinformation and read them when running icg.
 - [ ] Download a prepapre for Benchmark dataset & Prepare Tools for them. YCB-video, BOI, BOP challenge.
 - [ ] Run OnePose and ICG seperately on benchmark.
 

@@ -43,6 +43,18 @@
             "justMyCode": true
         },
         {
+            "name": "Record RL",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/utils/camera_utils.py",
+            "args": [
+                "--output_dir",
+                "${workspaceFolder}/data/cracker_box/cracker_box_3",
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Transfer [op]",
             "type": "python",
             "request": "launch",
@@ -62,8 +74,10 @@
             "args": [
                 "--tracker_name",
                 "cracker_box",
-                "--data_dir",
+                "--model_dir",
                 "${workspaceFolder}/data/cracker_box/cracker_box_1",
+                "--eval_dir",
+                "${workspaceFolder}/data/cracker_box/cracker_box_3",
                 "--icg_dir",
                 "/home/robot-learning/Projects/3DObjectTracking/ICG/examples/generator_example_v2"
             ],
