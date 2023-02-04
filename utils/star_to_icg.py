@@ -177,7 +177,7 @@ def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, redo_obj=Fa
     cam_color_s.release()
 
     # save the detector
-    kf_results_file = os.path.join(args.eval_dir, "star", "kf_results.npz")
+    kf_results_file = os.path.join(args.eval_dir, "kf_results.npz")
     if not os.path.exists(kf_results_file):
         raise FileNotFoundError("kf_results.npz not found!")
     kf_results = np.load(kf_results_file)
@@ -201,9 +201,7 @@ def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, redo_obj=Fa
     object_s.write("geometry_unit_in_meter", 1.0)
     object_s.write("geometry_counterclockwise", 1)
     object_s.write("geometry_enable_culling", 1)
-    object_s.write(
-        "geometry2body_pose", np.eye(4)
-    )  # the pose of the geometry in the body frame
+    object_s.write("geometry2body_pose", np.eye(4))  # the pose of the geometry in the body frame
     object_s.release()
 
 

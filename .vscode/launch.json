@@ -111,5 +111,18 @@
             "console": "integratedTerminal",
             "justMyCode": true
         },
+        {
+            "name": "OnePose: [prior]",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/one_pose_prior.py",
+            "args": [
+                "+experiment=one_pose_prior.yaml",
+                "input.eval_dirs=[${workspaceFolder}/data/cracker_box/cracker_box_3]",
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
     ]
 }

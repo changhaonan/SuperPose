@@ -112,13 +112,12 @@ hydra:
     hydra:
     - hydra.mode=RUN
     task:
-    - +experiment=test_GATsSPG_custom.yaml
-    - object_detect_mode=GT_box
-    - save_wis3d=True
+    - +experiment=one_pose_prior.yaml
+    - input.eval_dirs=[/home/robot-learning/Projects/SuperPose/data/cracker_box/cracker_box_3]
   job:
-    name: one_pose_inference
+    name: one_pose_prior
     chdir: null
-    override_dirname: +experiment=test_GATsSPG_custom.yaml,object_detect_mode=GT_box,save_wis3d=True
+    override_dirname: +experiment=one_pose_prior.yaml,input.eval_dirs=[/home/robot-learning/Projects/SuperPose/data/cracker_box/cracker_box_3]
     id: ???
     num: ???
     config_name: config.yaml
@@ -145,7 +144,7 @@ hydra:
       provider: schema
     output_dir: /home/robot-learning/Projects/SuperPose
     choices:
-      experiment: test_GATsSPG_custom.yaml
+      experiment: one_pose_prior.yaml
       logger: null
       callbacks: null
       datamodule: null

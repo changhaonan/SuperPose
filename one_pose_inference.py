@@ -134,7 +134,7 @@ class OnePoseInference:
                                 )
 
     @torch.no_grad()
-    def inference(self, cfg, image):
+    def inference(self, cfg, image, enable_vis=False):
         # Normalize image:
         image_gray = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
         inp = transforms.ToTensor()(image_gray).cuda()[None]
@@ -160,8 +160,7 @@ class OnePoseInference:
         pose_pred, pose_pred_homo, inliers = eval_utils.ransac_PnP(K_crop, mkpts2d, mkpts3d, scale=1000)
         
         # Visualize the result:
-        self.enable_vis = True
-        if self.enable_vis and len(inliers) > 0:
+        if enable_vis and len(inliers) > 0:
             poses = [pose_pred_homo]
             box3d_path = path_utils.get_3d_box_path(self.paths['data_root'])
             intrin_full_path = path_utils.get_intrin_full_path(self.paths['data_dir'])
@@ -176,8 +175,7 @@ class OnePoseInference:
             image_vis = cv2.resize(image_vis, (vis_width, vis_heght))
             cv2.imshow('frame', image_vis)
             cv2.waitKey(15)
-        else:
-            print("Not enough inliers!")
+        return pose_pred_homo, len(inliers)
 
 @hydra.main(config_path='cfg/', config_name='config.yaml')
 def main(cfg):
@@ -201,19 +199,19 @@ def main(cfg):
         video_mode = "web_camera"
     
     # hard-code
-    video_mode = "video"
+    video_mode = "realsense"
     if video_mode == "video":
         cap = cv2.VideoCapture(f"{test_data_dir}/color.avi")
         while True:
             ret, frame = cap.read()
             if ret:
-                one_pose_inference.inference(cfg, frame)
+                one_pose_inference.inference(cfg, frame, True)
     elif video_mode == "web_camera":
         cap = cv2.VideoCapture(0)
         while True:
             ret, frame = cap.read()
             if ret:
-                one_pose_inference.inference(cfg, frame)
+                one_pose_inference.inference(cfg, frame, True)
     elif video_mode == "realsense":
         from utils.camera_utils import RealSenseCamera
         camera = RealSenseCamera()
@@ -222,13 +220,13 @@ def main(cfg):
             if depth_image is None or color_image is None:
                 continue
             if color_image is not None:
-                one_pose_inference.inference(cfg, color_image)
+                one_pose_inference.inference(cfg, color_image, True)
     elif video_mode == "images":
         cap = cv2.VideoCapture(f"{test_data_dir}/images/%d.png")
         while True:
             ret, frame = cap.read()
             if ret:
-                one_pose_inference.inference(cfg, frame)
+                one_pose_inference.inference(cfg, frame, True)
 
 
 if __name__ == "__main__":
