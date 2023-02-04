@@ -202,7 +202,6 @@ def main(cfg):
     
     # hard-code
     vide_mode = "web_camera"
-
     if vide_mode == "video":
         cap = cv2.VideoCapture(f"{test_data_dir}/video.MOV")
         while True:

@@ -3,6 +3,7 @@ import numpy as np
 import os
 import struct
 import collections
+import json
 
 Point3D = collections.namedtuple(
     "Point3D", ["id", "xyz", "rgb", "error", "image_ids", "point2D_idxs"])
@@ -61,35 +62,26 @@ def points_colmap_to_o3d(points3D):
 
 
 def vis_pcd(pcd, cam_poses=None, coord_frame_size=0.2):
-    # create bbox from pcd
-    bbox = o3d.geometry.AxisAlignedBoundingBox.create_from_points(pcd.points)
-    bbox.color = (0, 0, 1)
-    pcd_frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=coord_frame_size)
+    vis_list = []
+    # add pcd and frame
+    if len(pcd) == 1:
+        # create bbox from pcd
+        bbox = o3d.geometry.AxisAlignedBoundingBox.create_from_points(pcd.points)
+        bbox.color = (0, 0, 1)
+        pcd_frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=coord_frame_size)
+        vis_list = [*pcd, pcd_frame, bbox]
+    else:
+        vis_list = [*pcd]
+    
+    # add camera poses
     if cam_poses is not None:
-        vis_list = [pcd, pcd_frame, bbox]
         for cam_pose in cam_poses:
             cam_frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=coord_frame_size)
             cam_frame.transform(cam_pose)
             vis_list.append(cam_frame)
         o3d.visualization.draw_geometries(vis_list)
     else:
-        o3d.visualization.draw_geometries([bbox, pcd, pcd_frame])
-
-
-def vis_pcd_sfm(pcd, sparse, cam_poses=None, coord_frame_size=0.2):
-    # create bbox from pcd
-    bbox = o3d.geometry.AxisAlignedBoundingBox.create_from_points(pcd.points)
-    bbox.color = (0, 0, 1)
-    pcd_frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=coord_frame_size)
-    if cam_poses is not None:
-        vis_list = [pcd, pcd_frame, sparse, bbox]
-        for cam_pose in cam_poses:
-            cam_frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=coord_frame_size)
-            cam_frame.transform(cam_pose)
-            vis_list.append(cam_frame)
         o3d.visualization.draw_geometries(vis_list)
-    else:
-        o3d.visualization.draw_geometries([bbox, pcd, sparse, pcd_frame])
 
 
 if __name__ == "__main__":
@@ -101,16 +93,44 @@ if __name__ == "__main__":
 
     # read the point cloud using open3d
     pcd = o3d.io.read_point_cloud(os.path.join(args.model_path, "reconstruct.pcd"))
+    # read the mesh using open3d
+    mesh = o3d.io.read_triangle_mesh(os.path.join(args.model_path, "reconstruct.obj"))
+    # create the origin coordinate frame
+    origin_frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=0.2)
     # read the camera pose
     kf_results = np.load(os.path.join(args.model_path, "kf_results.npz"))
-    
+    # load context 
+    cam_poses = kf_results["cam_poses"]
+    context_json_file = os.path.join(args.model_path, "context.json")
+    with open(context_json_file, "r") as f:
+        context_data = json.load(f)
+    intrinsic = np.array([
+        context_data["cam-00"]["intrinsic"][0], 
+        context_data["cam-00"]["intrinsic"][1], 
+        context_data["cam-00"]["intrinsic"][2], 
+        context_data["cam-00"]["intrinsic"][3]])
+    intrinsic_matrix = np.array([
+        [intrinsic[0], 0, intrinsic[2]],
+        [0, intrinsic[1], intrinsic[3]],
+        [0, 0, 1]])
+    # create camera intrinsics
+    cam_intrinsic = o3d.camera.PinholeCameraIntrinsic(
+        context_data["cam-00"]["image_cols"], 
+        context_data["cam-00"]["image_rows"], intrinsic_matrix)
+
+    # read depth image
+    depth_path = os.path.join(args.model_path, "../depth")
+    depth_image = o3d.io.read_image(os.path.join(depth_path, "494.png"))
+    # create point cloud from depth image
+    depth_pcd = o3d.geometry.PointCloud.create_from_depth_image(depth_image, cam_intrinsic, np.linalg.inv(cam_poses[-1]))
+
     if not args.sparse_model_path:
         # visualize the point cloud
-        vis_pcd(pcd, kf_results["cam_poses"])
+        vis_pcd([pcd], kf_results["cam_poses"])
     else:
         # read the sparse model
         sparse_model_path = os.path.join(args.sparse_model_path, "points3D.bin")
         points_3d = read_points3d_binary(sparse_model_path)
         sprase_model = points_colmap_to_o3d(points_3d)
         # visualize the point cloud
-        vis_pcd_sfm(pcd, sprase_model, kf_results["cam_poses"])
+        vis_pcd([depth_pcd, mesh, origin_frame], kf_results["cam_poses"])

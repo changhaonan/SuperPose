@@ -19,6 +19,30 @@
             "justMyCode": true
         },
         {
+            "name": "Debug Render",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/utils/debug_render.py",
+            "args": [
+                "--model_path",
+                "${workspaceFolder}/data/cracker_box/cracker_box_1/star",
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Shift Model",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/utils/model_shift.py",
+            "args": [
+                "--data_dir",
+                "${workspaceFolder}/data/cracker_box/cracker_box_1",
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Transfer [op]",
             "type": "python",
             "request": "launch",
