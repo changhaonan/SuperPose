@@ -113,12 +113,12 @@ hydra:
     - hydra.mode=RUN
     task:
     - +experiment=one_pose_prior.yaml
-    - input.eval_dirs=[/home/robot-learning/Projects/SuperPose/data/cracker_box/cracker_box_4]
+    - input.eval_dirs=[/home/robot-learning/Projects/SuperPose/data/cracker_box/cracker_box_3]
     - video_mode=image
   job:
     name: one_pose_prior
     chdir: null
-    override_dirname: +experiment=one_pose_prior.yaml,input.eval_dirs=[/home/robot-learning/Projects/SuperPose/data/cracker_box/cracker_box_4],video_mode=image
+    override_dirname: +experiment=one_pose_prior.yaml,input.eval_dirs=[/home/robot-learning/Projects/SuperPose/data/cracker_box/cracker_box_3],video_mode=image
     id: ???
     num: ???
     config_name: config.yaml
@@ -132,7 +132,7 @@ hydra:
   runtime:
     version: 1.3.1
     version_base: '1.1'
-    cwd: /home/robot-learning/Projects/SuperPose
+    cwd: /home/robot-learning/Projects/SuperPose/scripts
     config_sources:
     - path: hydra.conf
       schema: pkg
@@ -143,7 +143,7 @@ hydra:
     - path: ''
       schema: structured
       provider: schema
-    output_dir: /home/robot-learning/Projects/SuperPose
+    output_dir: /home/robot-learning/Projects/SuperPose/scripts
     choices:
       experiment: one_pose_prior.yaml
       logger: null

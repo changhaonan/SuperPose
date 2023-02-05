@@ -10,8 +10,10 @@
             "request": "launch",
             "program": "${workspaceFolder}/utils/model_viewer.py",
             "args": [
-                "--model_path",
+                "--model_dir",
                 "${workspaceFolder}/data/cracker_box/cracker_box_1/star",
+                "--eval_dir",
+                "${workspaceFolder}/data/cracker_box/cracker_box_4",
                 "--sparse_model_path",
                 "${workspaceFolder}/data/sfm_model/cracker_box/outputs_superpoint_superglue/tkl_model"
             ],
@@ -49,7 +51,7 @@
             "program": "${workspaceFolder}/utils/camera_utils.py",
             "args": [
                 "--output_dir",
-                "${workspaceFolder}/data/cracker_box/cracker_box_3",
+                "${workspaceFolder}/data/cracker_box/cracker_box_4",
             ],
             "console": "integratedTerminal",
             "justMyCode": true
@@ -77,7 +79,7 @@
                 "--model_dir",
                 "${workspaceFolder}/data/cracker_box/cracker_box_1",
                 "--eval_dir",
-                "${workspaceFolder}/data/cracker_box/cracker_box_3",
+                "${workspaceFolder}/data/cracker_box/cracker_box_4",
                 "--icg_dir",
                 "/home/robot-learning/Projects/3DObjectTracking/ICG/examples/generator_example_v2"
             ],
@@ -118,7 +120,8 @@
             "program": "${workspaceFolder}/one_pose_prior.py",
             "args": [
                 "+experiment=one_pose_prior.yaml",
-                "input.eval_dirs=[${workspaceFolder}/data/cracker_box/cracker_box_3]",
+                "input.eval_dirs=[${workspaceFolder}/data/cracker_box/cracker_box_4]",
+                "video_mode=image"
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",

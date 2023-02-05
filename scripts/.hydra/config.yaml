@@ -25,7 +25,7 @@ input:
   sfm_model_dirs:
   - ${sfm_model_dir}/cracker_box
   eval_dirs:
-  - /home/robot-learning/Projects/SuperPose/data/cracker_box/cracker_box_4
+  - /home/robot-learning/Projects/SuperPose/data/cracker_box/cracker_box_3
 output:
   vis_dir: ${work_dir}/runs/vis/GATsSPG
   eval_dir: ${work_dir}/runs/eval/GATsSPG

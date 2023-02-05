@@ -7,6 +7,7 @@ suffix: ""
 save_demo: False
 save_wis3d: False
 demo_root: ${data_dir}/runs/demo
+video_mode: image
 
 model:
   onepose_model_path: ${data_dir}/models/checkpoints/onepose/GATsSPG.ckpt

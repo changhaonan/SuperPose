@@ -15,6 +15,7 @@ OnePose data:
 import os
 import open3d as o3d
 import numpy as np
+import json
 
 
 def bbox_o3d_to_onepose(bbox_o3d):
@@ -51,13 +52,22 @@ if __name__ == "__main__":
     # transfer the pose & intrinsics
     kf_results = np.load(os.path.join(args.data_dir, "star", "kf_results.npz"))
     star_poses = kf_results["cam_poses"]
-    star_intr = kf_results["cam_intr"]
+    context_json_file = os.path.join(args.data_dir, "star", "context.json")
+    with open(context_json_file, "r") as f:
+        context_data = json.load(f)
+    star_intr = np.array(
+        [
+            [context_data["cam-00"]["intrinsic"][0], 0, context_data["cam-00"]["intrinsic"][2]],
+            [0, context_data["cam-00"]["intrinsic"][1], context_data["cam-00"]["intrinsic"][3]],
+            [0, 0, 1]
+        ]
+    )
     pose_dir = os.path.join(args.data_dir, "poses_ba")
     intr_dir = os.path.join(args.data_dir, "intrin_ba")
     intr_file = os.path.join(args.data_dir, "intrinsics.txt")
     os.makedirs(pose_dir, exist_ok=True)
     os.makedirs(intr_dir, exist_ok=True)
-
+    
     for i, star_pose in enumerate(star_poses):
         # extrinsic
         colmap_pose = np.linalg.inv(star_pose)  # colmap pose = inv(star pose)
@@ -82,10 +92,10 @@ if __name__ == "__main__":
     with open(intr_file, "w") as f:
         f.writelines(
             [
-                "fx: {}\n".format(star_intr[0, 0]),
-                "fy: {}\n".format(star_intr[1, 1]),
-                "cx: {}\n".format(star_intr[0, 2]),
-                "cy: {}\n".format(star_intr[1, 2]),
+                "fx: {}\n".format(context_data["cam-00"]["intrinsic"][0]),
+                "fy: {}\n".format(context_data["cam-00"]["intrinsic"][1]),
+                "cx: {}\n".format(context_data["cam-00"]["intrinsic"][2]),
+                "cy: {}\n".format(context_data["cam-00"]["intrinsic"][3]),
             ],
         )
     print("Finish converting STAR data to colmap data...")

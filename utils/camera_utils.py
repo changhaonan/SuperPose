@@ -7,8 +7,11 @@
 
 import pyrealsense2 as rs
 import numpy as np
+from tqdm import tqdm
 import cv2
 import os
+import shutil
+
 
 class RealSenseCamera:
     def __init__(self) -> None:
@@ -72,15 +75,29 @@ if __name__ == "__main__":
     if args.output_dir != "":
         if not os.path.exists(args.output_dir):
             os.makedirs(args.output_dir)
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        depth_video = cv2.VideoWriter(os.path.join(args.output_dir, "depth.avi"), fourcc, 30.0, (640, 480))
-        color_video = cv2.VideoWriter(os.path.join(args.output_dir, "color.avi"), fourcc, 30.0, (640, 480))
-    
+        depth_image_path = os.path.join(args.output_dir, "depth")
+        if os.path.exists(depth_image_path):
+            shutil.rmtree(depth_image_path)
+        os.makedirs(depth_image_path, exist_ok=True)
+        color_image_path = os.path.join(args.output_dir, "color")
+        if os.path.exists(color_image_path):
+            shutil.rmtree(color_image_path)
+        os.makedirs(color_image_path, exist_ok=True)
+        depth_color_image_path = os.path.join(args.output_dir, "depth_color")
+        if os.path.exists(depth_color_image_path):
+            shutil.rmtree(depth_color_image_path)
+        os.makedirs(depth_color_image_path, exist_ok=True)
+
         # Launch realsense camera
         camera = RealSenseCamera()
         import time
         time.sleep(2)  # Wait for camera to warm up
 
+        # Image buffer
+        color_image_list = []
+        depth_image_list = []
+        depth_color_image_list = []
+        frame = 0
         while True:
             depth_image, color_image = camera.get_frame()
             if depth_image is None or color_image is None:
@@ -88,13 +105,14 @@ if __name__ == "__main__":
             # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
             depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
 
-            # Write the frame into video
-            depth_video.write(depth_colormap)
-            color_video.write(color_image)
-            
-            cv2.imshow("depth", depth_colormap)
+            cv2.imshow("depth", depth_image)
             cv2.imshow("color", color_image)
+            
+            cv2.imwrite(os.path.join(color_image_path, "%d.png" % frame), color_image)
+            cv2.imwrite(os.path.join(depth_image_path, "%d.png" % frame), depth_image)
+            cv2.imwrite(os.path.join(depth_color_image_path, "%d.png" % frame), depth_colormap)
 
+            frame += 1
             # Press esc or 'q' to close the image window
             k = cv2.waitKey(1)
             if k%256 == 27 or k%256 == ord('q'):
@@ -103,5 +121,3 @@ if __name__ == "__main__":
         
         # Release camera and video
         camera.exit()
-        depth_video.release()
-        color_video.release()

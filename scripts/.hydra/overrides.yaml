@@ -1,0 +1,3 @@
+- +experiment=one_pose_prior.yaml
+- input.eval_dirs=[/home/robot-learning/Projects/SuperPose/data/cracker_box/cracker_box_3]
+- video_mode=image

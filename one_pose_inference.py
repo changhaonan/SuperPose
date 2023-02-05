@@ -175,7 +175,7 @@ class OnePoseInference:
             image_vis = cv2.resize(image_vis, (vis_width, vis_heght))
             cv2.imshow('frame', image_vis)
             cv2.waitKey(15)
-        return pose_pred_homo, len(inliers)
+        return pose_pred, pose_pred_homo, len(inliers)
 
 @hydra.main(config_path='cfg/', config_name='config.yaml')
 def main(cfg):
