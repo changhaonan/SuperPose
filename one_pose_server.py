@@ -29,12 +29,20 @@ class PoseServer:
         self.connection, self.client_address = self.sock.accept()
         print("Connection from: ", self.client_address)
 
-    def send_pose(self, pose):
-        data = self.connection.recv(1024)
-        if data:
-            data = bytes(pose_to_string(pose), 'utf-8')
-            print("Sending pose: ", data)
-            self.connection.sendall(data)
+    def run_service(self):
+        image_size = 538544
+        image_data = b''
+        while len(image_data) < image_size:
+            image_data += self.connection.recv(1024)
+        image = np.frombuffer(image_data, dtype=np.uint8)
+        image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+        # estimate pose
+        pose_pred, pose_pred_homo, num_inliers = self.pose_estimator(image)
+        print(f"OnePose inliers: {num_inliers}.")
+        # send pose to socket
+        data = bytes(pose_to_string(pose_pred_homo), 'utf-8')
+        print("Sending pose: ", data)
+        self.connection.sendall(data)
 
     def close(self):
         self.connection.close()
@@ -43,9 +51,9 @@ class PoseServer:
     def run(self):
         while True:
             try:
-                pose = np.eye(4)
-                self.send_pose(pose)
+                self.run_service()
             except KeyboardInterrupt:
+                print("Closing server...")
                 break
 
 
@@ -63,7 +71,7 @@ def one_pose_server(cfg):
     # init one pose inference
     one_pose_inference = OnePoseInference(cfg, sfm_data_dir, sfm_model_dir) 
 
-    pose_server = PoseServer(one_pose_inference, cfg.host, cfg.port)
+    pose_server = PoseServer(lambda image : one_pose_inference.inference(cfg, image), cfg.host, cfg.port)
     pose_server.run()
     pose_server.close()
 

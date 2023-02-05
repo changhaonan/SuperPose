@@ -113,10 +113,11 @@ hydra:
     - hydra.mode=RUN
     task:
     - +experiment=one_pose_server.yaml
+    - port=8081
   job:
     name: one_pose_server
     chdir: null
-    override_dirname: +experiment=one_pose_server.yaml
+    override_dirname: +experiment=one_pose_server.yaml,port=8081
     id: ???
     num: ???
     config_name: config.yaml

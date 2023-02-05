@@ -10,7 +10,7 @@ save_wis3d: false
 demo_root: ${data_dir}/runs/demo
 video_mode: image
 host: 127.0.0.1
-port: 8080
+port: 8081
 model:
   onepose_model_path: ${data_dir}/models/checkpoints/onepose/GATsSPG.ckpt
   extractor_model_path: ${data_dir}/models/extractors/SuperPoint/superpoint_v1.pth

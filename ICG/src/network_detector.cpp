@@ -124,10 +124,15 @@ namespace icg
     }
 
     bool NetworkDetector::ReadPoseFromSocket()
-    {
-        // Send request to server
-        char *hello = "Request pose...";
-        send(socket_fd_, hello, strlen(hello), 0);
+    {   
+        // Send image to server
+        cv::Mat image = color_camera_ptr_->image();
+        std::vector<uchar> image_buffer;
+        cv::imencode(".png", image, image_buffer);
+        int image_size = image_buffer.size();
+        // send(socket_fd_, &image_size, sizeof(int), 0);
+        send(socket_fd_, image_buffer.data(), image_size, 0);
+
         // Read pose from socket
         char buffer[1024] = {0};
         int valread = read(socket_fd_, buffer, 1024);
@@ -149,6 +154,10 @@ namespace icg
                     ss >> pose(i, j);
             std::cout << "Received pose: " << std::endl
                       << pose << std::endl;
+            // Eigen matrix to Affine3f
+            Eigen::Affine3f pose_affine(pose);
+            body2world_pose_ = pose_affine.matrix();
+            body_ptr_->set_body2world_pose(body2world_pose_);
         }
         return true;
     }
