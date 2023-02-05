@@ -1,0 +1,22 @@
+%YAML:1.0
+---
+load_directory: /home/robot-learning/Projects/SuperPose/data/cracker_box/cracker_box_4/color
+intrinsics:
+   f_u: 6.1044158935546875e+02
+   f_v: 6.0995611572265625e+02
+   pp_x: 3.2627822875976562e+02
+   pp_y: 2.3018516540527344e+02
+   width: 640
+   height: 480
+camara2world_pose: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: d
+   data: [ 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0.,
+       1. ]
+depth_scale: 1.0000000000000000e-03
+image_name_pre: ""
+load_index: 0
+n_leading_zeros: 0
+image_name_post: ""
+load_image_type: png

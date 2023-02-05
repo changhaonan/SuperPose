@@ -1,0 +1,22 @@
+load_directory: "./"
+intrinsics:
+   f_u: 638.633
+   f_v: 638.377
+   pp_x: 639.451
+   pp_y: 366.379
+   width: 1280
+   height: 720
+camera2world_pose: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: f
+   data: [ 1., 0., 0., 0.,
+            0., 1., 0., 0.,
+            0., 0., 1., 0.,
+            0., 0., 0., 1. ]
+depth_scale: 0.001    # only for depth camera
+image_name_pre: "color_camera_image_"
+load_index: 0
+n_leading_zeros: 0
+image_name_post: ""
+load_image_type: "png"

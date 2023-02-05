@@ -24,7 +24,7 @@ Feb.5th to Feb.11th
     - [ ] The current problem is that how can we combine them.
     - [x] Create a video recorder to record the video.
     - [ ] Build a hybrid pipeline for video.
-        - [ ] 
+        - [ ] The current idea is to add a feature upon it.
         - [ ] An easy way to think is that we can record some keyinformation and read them when running icg.
 - [ ] Download a prepapre for Benchmark dataset & Prepare Tools for them. YCB-video, BOI, BOP challenge.
 - [ ] Run OnePose and ICG seperately on benchmark.

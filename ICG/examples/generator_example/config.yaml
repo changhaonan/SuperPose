@@ -1,0 +1,44 @@
+%YAML:1.2
+LoaderColorCamera:
+  - name: "loader_color"
+    metafile_path: "./camera_color.yaml"
+
+NormalColorViewer:
+  - name: "color_viewer"
+    color_camera: "loader_color"
+    renderer_geometry: "renderer_geometry"
+
+RendererGeometry:
+  - name: "renderer_geometry"
+    bodies: ["cracker_box"]
+
+Body:
+  - name: "cracker_box"
+    metafile_path: "./cracker_box.yaml"
+
+StaticDetector:
+  - name: "cracker_box_static_detector"
+    metafile_path: "./detector.yaml"
+    body: "cracker_box"
+    color_camera: "loader_color"
+
+RegionModel:
+  - name: "cracker_box_region_model"
+    metafile_path: "./cracker_box_model.yaml"
+    body: "cracker_box"
+
+RegionModality:
+  - name: "cracker_box_region_modality"
+    body: "cracker_box"
+    color_camera: "loader_color"
+    region_model: "cracker_box_region_model"
+
+Optimizer:
+  - name: "cracker_box_optimizer"
+    modalities: ["cracker_box_region_modality"]
+
+Tracker:
+  - name: "tracker"
+    viewers: ["color_viewer"]
+    detectors: ["cracker_box_static_detector"]
+    optimizers: ["cracker_box_optimizer"]
