@@ -45,9 +45,6 @@ Feb.26th to March.1st
 
 # Debug
 
-Tune the ICG. Debug on the depth registration.
-Use PointFeatureHub to show the correspondence between frames.
-
 # Declare
 
 Our code based is based on the implementation of OnePose, ICG and Pytracking.

@@ -1,2 +1,9 @@
 %YAML:1.0
 ---
+visualize_pose_result: 0
+visualize_gradient_optimization: 0
+visualize_hessian_optimization: 0
+visualize_lines_correspondence: 0
+visualize_points_correspondence: 0
+visualize_points_depth_image_correspondence: 0
+visualize_points_depth_rendering_correspondence: 0

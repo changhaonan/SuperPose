@@ -14,6 +14,9 @@ import cv2
 
 
 def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, enable_depth=False, redo_obj=False):
+    # config macro
+    OBJECT_SCALE = 2.0  # the size of object, influencing the accept threshold for depth modality
+
     # generate the obj file if not exist
     obj_path = os.path.join(model_dir, "star", "reconstruct.obj")
     if redo_obj or not os.path.exists(obj_path):
@@ -232,10 +235,29 @@ def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, enable_dept
     # save the modality file
     config_yaml_path = os.path.join(icg_dir, "region_modality.yaml")
     modality_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
+    modality_s.write("visualize_pose_result", 0)
+    modality_s.write("visualize_gradient_optimization", 0)
+    modality_s.write("visualize_hessian_optimization", 0)
+    modality_s.write("visualize_lines_correspondence", 0)
+    modality_s.write("visualize_points_correspondence", 0)
+    modality_s.write("visualize_points_depth_image_correspondence", 0)
+    modality_s.write("visualize_points_depth_rendering_correspondence", 0)
     modality_s.release()
 
     config_yaml_path = os.path.join(icg_dir, "depth_modality.yaml")
     modality_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
+    modality_s.write("visualize_pose_result", 0)
+    modality_s.write("visualize_gradient_optimization", 0)
+    modality_s.write("visualize_hessian_optimization", 0)
+    modality_s.write("visualize_correspondences_correspondence", 0)
+    modality_s.write("visualize_points_correspondence", 0)
+    modality_s.write("visualize_points_depth_rendering_correspondence", 0)
+    modality_s.write("visualization_max_depth", 2.0)  # the max depth for visualization
+    modality_s.startWriteStruct("considered_distances", cv2.FileNode_SEQ)
+    modality_s.write("", 0.05 * OBJECT_SCALE)
+    modality_s.write("", 0.02 * OBJECT_SCALE)
+    modality_s.write("", 0.01 * OBJECT_SCALE)
+    modality_s.endWriteStruct()
     modality_s.release()
 
     # save the object
