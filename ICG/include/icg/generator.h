@@ -29,6 +29,7 @@
 #include <icg/region_model.h>
 #include <icg/renderer_geometry.h>
 #include <icg/static_detector.h>
+#include <icg/network_detector.h>
 #include <icg/tracker.h>
 #include <icg/viewer.h>
 

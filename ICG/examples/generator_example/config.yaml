@@ -18,9 +18,9 @@ Body:
    -
       name: cracker_box
       metafile_path: "object.yaml"
-StaticDetector:
+NetworkDetector:
    -
-      name: static_detector
+      name: network_detector
       metafile_path: "detector.yaml"
       body: cracker_box
       color_camera: loader_color
@@ -72,6 +72,6 @@ Tracker:
          - color_viewer
          - depth_viewer
       detectors:
-         - static_detector
+         - network_detector
       optimizers:
          - optimizer

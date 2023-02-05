@@ -20,13 +20,15 @@ Feb.1st to Feb.4th
 Feb.5th to Feb.11th
 
 - [x] Test ICG algorithm.
-- [ ] Test ICG in real-world. Combine OnePose with ICG.
+- [x] Test ICG in real-world. Combine OnePose with ICG.
     - [ ] Add a one-pose detector. Detector integration.
     - [ ] The current problem is that how can we combine them.
     - [x] Create a video recorder to record the video.
     - [ ] Build a hybrid pipeline for video.
         - [ ] The current idea is to add a feature upon it.
         - [ ] An easy way to think is that we can record some keyinformation and read them when running icg.
+- [ ] Add build tools from NeRF.
+- [ ] Add Network-based detector.
 - [ ] Download a prepapre for Benchmark dataset & Prepare Tools for them. YCB-video, BOI, BOP challenge.
 - [ ] Run OnePose and ICG seperately on benchmark.
 

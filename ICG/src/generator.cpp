@@ -627,6 +627,8 @@ bool GenerateConfiguredTracker(const std::filesystem::path& configfile_path,
   std::vector<std::shared_ptr<Detector>> detector_ptrs;
   if (!ConfigureObjectsMetafileAndBodyRequired<StaticDetector>(
           configfile_path, fs, "StaticDetector", body_ptrs, &detector_ptrs) ||
+      !ConfigureObjectsMetafileAndBodyRequired<NetworkDetector>(
+          configfile_path, fs, "NetworkDetector", body_ptrs, &detector_ptrs) ||
       !ConfigureManualDetectors(configfile_path, fs, body_ptrs,
                                 color_camera_ptrs, &detector_ptrs))
     return false;

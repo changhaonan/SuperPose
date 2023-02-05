@@ -71,10 +71,10 @@ def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, enable_dept
     config_s.endWriteStruct()
     config_s.endWriteStruct()
 
-    # save the static detector
-    config_s.startWriteStruct("StaticDetector", cv2.FileNode_SEQ)
+    # save the network detector
+    config_s.startWriteStruct("NetworkDetector", cv2.FileNode_SEQ)
     config_s.startWriteStruct("", cv2.FileNode_MAP)
-    config_s.write("name", "static_detector")
+    config_s.write("name", "network_detector")
     config_s.write("metafile_path", "detector.yaml")
     config_s.write("body", tracker_name)
     config_s.write("color_camera", "loader_color")
@@ -162,7 +162,7 @@ def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, enable_dept
         config_s.write("viewers", ["color_viewer", "depth_viewer"])
     else:
         config_s.write("viewers", ["color_viewer"])
-    config_s.write("detectors", ["static_detector"])
+    config_s.write("detectors", ["network_detector"])
     config_s.write("optimizers", ["optimizer"])
     config_s.endWriteStruct()
     config_s.endWriteStruct()

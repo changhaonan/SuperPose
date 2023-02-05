@@ -7,7 +7,7 @@ set(SOURCES
         normal_renderer.cpp basic_depth_renderer.cpp model.cpp region_model.cpp
         depth_model.cpp camera.cpp loader_camera.cpp viewer.cpp
         image_viewer.cpp normal_viewer.cpp modality.cpp region_modality.cpp
-        depth_modality.cpp optimizer.cpp detector.cpp static_detector.cpp
+        depth_modality.cpp optimizer.cpp detector.cpp static_detector.cpp network_detector.cpp
         manual_detector.cpp refiner.cpp publisher.cpp tracker.cpp
         generator.cpp)
 
