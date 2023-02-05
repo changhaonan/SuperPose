@@ -94,6 +94,7 @@ def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, enable_dept
     config_s.write("body", tracker_name)
     config_s.write("color_camera", "loader_color")
     config_s.write("region_model", "region_model")
+    config_s.write("metafile_path", "region_modality.yaml")
     if enable_depth:
         config_s.startWriteStruct("measure_occlusions", cv2.FileNode_MAP)
         config_s.write("depth_camera", "loader_depth")
@@ -135,6 +136,7 @@ def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, enable_dept
         config_s.write("body", tracker_name)
         config_s.write("depth_camera", "loader_depth")
         config_s.write("depth_model", "depth_model")
+        config_s.write("metafile_path", "depth_modality.yaml")
         config_s.endWriteStruct()
         config_s.endWriteStruct()
 
@@ -226,6 +228,15 @@ def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, enable_dept
     model_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
     model_s.write("model_path", "INFER_FROM_NAME")
     model_s.release()
+
+    # save the modality file
+    config_yaml_path = os.path.join(icg_dir, "region_modality.yaml")
+    modality_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
+    modality_s.release()
+
+    config_yaml_path = os.path.join(icg_dir, "depth_modality.yaml")
+    modality_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
+    modality_s.release()
 
     # save the object
     config_yaml_path = os.path.join(icg_dir, "object.yaml")

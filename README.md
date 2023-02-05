@@ -21,6 +21,7 @@ Feb.5th to Feb.11th
 
 - [x] Test ICG algorithm.
 - [ ] Test ICG in real-world. Combine OnePose with ICG.
+    - [ ] Add a one-pose detector. Detector integration.
     - [ ] The current problem is that how can we combine them.
     - [x] Create a video recorder to record the video.
     - [ ] Build a hybrid pipeline for video.
@@ -41,6 +42,11 @@ Feb.19th to Feb.25th
 
 Feb.26th to March.1st
 - [ ] Write the paper
+
+# Debug
+
+Tune the ICG. Debug on the depth registration.
+Use PointFeatureHub to show the correspondence between frames.
 
 # Declare
 
