@@ -81,7 +81,8 @@
                 "--eval_dir",
                 "${workspaceFolder}/data/cracker_box/cracker_box_4",
                 "--icg_dir",
-                "/home/robot-learning/Projects/3DObjectTracking/ICG/examples/generator_example_v2"
+                "/home/robot-learning/Projects/3DObjectTracking/ICG/examples/generator_example_v2",
+                "--enable_depth"
             ],
             "console": "integratedTerminal",
             "justMyCode": true

@@ -94,6 +94,10 @@ def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, enable_dept
     config_s.write("body", tracker_name)
     config_s.write("color_camera", "loader_color")
     config_s.write("region_model", "region_model")
+    if enable_depth:
+        config_s.startWriteStruct("measure_occlusions", cv2.FileNode_MAP)
+        config_s.write("depth_camera", "loader_depth")
+        config_s.endWriteStruct()
     config_s.endWriteStruct()
     config_s.endWriteStruct()
 
