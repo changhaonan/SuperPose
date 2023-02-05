@@ -81,7 +81,7 @@
                 "--eval_dir",
                 "${workspaceFolder}/data/cracker_box/cracker_box_4",
                 "--icg_dir",
-                "/home/robot-learning/Projects/3DObjectTracking/ICG/examples/generator_example_v2",
+                "${workspaceFolder}/ICG/examples/generator_example",
                 "--enable_depth"
             ],
             "console": "integratedTerminal",
@@ -129,7 +129,7 @@
             "justMyCode": true
         },
         {
-            "name": "ICG (generate)",
+            "name": "ICG",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/examples/run_generated_tracker",
