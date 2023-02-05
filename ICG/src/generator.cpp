@@ -445,6 +445,31 @@ bool ConfigureManualDetectors(
       detector_ptrs);
 }
 
+bool ConfigureNetworkDetectors(
+    const std::filesystem::path& configfile_path,
+    const cv::FileStorage& file_storage,
+    const std::vector<std::shared_ptr<Body>>& body_ptrs,
+    const std::vector<std::shared_ptr<ColorCamera>>& color_camera_ptrs,
+    std::vector<std::shared_ptr<Detector>>* detector_ptrs) {
+  std::string class_name{"NetworkDetector"};
+  return ConfigureObjects<NetworkDetector>(
+      file_storage, class_name,
+      {"name", "metafile_path", "body", "color_camera"},
+      [&](const auto& file_node, auto* detector_ptr) {
+        std::shared_ptr<Body> body_ptr;
+        std::shared_ptr<ColorCamera> color_camera_ptr;
+        if (!GetObject(file_node, "body", class_name, body_ptrs, &body_ptr) ||
+            !GetObject(file_node, "color_camera", class_name, color_camera_ptrs,
+                       &color_camera_ptr))
+          return false;
+        *detector_ptr = std::make_shared<NetworkDetector>(
+            Name(file_node), MetafilePath(file_node, configfile_path), body_ptr,
+            color_camera_ptr);
+        return true;
+      },
+      detector_ptrs);
+}
+
 bool ConfigureRefiners(
     const std::filesystem::path& configfile_path,
     const cv::FileStorage& file_storage,
@@ -627,8 +652,8 @@ bool GenerateConfiguredTracker(const std::filesystem::path& configfile_path,
   std::vector<std::shared_ptr<Detector>> detector_ptrs;
   if (!ConfigureObjectsMetafileAndBodyRequired<StaticDetector>(
           configfile_path, fs, "StaticDetector", body_ptrs, &detector_ptrs) ||
-      !ConfigureObjectsMetafileAndBodyRequired<NetworkDetector>(
-          configfile_path, fs, "NetworkDetector", body_ptrs, &detector_ptrs) ||
+      !ConfigureNetworkDetectors(
+          configfile_path, fs, body_ptrs, color_camera_ptrs, &detector_ptrs) ||
       !ConfigureManualDetectors(configfile_path, fs, body_ptrs,
                                 color_camera_ptrs, &detector_ptrs))
     return false;

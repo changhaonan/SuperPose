@@ -129,6 +129,18 @@
             "justMyCode": true
         },
         {
+            "name": "OnePose: [server]",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/one_pose_server.py",
+            "args": [
+                "+experiment=one_pose_server.yaml",
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "ICG",
             "type": "cppdbg",
             "request": "launch",

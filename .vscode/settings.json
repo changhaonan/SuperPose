@@ -1,6 +1,7 @@
 {
     "cmake.sourceDirectory": "${workspaceFolder}/ICG",
     "files.associations": {
-        "string": "cpp"
+        "string": "cpp",
+        "string_view": "cpp"
     }
 }

@@ -5,13 +5,20 @@ namespace icg
 
     NetworkDetector::NetworkDetector(const std::string &name,
                                      const std::shared_ptr<Body> &body_ptr,
-                                     const Transform3fA &body2world_pose)
-        : Detector{name}, body_ptr_{body_ptr}, body2world_pose_{body2world_pose} {}
+                                     const Transform3fA &body2world_pose,
+                                     const std::shared_ptr<ColorCamera>& color_camera_ptr)
+        : Detector{name}, body_ptr_{body_ptr}, body2world_pose_{body2world_pose}, color_camera_ptr_(color_camera_ptr) {}
 
     NetworkDetector::NetworkDetector(const std::string &name,
                                      const std::filesystem::path &metafile_path,
-                                     const std::shared_ptr<icg::Body> &body_ptr)
-        : Detector{name, metafile_path}, body_ptr_{body_ptr} {};
+                                     const std::shared_ptr<icg::Body> &body_ptr,
+                                     const std::shared_ptr<ColorCamera>& color_camera_ptr)
+        : Detector{name, metafile_path}, body_ptr_{body_ptr}, color_camera_ptr_(color_camera_ptr) {};
+
+    NetworkDetector::~NetworkDetector()
+    {
+        close(socket_fd_);
+    }
 
     bool NetworkDetector::SetUp()
     {
@@ -26,6 +33,9 @@ namespace icg
             std::cerr << "Body " << body_ptr_->name() << " was not set up" << std::endl;
             return false;
         }
+        // Build connection to port
+        if (!ConnectToServer())
+            return false;
 
         set_up_ = true;
         return true;
@@ -50,6 +60,8 @@ namespace icg
             return false;
         }
         body_ptr_->set_body2world_pose(body2world_pose_);
+
+        ReadPoseFromSocket();
         return true;
     }
 
@@ -76,13 +88,68 @@ namespace icg
             return false;
 
         // Read parameters from yaml
-        if (!ReadRequiredValueFromYaml(fs, "body2world_pose", &body2world_pose_))
+        if (!ReadRequiredValueFromYaml(fs, "body2world_pose", &body2world_pose_) ||
+            !ReadRequiredValueFromYaml(fs, "port", &port_))
         {
             std::cerr << "Could not read all required body parameters from "
                       << metafile_path_ << std::endl;
             return false;
         }
         fs.release();
+        return true;
+    }
+
+    bool NetworkDetector::ConnectToServer()
+    {
+        // Create socket
+        socket_fd_ = socket(AF_INET, SOCK_STREAM, 0);
+        if (socket_fd_ < 0)
+        {
+            std::cerr << "Could not create socket" << std::endl;
+            return false;
+        }
+
+        // Set server address
+        server_address_.sin_family = AF_INET;
+        server_address_.sin_port = htons(port_);
+        server_address_.sin_addr.s_addr = INADDR_ANY;
+
+        // Connect to server
+        if (connect(socket_fd_, (struct sockaddr *)&server_address_, sizeof(server_address_)) < 0)
+        {
+            std::cerr << "Could not connect to server" << std::endl;
+            return false;
+        }
+        return true;
+    }
+
+    bool NetworkDetector::ReadPoseFromSocket()
+    {
+        // Send request to server
+        char *hello = "Request pose...";
+        send(socket_fd_, hello, strlen(hello), 0);
+        // Read pose from socket
+        char buffer[1024] = {0};
+        int valread = read(socket_fd_, buffer, 1024);
+        if (valread < 0)
+        {
+            std::cerr << "Could not read from socket" << std::endl;
+            return false;
+        }
+        else
+        {
+            // Recover pose from buffer
+            std::string pose_string(buffer);
+            std::stringstream ss(pose_string);
+            
+            // Parse pose from string
+            Eigen::Matrix4f pose;
+            for (int i = 0; i < 4; i++)
+                for (int j = 0; j < 4; j++)
+                    ss >> pose(i, j);
+            std::cout << "Received pose: " << std::endl
+                      << pose << std::endl;
+        }
         return true;
     }
 

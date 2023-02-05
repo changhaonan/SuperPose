@@ -224,6 +224,7 @@ def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, enable_dept
     detector_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
     init_pose = cam_poses[0]
     detector_s.write("body2world_pose", np.linalg.inv(init_pose))  # the object init position
+    detector_s.write("port", 8080)
     detector_s.release()
 
     # save the model
