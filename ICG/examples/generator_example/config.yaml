@@ -1,44 +1,75 @@
-%YAML:1.2
+%YAML:1.0
+---
 LoaderColorCamera:
-  - name: "loader_color"
-    metafile_path: "./camera_color.yaml"
-
+   -
+      name: loader_color
+      metafile_path: "camera_color.yaml"
 NormalColorViewer:
-  - name: "color_viewer"
-    color_camera: "loader_color"
-    renderer_geometry: "renderer_geometry"
-
+   -
+      name: color_viewer
+      color_camera: loader_color
+      renderer_geometry: renderer_geometry
 RendererGeometry:
-  - name: "renderer_geometry"
-    bodies: ["cracker_box"]
-
+   -
+      name: renderer_geometry
+      bodies:
+         - cracker_box
 Body:
-  - name: "cracker_box"
-    metafile_path: "./cracker_box.yaml"
-
+   -
+      name: cracker_box
+      metafile_path: "object.yaml"
 StaticDetector:
-  - name: "cracker_box_static_detector"
-    metafile_path: "./detector.yaml"
-    body: "cracker_box"
-    color_camera: "loader_color"
-
+   -
+      name: static_detector
+      metafile_path: "detector.yaml"
+      body: cracker_box
+      color_camera: loader_color
 RegionModel:
-  - name: "cracker_box_region_model"
-    metafile_path: "./cracker_box_model.yaml"
-    body: "cracker_box"
-
+   -
+      name: region_model
+      metafile_path: "model.yaml"
+      body: cracker_box
 RegionModality:
-  - name: "cracker_box_region_modality"
-    body: "cracker_box"
-    color_camera: "loader_color"
-    region_model: "cracker_box_region_model"
-
+   -
+      name: region_modality
+      body: cracker_box
+      color_camera: loader_color
+      region_model: region_model
+      measure_occlusions:
+         depth_camera: loader_depth
+LoaderDepthCamera:
+   -
+      name: loader_depth
+      metafile_path: "camera_depth.yaml"
+NormalDepthViewer:
+   -
+      name: depth_viewer
+      depth_camera: loader_depth
+      renderer_geometry: renderer_geometry
+DepthModel:
+   -
+      name: depth_model
+      metafile_path: "model.yaml"
+      body: cracker_box
+DepthModality:
+   -
+      name: depth_modality
+      body: cracker_box
+      depth_camera: loader_depth
+      depth_model: depth_model
 Optimizer:
-  - name: "cracker_box_optimizer"
-    modalities: ["cracker_box_region_modality"]
-
+   -
+      name: optimizer
+      modalities:
+         - region_modality
+         - depth_modality
 Tracker:
-  - name: "tracker"
-    viewers: ["color_viewer"]
-    detectors: ["cracker_box_static_detector"]
-    optimizers: ["cracker_box_optimizer"]
+   -
+      name: tracker
+      viewers:
+         - color_viewer
+         - depth_viewer
+      detectors:
+         - static_detector
+      optimizers:
+         - optimizer

@@ -1,5 +1,0 @@
-%YAML:1.2
-model_path: "INFER_FROM_NAME"
-max_radius_depth_offset: 0.1
-stride_depth_offset: 0.004
-sphere_radius: 6.4
