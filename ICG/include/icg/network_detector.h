@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <zmq.hpp>
+#include <zmq_addon.hpp>
 
 namespace icg
 {
@@ -58,6 +60,8 @@ namespace icg
         int port_;
         int socket_fd_;
         sockaddr_in server_address_;
+        zmq::context_t _context;
+        zmq::socket_t _socket;
         std::shared_ptr<ColorCamera> color_camera_ptr_;
     };
 
