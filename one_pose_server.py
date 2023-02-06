@@ -1,10 +1,10 @@
-import socket
 import numpy as np
 import cv2
 import os
 import cv2
 import numpy as np
 import hydra
+import zmq
 from one_pose_inference import OnePoseInference
 
 def pose_to_string(pose):
@@ -19,55 +19,41 @@ def pose_to_string(pose):
 
 class PoseServer:
     def __init__(self, pose_estimator, host='127.0.0.1', port=8080):
-        self.host = host
-        self.port = port
         self.pose_estimator = pose_estimator
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind((self.host, self.port))
-        self.sock.listen(1)
-        self.connected = False
-
-    def wait_for_connection(self):
-        print("No connection. Waiting for connection...")
-        self.connection, self.client_address = self.sock.accept()
-        print("Connection from: ", self.client_address)
-        self.connected = True
+        # Set up zmq
+        context = zmq.Context()
+        self.socket = context.socket(zmq.REP)
+        self.port = f"tcp://*:{port}"
+        print("port", port)
+        self.socket.bind(self.port)
 
     def run_service(self):
-        # receive image size
-        print("Receiving image size...")
-        data = self.connection.recv(4)
-        if data:
-            image_size = int.from_bytes(data, byteorder='little')
-            # receive image
-            image_data = b''
-            while len(image_data) < image_size:
-                image_data += self.connection.recv(1024)
-            image = np.frombuffer(image_data, dtype=np.uint8)
-            image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-            # estimate pose
-            pose_pred, pose_pred_homo, num_inliers = self.pose_estimator(image)
-            if num_inliers > 20:
-                print(f"OnePose inliers is enough: {num_inliers}.")
-            else:
-                print(f"OnePose inliers is not enough: {num_inliers}.")
-                pose_pred_homo = np.zeros([4, 4], dtype=np.float32)
-            # send pose to socket
-            data = bytes(pose_to_string(pose_pred_homo), 'utf-8')
-            print("Sending pose: ", data)
-            self.connection.sendall(data)
-            # Set connected to False to wait for next connection
-            self.connected = False
+        print(f"onepose listending to {self.port}")
+        msgs = self.socket.recv_multipart(0)
+        assert len(msgs) == 2, "#msgs={}".format(len(msgs))
+        wh = np.frombuffer(msgs[0], dtype=np.int32)
+        W = wh[0]
+        H = wh[1]
+        print(f"W={W}, H={H}")
+        msg = msgs[1]
+        image = np.frombuffer(msg, dtype=np.uint8).reshape(H, W, -1).squeeze()
+        image_ori = image.copy()
 
-    def close(self):
-        self.connection.close()
-        self.sock.close()
+        # estimate pose
+        pose_pred, pose_pred_homo, num_inliers = self.pose_estimator(image)
+        if num_inliers > 20:
+            print(f"OnePose inliers is enough: {num_inliers}.")
+        else:
+            print(f"OnePose inliers is not enough: {num_inliers}.")
+            pose_pred_homo = np.zeros([4, 4], dtype=np.float32)
+        # send pose to socket
+        msg = pose_pred_homo.T.reshape(-1).astype(np.float32).tobytes()
+        self.socket.send(msg, 0)
+        print("Sending pose: ", pose_pred_homo)
 
     def run(self):
         while True:
             try:
-                if not self.connected:
-                    self.wait_for_connection()
                 self.run_service()
             except KeyboardInterrupt:
                 print("Closing server...")
@@ -90,7 +76,6 @@ def one_pose_server(cfg):
 
     pose_server = PoseServer(lambda image : one_pose_inference.inference(cfg, image), cfg.host, cfg.port)
     pose_server.run()
-    pose_server.close()
 
 
 if __name__ == "__main__":

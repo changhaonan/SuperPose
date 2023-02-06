@@ -7,13 +7,13 @@ namespace icg
                                      const std::shared_ptr<Body> &body_ptr,
                                      const Transform3fA &body2world_pose,
                                      const std::shared_ptr<ColorCamera> &color_camera_ptr)
-        : Detector{name}, body_ptr_{body_ptr}, body2world_pose_{body2world_pose}, color_camera_ptr_(color_camera_ptr) {}
+        : Detector{name}, body_ptr_{body_ptr}, body2world_pose_{body2world_pose}, color_camera_ptr_(color_camera_ptr), socket_(context_, ZMQ_REQ) {}
 
     NetworkDetector::NetworkDetector(const std::string &name,
                                      const std::filesystem::path &metafile_path,
                                      const std::shared_ptr<icg::Body> &body_ptr,
                                      const std::shared_ptr<ColorCamera> &color_camera_ptr)
-        : Detector{name, metafile_path}, body_ptr_{body_ptr}, color_camera_ptr_(color_camera_ptr){};
+        : Detector{name, metafile_path}, body_ptr_{body_ptr}, color_camera_ptr_(color_camera_ptr), socket_(context_, ZMQ_REQ){};
 
     NetworkDetector::~NetworkDetector()
     {
@@ -32,6 +32,9 @@ namespace icg
             std::cerr << "Body " << body_ptr_->name() << " was not set up" << std::endl;
             return false;
         }
+        // Set up zmq socket
+        socket_.connect("tcp://0.0.0.0:" + std::to_string(port_));
+        std::cout << "Connected to port " << port_ << "..." << std::endl;
 
         set_up_ = true;
         return true;
@@ -55,9 +58,7 @@ namespace icg
             std::cerr << "Set up network detector " << name_ << " first" << std::endl;
             return false;
         }
-        ConnectToServer();
         ReadPoseFromSocket();
-        DisconnectFromServer();
         return true;
     }
 
@@ -94,85 +95,44 @@ namespace icg
         return true;
     }
 
-    bool NetworkDetector::ConnectToServer()
-    {
-        // Create socket
-        socket_fd_ = socket(AF_INET, SOCK_STREAM, 0);
-        if (socket_fd_ < 0)
-        {
-            std::cerr << "Could not create socket" << std::endl;
-            return false;
-        }
-
-        // Set server address
-        server_address_.sin_family = AF_INET;
-        server_address_.sin_port = htons(port_);
-        server_address_.sin_addr.s_addr = INADDR_ANY;
-
-        // Connect to server
-        if (connect(socket_fd_, (struct sockaddr *)&server_address_, sizeof(server_address_)) < 0)
-        {
-            std::cerr << "Could not connect to server" << std::endl;
-            return false;
-        }
-
-        std::cout << "Server connected." << std::endl;
-        return true;
-    }
-
-    bool NetworkDetector::DisconnectFromServer()
-    {
-        close(socket_fd_);
-        return true;
-    }
-
     bool NetworkDetector::ReadPoseFromSocket()
     {
-        // Send image to server
+        // Send image to server using zmq
         cv::Mat image = color_camera_ptr_->image();
-        std::vector<uchar> image_buffer;
-        cv::imencode(".png", image, image_buffer);
-        int image_size = image_buffer.size();
-        if (!send(socket_fd_, (char *)&image_size, sizeof(int), 0))
         {
-            std::cerr << "Could not send image size" << std::endl;
-            return false;
+            // Send image size first
+            zmq::message_t msg(2 * sizeof(int));
+            std::vector<int> wh = {image.cols, image.rows};
+            std::memcpy(msg.data(), wh.data(), 2 * sizeof(int));
+            socket_.send(msg, ZMQ_SNDMORE);
         }
-        if (!send(socket_fd_, image_buffer.data(), image_size, 0))
         {
-            std::cerr << "Could not send image" << std::endl;
-            return false;
+            cv::Mat flat = image.reshape(1, image.total() * image.channels());
+            std::vector<unsigned char> vec = image.isContinuous() ? flat : flat.clone();
+            zmq::message_t msg(vec.size() * sizeof(unsigned char));
+            std::memcpy(msg.data(), vec.data(), vec.size() * sizeof(unsigned char));
+            socket_.send(msg, 0);
         }
-        // Read pose from socket
-        char buffer[1024] = {0};
-        int valread = read(socket_fd_, buffer, 1024);
-        if (valread < 0)
-        {
-            std::cerr << "Could not read from socket" << std::endl;
-            return false;
-        }
-        else
-        {
-            // Recover pose from buffer
-            std::string pose_string(buffer);
-            std::stringstream ss(pose_string);
 
-            // Parse pose from string
-            Eigen::Matrix4f pose;
-            for (int i = 0; i < 4; i++)
-                for (int j = 0; j < 4; j++)
-                    ss >> pose(i, j);
-            // Check pose 
-            if (pose(3, 3) == 0.f)
-            {
-                std::cerr << "Pose is not valid" << std::endl;
-                return false;
-            }
-            // Eigen matrix to Affine3f
-            Eigen::Affine3f pose_affine(pose);
-            body2world_pose_ = pose_affine.matrix();
-            body_ptr_->set_body2world_pose(body2world_pose_);
+        std::cout << "Zmq start waiting for reply" << std::endl;
+        std::vector<zmq::message_t> recv_msgs;
+        zmq::recv_multipart(socket_, std::back_inserter(recv_msgs));
+        std::cout << "Zmq got reply" << std::endl;
+
+        // Read & parse pose from socket
+        Eigen::Matrix4f pose;
+        std::memcpy(pose.data(), recv_msgs[0].data(), sizeof(Eigen::Matrix4f));
+        // Check pose
+        if (pose(3, 3) == 0.f)
+        {
+            std::cerr << "Pose is not valid" << std::endl;
+            return false;
         }
+        // Eigen matrix to Affine3f
+        Eigen::Affine3f pose_affine(pose);
+        body2world_pose_ = pose_affine.matrix();
+        body_ptr_->set_body2world_pose(body2world_pose_);
+
         return true;
     }
 

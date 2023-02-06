@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <zmq.hpp>
-#include <zmq_addon.hpp>
+#include <cppzmq/zmq.hpp>
+#include <cppzmq/zmq_addon.hpp>
 
 namespace icg
 {
@@ -52,16 +52,12 @@ namespace icg
 
     private:
         bool LoadMetaData();
-        bool ConnectToServer();
-        bool DisconnectFromServer();
         bool ReadPoseFromSocket();
         std::shared_ptr<Body> body_ptr_{};
         Transform3fA body2world_pose_{};
         int port_;
-        int socket_fd_;
-        sockaddr_in server_address_;
-        zmq::context_t _context;
-        zmq::socket_t _socket;
+        zmq::context_t context_;
+        zmq::socket_t socket_;
         std::shared_ptr<ColorCamera> color_camera_ptr_;
     };
 
