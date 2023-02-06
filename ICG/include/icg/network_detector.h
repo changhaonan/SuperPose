@@ -51,6 +51,7 @@ namespace icg
     private:
         bool LoadMetaData();
         bool ConnectToServer();
+        bool DisconnectFromServer();
         bool ReadPoseFromSocket();
         std::shared_ptr<Body> body_ptr_{};
         Transform3fA body2world_pose_{};

@@ -6,18 +6,17 @@ namespace icg
     NetworkDetector::NetworkDetector(const std::string &name,
                                      const std::shared_ptr<Body> &body_ptr,
                                      const Transform3fA &body2world_pose,
-                                     const std::shared_ptr<ColorCamera>& color_camera_ptr)
+                                     const std::shared_ptr<ColorCamera> &color_camera_ptr)
         : Detector{name}, body_ptr_{body_ptr}, body2world_pose_{body2world_pose}, color_camera_ptr_(color_camera_ptr) {}
 
     NetworkDetector::NetworkDetector(const std::string &name,
                                      const std::filesystem::path &metafile_path,
                                      const std::shared_ptr<icg::Body> &body_ptr,
-                                     const std::shared_ptr<ColorCamera>& color_camera_ptr)
-        : Detector{name, metafile_path}, body_ptr_{body_ptr}, color_camera_ptr_(color_camera_ptr) {};
+                                     const std::shared_ptr<ColorCamera> &color_camera_ptr)
+        : Detector{name, metafile_path}, body_ptr_{body_ptr}, color_camera_ptr_(color_camera_ptr){};
 
     NetworkDetector::~NetworkDetector()
     {
-        close(socket_fd_);
     }
 
     bool NetworkDetector::SetUp()
@@ -33,9 +32,6 @@ namespace icg
             std::cerr << "Body " << body_ptr_->name() << " was not set up" << std::endl;
             return false;
         }
-        // Build connection to port
-        if (!ConnectToServer())
-            return false;
 
         set_up_ = true;
         return true;
@@ -56,12 +52,12 @@ namespace icg
     {
         if (!set_up_)
         {
-            std::cerr << "Set up static detector " << name_ << " first" << std::endl;
+            std::cerr << "Set up network detector " << name_ << " first" << std::endl;
             return false;
         }
-        body_ptr_->set_body2world_pose(body2world_pose_);
-
+        ConnectToServer();
         ReadPoseFromSocket();
+        DisconnectFromServer();
         return true;
     }
 
@@ -88,8 +84,7 @@ namespace icg
             return false;
 
         // Read parameters from yaml
-        if (!ReadRequiredValueFromYaml(fs, "body2world_pose", &body2world_pose_) ||
-            !ReadRequiredValueFromYaml(fs, "port", &port_))
+        if (!ReadRequiredValueFromYaml(fs, "port", &port_))
         {
             std::cerr << "Could not read all required body parameters from "
                       << metafile_path_ << std::endl;
@@ -120,19 +115,34 @@ namespace icg
             std::cerr << "Could not connect to server" << std::endl;
             return false;
         }
+
+        std::cout << "Server connected." << std::endl;
+        return true;
+    }
+
+    bool NetworkDetector::DisconnectFromServer()
+    {
+        close(socket_fd_);
         return true;
     }
 
     bool NetworkDetector::ReadPoseFromSocket()
-    {   
+    {
         // Send image to server
         cv::Mat image = color_camera_ptr_->image();
         std::vector<uchar> image_buffer;
         cv::imencode(".png", image, image_buffer);
         int image_size = image_buffer.size();
-        // send(socket_fd_, &image_size, sizeof(int), 0);
-        send(socket_fd_, image_buffer.data(), image_size, 0);
-
+        if (!send(socket_fd_, (char *)&image_size, sizeof(int), 0))
+        {
+            std::cerr << "Could not send image size" << std::endl;
+            return false;
+        }
+        if (!send(socket_fd_, image_buffer.data(), image_size, 0))
+        {
+            std::cerr << "Could not send image" << std::endl;
+            return false;
+        }
         // Read pose from socket
         char buffer[1024] = {0};
         int valread = read(socket_fd_, buffer, 1024);
@@ -146,14 +156,18 @@ namespace icg
             // Recover pose from buffer
             std::string pose_string(buffer);
             std::stringstream ss(pose_string);
-            
+
             // Parse pose from string
             Eigen::Matrix4f pose;
             for (int i = 0; i < 4; i++)
                 for (int j = 0; j < 4; j++)
                     ss >> pose(i, j);
-            std::cout << "Received pose: " << std::endl
-                      << pose << std::endl;
+            // Check pose 
+            if (pose(3, 3) == 0.f)
+            {
+                std::cerr << "Pose is not valid" << std::endl;
+                return false;
+            }
             // Eigen matrix to Affine3f
             Eigen::Affine3f pose_affine(pose);
             body2world_pose_ = pose_affine.matrix();

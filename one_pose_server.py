@@ -25,24 +25,39 @@ class PoseServer:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((self.host, self.port))
         self.sock.listen(1)
-        print("Waiting for connection...")
+        self.connected = False
+
+    def wait_for_connection(self):
+        print("No connection. Waiting for connection...")
         self.connection, self.client_address = self.sock.accept()
         print("Connection from: ", self.client_address)
+        self.connected = True
 
     def run_service(self):
-        image_size = 538544
-        image_data = b''
-        while len(image_data) < image_size:
-            image_data += self.connection.recv(1024)
-        image = np.frombuffer(image_data, dtype=np.uint8)
-        image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-        # estimate pose
-        pose_pred, pose_pred_homo, num_inliers = self.pose_estimator(image)
-        print(f"OnePose inliers: {num_inliers}.")
-        # send pose to socket
-        data = bytes(pose_to_string(pose_pred_homo), 'utf-8')
-        print("Sending pose: ", data)
-        self.connection.sendall(data)
+        # receive image size
+        print("Receiving image size...")
+        data = self.connection.recv(4)
+        if data:
+            image_size = int.from_bytes(data, byteorder='little')
+            # receive image
+            image_data = b''
+            while len(image_data) < image_size:
+                image_data += self.connection.recv(1024)
+            image = np.frombuffer(image_data, dtype=np.uint8)
+            image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+            # estimate pose
+            pose_pred, pose_pred_homo, num_inliers = self.pose_estimator(image)
+            if num_inliers > 20:
+                print(f"OnePose inliers is enough: {num_inliers}.")
+            else:
+                print(f"OnePose inliers is not enough: {num_inliers}.")
+                pose_pred_homo = np.zeros([4, 4], dtype=np.float32)
+            # send pose to socket
+            data = bytes(pose_to_string(pose_pred_homo), 'utf-8')
+            print("Sending pose: ", data)
+            self.connection.sendall(data)
+            # Set connected to False to wait for next connection
+            self.connected = False
 
     def close(self):
         self.connection.close()
@@ -51,6 +66,8 @@ class PoseServer:
     def run(self):
         while True:
             try:
+                if not self.connected:
+                    self.wait_for_connection()
                 self.run_service()
             except KeyboardInterrupt:
                 print("Closing server...")

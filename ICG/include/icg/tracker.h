@@ -101,6 +101,9 @@ class Tracker {
   // Main method
   bool RunTrackerProcess(bool execute_detection = false,
                          bool start_tracking = false);
+  bool RunRobustTrackerProcess(bool execute_detection = false,
+                         bool start_tracking = false,
+                         int re_init_per_iter=10);
   void QuitTrackerProcess();
   void ExecuteDetection(bool start_tracking = false);
   void StartTracking();
