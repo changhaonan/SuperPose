@@ -52,6 +52,8 @@ namespace icg
         // Visualization method
         bool VisualizeCorrespondences(const std::string& title, int save_idx);
     private:
+        // Helper method for setup
+        bool LoadMetaData();
 
         // Other helper methods
         bool IsSetup() const;
@@ -70,6 +72,9 @@ namespace icg
         bool visualize_points_depth_rendering_correspondence_ = false;
         bool visualize_points_optimization_ = false;
         bool visualize_points_result_ = false;
+
+        // Feature manager related
+        int port_;
     };
 
 }

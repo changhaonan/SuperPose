@@ -82,7 +82,10 @@
                 "${workspaceFolder}/data/cracker_box/cracker_box_4",
                 "--icg_dir",
                 "${workspaceFolder}/ICG/examples/generator_example",
-                "--enable_depth"
+                "--detector_port=8080",
+                "--feature_port=9090",
+                "--enable_depth",
+                "--enable_feature"
             ],
             "console": "integratedTerminal",
             "justMyCode": true

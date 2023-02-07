@@ -20,6 +20,31 @@ namespace icg
 
     bool FeatureModality::SetUp()
     {
+        set_up_ = false;
+        if (!metafile_path_.empty())
+            if (!LoadMetaData())
+                return false;
+
+        // Check if all required objects are set up
+        if (!body_ptr_->set_up())
+        {
+            std::cerr << "Body " << body_ptr_->name() << " was not set up" << std::endl;
+            return false;
+        }
+        if (!feature_model_ptr_->set_up())
+        {
+            std::cerr << "Feature model " << feature_model_ptr_->name() << " was not set up"
+                      << std::endl;
+            return false;
+        }
+        if (!color_camera_ptr_->set_up())
+        {
+            std::cerr << "Color camera " << color_camera_ptr_->name()
+                      << " was not set up" << std::endl;
+            return false;
+        }
+
+        set_up_ = true;
         return true;
     }
 
@@ -34,6 +59,7 @@ namespace icg
         if (!IsSetup())
             return false;
         // FIXME: To be implemented
+        std::cout << "Waiting keypoint results from server" << std::endl;
         return true;
     }
 
@@ -47,6 +73,22 @@ namespace icg
         return true;
     }
 
+    bool FeatureModality::LoadMetaData()
+    {
+        // Open file storage from yaml
+        cv::FileStorage fs;
+        if (!OpenYamlFileStorage(metafile_path_, &fs))
+            return false;
+
+        // Read required parameters from yaml
+        if (!ReadRequiredValueFromYaml(fs, "port", &port_))
+            return false;
+
+        // Read optional parameters from yaml
+
+        return true;
+    }
+
     bool FeatureModality::CalculateGradientAndHessian(int iteration,
                                                       int corr_iteration,
                                                       int opt_iteration)
@@ -55,7 +97,7 @@ namespace icg
             return false;
         gradient_.setZero();
         hessian_.setZero();
-        
+
         return true;
     }
 

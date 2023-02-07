@@ -13,9 +13,21 @@ import open3d as o3d
 import cv2
 
 
-def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, enable_depth=False, redo_obj=False):
+def generate_icg_tracker(
+    tracker_name,
+    model_dir,
+    eval_dir,
+    icg_dir,
+    detector_port=8080,
+    feature_port=9090,
+    enable_depth=False,
+    enable_feature=False,
+    redo_obj=False,
+):
     # config macro
-    OBJECT_SCALE = 2.0  # the size of object, influencing the accept threshold for depth modality
+    OBJECT_SCALE = (
+        2.0  # the size of object, influencing the accept threshold for depth modality
+    )
 
     # generate the obj file if not exist
     obj_path = os.path.join(model_dir, "star", "reconstruct.obj")
@@ -122,7 +134,7 @@ def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, enable_dept
         config_s.write("renderer_geometry", "renderer_geometry")
         config_s.endWriteStruct()
         config_s.endWriteStruct()
-        
+
         # save the depth model
         config_s.startWriteStruct("DepthModel", cv2.FileNode_SEQ)
         config_s.startWriteStruct("", cv2.FileNode_MAP)
@@ -142,6 +154,37 @@ def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, enable_dept
         config_s.write("metafile_path", "depth_modality.yaml")
         config_s.endWriteStruct()
         config_s.endWriteStruct()
+
+    if enable_feature:
+        # save the feature viewer
+        config_s.startWriteStruct("FeatureViewer", cv2.FileNode_SEQ)
+        config_s.startWriteStruct("", cv2.FileNode_MAP)
+        config_s.write("name", "feature_viewer")
+        config_s.write("color_camera", "loader_color")
+        config_s.write("renderer_geometry", "renderer_geometry")
+        config_s.endWriteStruct()
+        config_s.endWriteStruct()
+
+        # save the feature model
+        config_s.startWriteStruct("FeatureModel", cv2.FileNode_SEQ)
+        config_s.startWriteStruct("", cv2.FileNode_MAP)
+        config_s.write("name", "feature_model")
+        config_s.write("metafile_path", "model.yaml")
+        config_s.write("body", tracker_name)
+        config_s.endWriteStruct()
+        config_s.endWriteStruct()
+
+        # save the feature modality
+        config_s.startWriteStruct("FeatureModality", cv2.FileNode_SEQ)
+        config_s.startWriteStruct("", cv2.FileNode_MAP)
+        config_s.write("name", "feature_modality")
+        config_s.write("body", tracker_name)
+        config_s.write("color_camera", "loader_color")
+        config_s.write("feature_model", "feature_model")
+        config_s.write("metafile_path", "feature_modality.yaml")
+        config_s.endWriteStruct()
+        config_s.endWriteStruct()
+        
 
     # save the optimizer
     config_s.startWriteStruct("Optimizer", cv2.FileNode_SEQ)
@@ -223,8 +266,10 @@ def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, enable_dept
     config_yaml_path = os.path.join(icg_dir, "detector.yaml")
     detector_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
     init_pose = cam_poses[0]
-    detector_s.write("body2world_pose", np.linalg.inv(init_pose))  # the object init position
-    detector_s.write("port", 8080)
+    detector_s.write(
+        "body2world_pose", np.linalg.inv(init_pose)
+    )  # the object init position
+    detector_s.write("port", detector_port)
     detector_s.release()
 
     # save the model
@@ -261,6 +306,23 @@ def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, enable_dept
     modality_s.endWriteStruct()
     modality_s.release()
 
+    config_yaml_path = os.path.join(icg_dir, "feature_modality.yaml")
+    modality_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
+    modality_s.write("visualize_pose_result", 0)
+    modality_s.write("visualize_gradient_optimization", 0)
+    modality_s.write("visualize_hessian_optimization", 0)
+    modality_s.write("visualize_correspondences_correspondence", 0)
+    modality_s.write("visualize_points_correspondence", 0)
+    modality_s.write("visualize_points_depth_rendering_correspondence", 0)
+    modality_s.write("visualization_max_depth", 2.0)  # the max depth for visualization
+    modality_s.startWriteStruct("considered_distances", cv2.FileNode_SEQ)
+    modality_s.write("", 0.05 * OBJECT_SCALE)
+    modality_s.write("", 0.02 * OBJECT_SCALE)
+    modality_s.write("", 0.01 * OBJECT_SCALE)
+    modality_s.endWriteStruct()
+    modality_s.write("port", feature_port)
+    modality_s.release()
+
     # save the object
     config_yaml_path = os.path.join(icg_dir, "object.yaml")
     object_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
@@ -268,7 +330,9 @@ def generate_icg_tracker(tracker_name, model_dir, eval_dir, icg_dir, enable_dept
     object_s.write("geometry_unit_in_meter", 1.0)
     object_s.write("geometry_counterclockwise", 1)
     object_s.write("geometry_enable_culling", 1)
-    object_s.write("geometry2body_pose", np.eye(4))  # the pose of the geometry in the body frame
+    object_s.write(
+        "geometry2body_pose", np.eye(4)
+    )  # the pose of the geometry in the body frame
     object_s.release()
 
 
@@ -283,11 +347,34 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--tracker_name", type=str, default="", help="name")
-    parser.add_argument("--model_dir", type=str, default="", help="where the cad model exists")
-    parser.add_argument("--eval_dir", type=str, default="", help="where the eval data exists")
-    parser.add_argument("--icg_dir", type=str, default="", help="exported icg data folder")
-    parser.add_argument("--enable_depth", action="store_true", help="enable depth modality")
+    parser.add_argument(
+        "--model_dir", type=str, default="", help="where the cad model exists"
+    )
+    parser.add_argument(
+        "--eval_dir", type=str, default="", help="where the eval data exists"
+    )
+    parser.add_argument(
+        "--icg_dir", type=str, default="", help="exported icg data folder"
+    )
+    parser.add_argument(
+        "--enable_depth", action="store_true", help="enable depth modality"
+    )
+    parser.add_argument(
+        "--enable_feature", action="store_true", help="enable feature modality"
+    )
+    parser.add_argument("--detector_port", type=int, default=8080, help="detector port")
+    parser.add_argument("--feature_port", type=int, default=9090, help="feature port")
     parser.add_argument("--redo_obj", action="store_true", help="redo the obj file")
     args = parser.parse_args()
     # generate the icg tracker config
-    generate_icg_tracker(args.tracker_name, args.model_dir, args.eval_dir, args.icg_dir, args.enable_depth, args.redo_obj)
+    generate_icg_tracker(
+        args.tracker_name,
+        args.model_dir,
+        args.eval_dir,
+        args.icg_dir,
+        args.detector_port,
+        args.feature_port,
+        args.enable_depth,
+        args.enable_feature,
+        args.redo_obj,
+    )
