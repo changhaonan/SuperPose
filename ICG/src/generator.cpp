@@ -341,6 +341,41 @@ bool ConfigureDepthModalities(
       modality_ptrs);
 }
 
+bool ConfigureFeatureModalities(
+    const std::filesystem::path& configfile_path,
+    const cv::FileStorage& file_storage,
+    const std::vector<std::shared_ptr<Body>>& body_ptrs,
+    const std::vector<std::shared_ptr<ColorCamera>>& color_camera_ptrs,
+    const std::vector<std::shared_ptr<FeatureModel>>& feature_model_ptrs,
+    std::vector<std::shared_ptr<Modality>>* modality_ptrs) {
+  std::string class_name{"FeatureModality"};
+  return ConfigureObjects<FeatureModality>(
+      file_storage, class_name, {"name", "body", "color_camera", "feature_model"},
+      [&](const auto& file_node, auto* feature_modality_ptr) {
+        // Get objects required for depth modality constructor
+        std::shared_ptr<Body> body_ptr;
+        std::shared_ptr<ColorCamera> color_camera_ptr;
+        std::shared_ptr<FeatureModel> feature_model_ptr;
+        if (!GetObject(file_node, "body", class_name, body_ptrs, &body_ptr) ||
+            !GetObject(file_node, "color_camera", class_name, color_camera_ptrs,
+                       &color_camera_ptr) ||
+            !GetObject(file_node, "feature_model", class_name, feature_model_ptrs,
+                       &feature_model_ptr))
+          return false;
+
+        // Construct feature modality
+        if (MetafilePathEmpty(file_node))
+          *feature_modality_ptr = std::make_shared<FeatureModality>(
+              Name(file_node), body_ptr, color_camera_ptr, feature_model_ptr);
+        else
+          *feature_modality_ptr = std::make_shared<FeatureModality>(
+              Name(file_node), MetafilePath(file_node, configfile_path),
+              body_ptr, color_camera_ptr, feature_model_ptr);
+        return true;
+      },
+      modality_ptrs);
+}
+
 bool ConfigureOptimizers(
     const std::filesystem::path& configfile_path,
     const cv::FileStorage& file_storage,
@@ -616,6 +651,12 @@ bool GenerateConfiguredTracker(const std::filesystem::path& configfile_path,
   if (!ConfigureObjectsMetafileAndBodyRequired<DepthModel>(
           configfile_path, fs, "DepthModel", body_ptrs, &depth_model_ptrs))
     return false;
+  
+  // Configure feature models
+  std::vector<std::shared_ptr<FeatureModel>> feature_model_ptrs;
+  if (!ConfigureObjectsMetafileAndBodyRequired<FeatureModel>(
+          configfile_path, fs, "FeatureModel", body_ptrs, &feature_model_ptrs))
+    return false;
 
   // Configure modalities
   std::vector<std::shared_ptr<Modality>> modality_ptrs;
@@ -624,7 +665,10 @@ bool GenerateConfiguredTracker(const std::filesystem::path& configfile_path,
           depth_camera_ptrs, focused_depth_renderer_ptrs, &modality_ptrs) ||
       !ConfigureDepthModalities(configfile_path, fs, body_ptrs,
                                 depth_camera_ptrs, depth_model_ptrs,
-                                focused_depth_renderer_ptrs, &modality_ptrs))
+                                focused_depth_renderer_ptrs, &modality_ptrs) ||
+      !ConfigureFeatureModalities(configfile_path, fs, body_ptrs,
+                                  color_camera_ptrs, feature_model_ptrs,
+                                  &modality_ptrs))
     return false;
 
   // Configure optimizers

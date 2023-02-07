@@ -76,6 +76,7 @@ public:
     int _H, _W;
     std::shared_ptr<YAML::Node> yml;
     std::vector<cv::KeyPoint> _keypts;
+    std::vector<cv::Point3f> _keypts_3d;
     cv::Mat _feat_des;
     Status _status;
     bool _pose_inited;

@@ -35,6 +35,7 @@ Feb.5th to Feb.11th
 - [x] Change SuperTrack to zmq socket.
 - [x] Run BundleTrack with r2d2.
 - [ ] Replace feature matching with bundletrack method.
+    - [ ] Get feature matching method run.
 
 Feb.12th to Feb.18th
 - [ ] Combine ICG, OnePose and Two tracker.

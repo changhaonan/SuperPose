@@ -27,6 +27,8 @@
 #include <icg/refiner.h>
 #include <icg/region_modality.h>
 #include <icg/region_model.h>
+#include <icg/feature_modality.h>
+#include <icg/feature_model.h>
 #include <icg/renderer_geometry.h>
 #include <icg/static_detector.h>
 #include <icg/network_detector.h>
