@@ -32,7 +32,9 @@ Feb.5th to Feb.11th
 - [ ] Download a prepapre for Benchmark dataset & Prepare Tools for them. YCB-video, BOI, BOP challenge.
 - [ ] Run OnePose and ICG seperately on benchmark.
 - [ ] The current idea is to do a feature-based pure CPU method. ICG plus.
-- [ ] Change SuperTrack to zmq socket.
+- [x] Change SuperTrack to zmq socket.
+- [x] Run BundleTrack with r2d2.
+- [ ] Replace feature matching with bundletrack method.
 
 Feb.12th to Feb.18th
 - [ ] Combine ICG, OnePose and Two tracker.

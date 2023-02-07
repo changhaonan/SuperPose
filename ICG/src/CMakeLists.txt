@@ -9,6 +9,7 @@ set(SOURCES
         image_viewer.cpp normal_viewer.cpp modality.cpp region_modality.cpp
         depth_modality.cpp optimizer.cpp detector.cpp static_detector.cpp network_detector.cpp
         manual_detector.cpp refiner.cpp publisher.cpp tracker.cpp
+        frame.cpp
         generator.cpp)
 
 if (USE_AZURE_KINECT)

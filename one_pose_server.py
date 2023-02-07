@@ -28,7 +28,7 @@ class PoseServer:
         self.socket.bind(self.port)
 
     def run_service(self):
-        print(f"onepose listending to {self.port}")
+        print(f"OnePose listending to {self.port}")
         msgs = self.socket.recv_multipart(0)
         assert len(msgs) == 2, "#msgs={}".format(len(msgs))
         wh = np.frombuffer(msgs[0], dtype=np.int32)
