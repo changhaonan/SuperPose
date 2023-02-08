@@ -39,7 +39,9 @@ void StaticDetector::set_body2world_pose(const Transform3fA &body2world_pose) {
   body2world_pose_ = body2world_pose;
 }
 
-bool StaticDetector::DetectBody() {
+bool StaticDetector::DetectBody(int iteration) {
+  if (reinit_iter_ <= 0 && iteration > 0) return true;  // No reinitialization
+  if (reinit_iter_ > 0 && iteration % reinit_iter_ != 0) return true;  // Reinit per reinit_iter_ iterations
   if (!set_up_) {
     std::cerr << "Set up static detector " << name_ << " first" << std::endl;
     return false;
@@ -66,7 +68,8 @@ bool StaticDetector::LoadMetaData() {
   if (!OpenYamlFileStorage(metafile_path_, &fs)) return false;
 
   // Read parameters from yaml
-  if (!ReadRequiredValueFromYaml(fs, "body2world_pose", &body2world_pose_)) {
+  if (!ReadRequiredValueFromYaml(fs, "body2world_pose", &body2world_pose_) ||
+      !ReadRequiredValueFromYaml(fs, "reinit_iter", &reinit_iter_)) {
     std::cerr << "Could not read all required body parameters from "
               << metafile_path_ << std::endl;
     return false;

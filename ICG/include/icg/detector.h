@@ -28,7 +28,7 @@ class Detector {
   void set_metafile_path(const std::filesystem::path &metafile_path);
 
   // Main methods
-  virtual bool DetectBody() = 0;
+  virtual bool DetectBody(int iteration) = 0;
 
   // Getters
   const std::string &name() const;
@@ -36,6 +36,7 @@ class Detector {
   virtual std::vector<std::shared_ptr<Body>> body_ptrs() const;
   virtual std::shared_ptr<Camera> camera_ptr() const;
   bool set_up() const;
+  int reinit_iter() const;
 
  protected:
   // Constructor
@@ -46,6 +47,7 @@ class Detector {
   std::string name_{};
   std::filesystem::path metafile_path_{};
   bool set_up_ = false;
+  int reinit_iter_ = 0;
 };
 
 }  // namespace icg

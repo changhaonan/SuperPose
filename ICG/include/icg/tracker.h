@@ -115,7 +115,7 @@ class Tracker {
   bool ExecuteTrackingCycle(int iteration);
 
   // Individual steps of detection cycle for advanced use
-  bool DetectBodies();
+  bool DetectBodies(int iteration);
   bool RefinePoses();
 
   // Individual steps of tracking cycle for advanced use

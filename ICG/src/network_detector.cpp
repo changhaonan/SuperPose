@@ -51,8 +51,10 @@ namespace icg
         body2world_pose_ = body2world_pose;
     }
 
-    bool NetworkDetector::DetectBody()
+    bool NetworkDetector::DetectBody(int iteration)
     {
+        if (reinit_iter_ <= 0 && iteration > 0) return true;  // No reinitialization
+        if (reinit_iter_ > 0 && iteration % reinit_iter_ != 0) return true;  // Reinit per reinit_iter_ iterations
         if (!set_up_)
         {
             std::cerr << "Set up network detector " << name_ << " first" << std::endl;
@@ -85,7 +87,8 @@ namespace icg
             return false;
 
         // Read parameters from yaml
-        if (!ReadRequiredValueFromYaml(fs, "port", &port_))
+        if (!ReadRequiredValueFromYaml(fs, "port", &port_) ||
+            !ReadRequiredValueFromYaml(fs, "reinit_iter", &reinit_iter_))
         {
             std::cerr << "Could not read all required body parameters from "
                       << metafile_path_ << std::endl;

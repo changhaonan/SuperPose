@@ -43,7 +43,7 @@ namespace icg
         void set_body2world_pose(const Transform3fA &body2world_pose);
 
         // Main methods
-        bool DetectBody() override;
+        bool DetectBody(int iteration) override;
 
         // Getters
         const std::shared_ptr<Body> &body_ptr() const;

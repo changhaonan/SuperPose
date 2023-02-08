@@ -26,6 +26,8 @@ std::shared_ptr<Camera> Detector::camera_ptr() const { return nullptr; }
 
 bool Detector::set_up() const { return set_up_; }
 
+int Detector::reinit_iter() const { return reinit_iter_; }
+
 Detector::Detector(const std::string &name) : name_{name} {}
 
 Detector::Detector(const std::string &name,

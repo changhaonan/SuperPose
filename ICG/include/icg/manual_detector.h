@@ -101,7 +101,7 @@ class ManualDetector : public icg::Detector {
       const std::filesystem::path& detector_image_path);
 
   // Main methods
-  bool DetectBody() override;
+  bool DetectBody(int iteration) override;
 
   // Getters
   const std::shared_ptr<Body>& body_ptr() const;

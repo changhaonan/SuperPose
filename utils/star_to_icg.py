@@ -27,7 +27,7 @@ def generate_icg_tracker(
 ):
     # config macro
     OBJECT_SCALE = (
-        1.0  # the size of object, influencing the accept threshold for depth modality
+        2.0  # the size of object, influencing the accept threshold for depth modality
     )
 
     # generate the obj file if not exist
@@ -277,7 +277,11 @@ def generate_icg_tracker(
     detector_s.write(
         "body2world_pose", np.linalg.inv(init_pose)
     )  # the object init position
-    detector_s.write("port", detector_port)
+    if use_network_detector:
+        detector_s.write("port", detector_port)
+        detector_s.write("reinit_iter", 10)  # reinit the detector every 10 frames
+    else:
+        detector_s.write("reinit_iter", 0)  # no reinit
     detector_s.release()
 
     # save the model

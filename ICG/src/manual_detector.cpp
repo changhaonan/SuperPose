@@ -144,7 +144,9 @@ void ManualDetector::set_detector_image_path(
   detector_image_path_ = detector_image_path;
 }
 
-bool ManualDetector::DetectBody() {
+bool ManualDetector::DetectBody(int iteration) {
+  if (reinit_iter_ <= 0 && iteration > 0) return true;  // No reinitialization
+  if (reinit_iter_ > 0 && iteration % reinit_iter_ != 0) return true;  // Reinit per reinit_iter_ iterations
   if (!set_up_) {
     std::cerr << "Set up manual detector " << name_ << " first" << std::endl;
     return false;

@@ -231,7 +231,7 @@ bool Tracker::RunRobustTrackerProcess(bool execute_detection, bool start_trackin
   for (int iteration = 0;; ++iteration) {
     auto begin{std::chrono::high_resolution_clock::now()};
     if (!UpdateCameras(execute_detection_)) return false;
-    if (execute_detection_ && (iteration % re_init_per_iter == 0)) {
+    if (execute_detection_) {
       if (!ExecuteDetectionCycle(iteration)) return false;
       // tracking_started_ = false;
       // execute_detection_ = false;
@@ -263,7 +263,7 @@ void Tracker::StartTracking() { start_tracking_ = true; }
 void Tracker::StopTracking() { tracking_started_ = false; }
 
 bool Tracker::ExecuteDetectionCycle(int iteration) {
-  if (!DetectBodies()) return false;
+  if (!DetectBodies(iteration)) return false;
   return RefinePoses();
 }
 
@@ -300,9 +300,9 @@ bool Tracker::ExecuteTrackingCycle(int iteration) {
   return UpdatePublishers(iteration);
 }
 
-bool Tracker::DetectBodies() {
+bool Tracker::DetectBodies(int iteration) {
   for (auto &detector_ptr : detector_ptrs_) {
-    if (!detector_ptr->DetectBody()) return false;
+    if (!detector_ptr->DetectBody(iteration)) return false;
   }
   return true;
 }

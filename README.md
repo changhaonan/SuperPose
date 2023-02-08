@@ -36,7 +36,7 @@ Feb.5th to Feb.11th
 - [x] Run BundleTrack with r2d2.
 - [x] Replace feature matching with bundletrack method.
     - [x] Get feature generation finished.
-    - [ ] Create a feature Viewer.
+    - [ ] Create a feature Viewer. [Wed]
     - [ ] Create Sparse feature view of the object. [Wed]
     - [ ] Build the feature matching. [Thurs]
     - [ ] Compute Jacobian. [Fri]
