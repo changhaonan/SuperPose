@@ -36,8 +36,14 @@ Feb.5th to Feb.11th
 - [x] Run BundleTrack with r2d2.
 - [x] Replace feature matching with bundletrack method.
     - [x] Get feature generation finished.
-    - [ ] Create a feature Viewer. [Wed]
+    - [x] Create a feature Viewer. [Wed]
     - [ ] Create Sparse feature view of the object. [Wed]
+        - [x] Understand what model should generate.
+        - [ ] Render different aspects of the CAD model
+        - [ ] Extract Keypoint feature.
+        - [ ] Save Keypoint feature into the model.
+        - [ ] Create a sparse feature object. (Each view should have a feature.)
+        - [ ] Build connection.
     - [ ] Build the feature matching. [Thurs]
     - [ ] Compute Jacobian. [Fri]
     - [ ] Test the system run. [Sat]
