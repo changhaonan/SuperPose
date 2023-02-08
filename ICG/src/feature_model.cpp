@@ -12,6 +12,7 @@ namespace icg
 
     bool FeatureModel::SetUp()
     {
+        set_up_ = true;
         return true;
     }
 

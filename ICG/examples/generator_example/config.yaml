@@ -82,6 +82,7 @@ Optimizer:
       modalities:
          - region_modality
          - depth_modality
+         - feature_modality
 Tracker:
    -
       name: tracker

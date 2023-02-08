@@ -190,10 +190,12 @@ def generate_icg_tracker(
     config_s.startWriteStruct("Optimizer", cv2.FileNode_SEQ)
     config_s.startWriteStruct("", cv2.FileNode_MAP)
     config_s.write("name", "optimizer")
+    modality_list = ["region_modality"]
     if enable_depth:
-        config_s.write("modalities", ["region_modality", "depth_modality"])
-    else:
-        config_s.write("modalities", "region_modality")
+        modality_list.append("depth_modality")
+    if enable_feature:
+        modality_list.append("feature_modality")
+    config_s.write("modalities", modality_list)
     config_s.endWriteStruct()
     config_s.endWriteStruct()
 
