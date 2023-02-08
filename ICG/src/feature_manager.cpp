@@ -702,10 +702,10 @@ void NetworkFeature::detectFeature(std::shared_ptr<Frame> frame, const float rot
         _socket.send(msg, 0);
     }
 
-    printf("zmq start waiting for reply\n");
+    printf("[feature manager]: waiting for reply\n");
     std::vector<zmq::message_t> recv_msgs;
     zmq::recv_multipart(_socket, std::back_inserter(recv_msgs));
-    printf("zmq got reply\n");
+    printf("[feature manager]: got reply\n");
 
     std::vector<int> info(2);
     std::memcpy(info.data(), recv_msgs[0].data(), info.size() * sizeof(int));

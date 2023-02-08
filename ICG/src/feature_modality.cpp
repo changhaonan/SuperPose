@@ -82,9 +82,8 @@ namespace icg
         // Create the frame object
         cv::Mat color_image = color_camera_ptr_->image();
         cv::Mat depth_image = depth_camera_ptr_->image();
-        // auto frame_ptr = std::make_shared<Frame>(iteration, corr_iteration);
-        // feature_manager_ptr_->detectFeature();
-        std::cout << "Waiting keypoint results from server" << std::endl;
+        auto frame_ptr = WrapFrame(color_image, depth_image);
+        feature_manager_ptr_->detectFeature(frame_ptr, 0);
 
         return true;
     }
@@ -97,6 +96,19 @@ namespace icg
         if (visualize_correspondences_correspondence_)
             VisualizeCorrespondences("correspondences_correspondence", save_idx);
         return true;
+    }
+
+    std::shared_ptr<Frame> FeatureModality::WrapFrame(cv::Mat &color_image, cv::Mat &depth_image)
+    {
+        auto frame_ptr = std::make_shared<Frame>();
+        frame_ptr->_color = color_image;
+        frame_ptr->_depth = depth_image;
+
+        // ROI
+        Eigen::Vector4f roi;
+        roi << 0,color_image.cols,0,color_image.rows;
+        frame_ptr->_roi = roi;
+        return frame_ptr;
     }
 
     bool FeatureModality::LoadMetaData()

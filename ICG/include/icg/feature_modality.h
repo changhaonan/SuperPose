@@ -53,6 +53,8 @@ namespace icg
         // Visualization method
         bool VisualizeCorrespondences(const std::string &title, int save_idx);
 
+        // Processing method
+        std::shared_ptr<Frame> WrapFrame(cv::Mat& color_image, cv::Mat& depth_image);
     private:
         // Helper method for setup
         bool LoadMetaData();

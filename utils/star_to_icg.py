@@ -180,6 +180,7 @@ def generate_icg_tracker(
         config_s.write("name", "feature_modality")
         config_s.write("body", tracker_name)
         config_s.write("color_camera", "loader_color")
+        config_s.write("depth_camera", "loader_depth")
         config_s.write("feature_model", "feature_model")
         config_s.write("metafile_path", "feature_modality.yaml")
         config_s.endWriteStruct()

@@ -114,10 +114,10 @@ namespace icg
             socket_.send(msg, 0);
         }
 
-        std::cout << "Zmq start waiting for reply" << std::endl;
+        std::cout << "[pose detector]: waiting for reply" << std::endl;
         std::vector<zmq::message_t> recv_msgs;
         zmq::recv_multipart(socket_, std::back_inserter(recv_msgs));
-        std::cout << "Zmq got reply" << std::endl;
+        std::cout << "[pose detector]: got reply" << std::endl;
 
         // Read & parse pose from socket
         Eigen::Matrix4f pose;

@@ -74,6 +74,7 @@ FeatureModality:
       name: feature_modality
       body: cracker_box
       color_camera: loader_color
+      depth_camera: loader_depth
       feature_model: feature_model
       metafile_path: "feature_modality.yaml"
 Optimizer:
