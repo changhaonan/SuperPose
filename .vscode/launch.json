@@ -51,7 +51,7 @@
             "program": "${workspaceFolder}/utils/camera_utils.py",
             "args": [
                 "--output_dir",
-                "${workspaceFolder}/data/cracker_box/cracker_box_4",
+                "${workspaceFolder}/data/jelly_box/jelly_box_2",
             ],
             "console": "integratedTerminal",
             "justMyCode": true
@@ -84,7 +84,7 @@
                 "${workspaceFolder}/ICG/examples/generator_example",
                 "--detector_port=8080",
                 "--feature_port=9090",
-                // "--enable_feature",
+                "--enable_feature",
                 "--enable_depth",
             ],
             "console": "integratedTerminal",

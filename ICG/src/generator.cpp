@@ -509,6 +509,39 @@ namespace icg
         viewer_ptrs);
   }
 
+  bool ConfigureFeatureViewers(
+      const std::filesystem::path &configfile_path,
+      const cv::FileStorage &file_storage, const std::string &class_name,
+      const std::string &camera_parameter_name,
+      const std::vector<std::shared_ptr<ColorCamera>> &camera_ptrs,
+      const std::vector<std::shared_ptr<RendererGeometry>> &
+          renderer_geometry_ptrs,
+      std::vector<std::shared_ptr<Viewer>> *viewer_ptrs)
+  {
+    return ConfigureObjects<FeatureViewer>(
+        file_storage, class_name,
+        {"name", camera_parameter_name, "renderer_geometry"},
+        [&](const auto &file_node, auto *viewer_ptr)
+        {
+          std::shared_ptr<ColorCamera> camera_ptr;
+          std::shared_ptr<RendererGeometry> renderer_geometry_ptr;
+          if (!GetObject(file_node, camera_parameter_name, class_name,
+                         camera_ptrs, &camera_ptr) ||
+              !GetObject(file_node, "renderer_geometry", class_name,
+                         renderer_geometry_ptrs, &renderer_geometry_ptr))
+            return false;
+          if (MetafilePathEmpty(file_node))
+            *viewer_ptr = std::make_shared<FeatureViewer>(Name(file_node), camera_ptr,
+                                               renderer_geometry_ptr);
+          else
+            *viewer_ptr = std::make_shared<FeatureViewer>(
+                Name(file_node), MetafilePath(file_node, configfile_path),
+                camera_ptr, renderer_geometry_ptr);
+          return true;
+        },
+        viewer_ptrs);
+  }
+
   bool ConfigureManualDetectors(
       const std::filesystem::path &configfile_path,
       const cv::FileStorage &file_storage,
@@ -761,7 +794,10 @@ namespace icg
             color_camera_ptrs, renderer_geometry_ptrs, &viewer_ptrs) ||
         !ConfigureNormalViewers<NormalDepthViewer>(
             configfile_path, fs, "NormalDepthViewer", "depth_camera",
-            depth_camera_ptrs, renderer_geometry_ptrs, &viewer_ptrs))
+            depth_camera_ptrs, renderer_geometry_ptrs, &viewer_ptrs) ||
+        !ConfigureFeatureViewers(
+            configfile_path, fs, "FeatureViewer", "color_camera",
+            color_camera_ptrs, renderer_geometry_ptrs, &viewer_ptrs))
       return false;
 
     // Configure detectors

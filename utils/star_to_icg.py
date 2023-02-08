@@ -209,10 +209,12 @@ def generate_icg_tracker(
     config_s.startWriteStruct("Tracker", cv2.FileNode_SEQ)
     config_s.startWriteStruct("", cv2.FileNode_MAP)
     config_s.write("name", "tracker")
+    viewer_list = ["color_viewer"]
     if enable_depth:
-        config_s.write("viewers", ["color_viewer", "depth_viewer"])
-    else:
-        config_s.write("viewers", ["color_viewer"])
+        viewer_list.append("depth_viewer")
+    if enable_feature:
+        viewer_list.append("feature_viewer")
+    config_s.write("viewers", viewer_list)
     config_s.write("detectors", ["detector"])
     config_s.write("optimizers", ["optimizer"])
     config_s.endWriteStruct()
