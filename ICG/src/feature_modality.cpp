@@ -4,8 +4,9 @@ namespace icg
 {
     FeatureModality::FeatureModality(const std::string &name, const std::shared_ptr<Body> &body_ptr,
                                      const std::shared_ptr<ColorCamera> &color_camera_ptr,
+                                     const std::shared_ptr<DepthCamera> &depth_camera_ptr,
                                      const std::shared_ptr<FeatureModel> &feature_model_ptr)
-        : Modality(name, body_ptr), color_camera_ptr_(color_camera_ptr), feature_model_ptr_(feature_model_ptr)
+        : Modality(name, body_ptr), color_camera_ptr_(color_camera_ptr), depth_camera_ptr_(depth_camera_ptr), feature_model_ptr_(feature_model_ptr)
     {
     }
 
@@ -13,8 +14,9 @@ namespace icg
         const std::string &name, const std::filesystem::path &metafile_path,
         const std::shared_ptr<Body> &body_ptr,
         const std::shared_ptr<ColorCamera> &color_camera_ptr,
+        const std::shared_ptr<DepthCamera> &depth_camera_ptr,
         const std::shared_ptr<FeatureModel> &feature_model_ptr)
-        : Modality(name, metafile_path, body_ptr), color_camera_ptr_(color_camera_ptr), feature_model_ptr_(feature_model_ptr)
+        : Modality(name, metafile_path, body_ptr), color_camera_ptr_(color_camera_ptr), depth_camera_ptr_(depth_camera_ptr), feature_model_ptr_(feature_model_ptr)
     {
     }
 
@@ -50,6 +52,12 @@ namespace icg
                       << std::endl;
             return false;
         }
+        if (!depth_camera_ptr_->set_up())
+        {
+            std::cerr << "Depth camera " << depth_camera_ptr_->name()
+                      << " was not set up" << std::endl;
+            return false;
+        }
         if (!color_camera_ptr_->set_up())
         {
             std::cerr << "Color camera " << color_camera_ptr_->name()
@@ -71,8 +79,13 @@ namespace icg
     {
         if (!IsSetup())
             return false;
-        // FIXME: To be implemented
+        // Create the frame object
+        cv::Mat color_image = color_camera_ptr_->image();
+        cv::Mat depth_image = depth_camera_ptr_->image();
+        // auto frame_ptr = std::make_shared<Frame>(iteration, corr_iteration);
+        // feature_manager_ptr_->detectFeature();
         std::cout << "Waiting keypoint results from server" << std::endl;
+
         return true;
     }
 

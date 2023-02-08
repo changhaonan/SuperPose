@@ -15,17 +15,18 @@ namespace icg
     public:
         FeatureModality(const std::string &name, const std::shared_ptr<Body> &body_ptr,
                         const std::shared_ptr<ColorCamera> &color_camera_ptr,
+                        const std::shared_ptr<DepthCamera> &depth_camera_ptr,
                         const std::shared_ptr<FeatureModel> &feature_model_ptr);
         FeatureModality(
             const std::string &name, const std::filesystem::path &metafile_path,
             const std::shared_ptr<Body> &body_ptr,
             const std::shared_ptr<ColorCamera> &color_camera_ptr,
+            const std::shared_ptr<DepthCamera> &depth_camera_ptr,
             const std::shared_ptr<FeatureModel> &feature_model_ptr);
         bool SetUp() override;
 
         struct DataPoint
         {
-            
         };
 
         // Main methods
@@ -50,7 +51,8 @@ namespace icg
         std::vector<std::shared_ptr<Renderer>> results_renderer_ptrs() const override;
 
         // Visualization method
-        bool VisualizeCorrespondences(const std::string& title, int save_idx);
+        bool VisualizeCorrespondences(const std::string &title, int save_idx);
+
     private:
         // Helper method for setup
         bool LoadMetaData();
@@ -63,6 +65,7 @@ namespace icg
 
         // Pointers to referenced objects
         std::shared_ptr<ColorCamera> color_camera_ptr_ = nullptr;
+        std::shared_ptr<DepthCamera> depth_camera_ptr_ = nullptr;
         std::shared_ptr<FeatureModel> feature_model_ptr_ = nullptr;
         std::shared_ptr<FocusedDepthRenderer> depth_renderer_ptr_ = nullptr;
 
