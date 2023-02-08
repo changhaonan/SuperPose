@@ -79,11 +79,11 @@ namespace icg
     {
         if (!IsSetup())
             return false;
-        // Create the frame object
+        // Create new frame object
         cv::Mat color_image = color_camera_ptr_->image();
         cv::Mat depth_image = depth_camera_ptr_->image();
-        auto frame_ptr = WrapFrame(color_image, depth_image);
-        feature_manager_ptr_->detectFeature(frame_ptr, 0);
+        current_frame_ptr_ = WrapFrame(color_image, depth_image);
+        feature_manager_ptr_->detectFeature(current_frame_ptr_, 0);
 
         return true;
     }
@@ -106,7 +106,7 @@ namespace icg
 
         // ROI
         Eigen::Vector4f roi;
-        roi << 0,color_image.cols,0,color_image.rows;
+        roi << 0, color_image.cols, 0, color_image.rows;
         frame_ptr->_roi = roi;
         return frame_ptr;
     }
@@ -123,9 +123,56 @@ namespace icg
             !ReadRequiredValueFromYaml(fs, "config_path", &feature_config_file_))
             return false;
 
-        // Read optional parameters from yaml
+        // Read parameters from yaml for visualization
+        ReadOptionalValueFromYaml(fs, "visualize_pose_result",
+                                  &visualize_pose_result_);
+        ReadOptionalValueFromYaml(fs, "visualize_gradient_optimization",
+                                  &visualize_gradient_optimization_);
+        ReadOptionalValueFromYaml(fs, "visualize_hessian_optimization",
+                                  &visualize_hessian_optimization_);
+        ReadOptionalValueFromYaml(fs, "visualize_correspondences_correspondence",
+                                  &visualize_correspondences_correspondence_);
+        ReadOptionalValueFromYaml(fs, "visualize_points_correspondence",
+                                  &visualize_points_correspondence_);
+        ReadOptionalValueFromYaml(fs,
+                                  "visualize_points_depth_rendering_correspondence",
+                                  &visualize_points_depth_rendering_correspondence_);
+        ReadOptionalValueFromYaml(fs, "visualize_points_optimization",
+                                  &visualize_points_optimization_);
+        ReadOptionalValueFromYaml(fs, "visualize_points_result",
+                                  &visualize_points_result_);
+        ReadOptionalValueFromYaml(fs, "display_visualization",
+                                  &display_visualization_);
+        ReadOptionalValueFromYaml(fs, "save_visualizations", &save_visualizations_);
+        ReadOptionalValueFromYaml(fs, "save_directory", &save_directory_);
+        ReadOptionalValueFromYaml(fs, "save_image_type", &save_image_type_);
 
         return true;
+    }
+
+    void FeatureModality::VisualizePointsFeatureImage(const std::string &title, int save_idx) const
+    {
+        // Visualize the current feature object
+        cv::Mat visualization_image = current_frame_ptr_->_color.clone();
+        for (auto &kpts : current_frame_ptr_->_keypts)
+        {
+            cv::circle(visualization_image, kpts.pt, 2, cv::Scalar(0, 255, 0), 2);
+        }
+        ShowAndSaveImage(name_ + "_" + title, save_idx, visualization_image);
+    }
+
+    void FeatureModality::ShowAndSaveImage(const std::string &title, int save_idx,
+                                           const cv::Mat &image) const
+    {
+        if (display_visualization_)
+            cv::imshow(title, image);
+        if (save_visualizations_)
+        {
+            std::filesystem::path path{
+                save_directory_ /
+                (title + "_" + std::to_string(save_idx) + "." + save_image_type_)};
+            cv::imwrite(path.string(), image);
+        }
     }
 
     bool FeatureModality::CalculateGradientAndHessian(int iteration,
@@ -170,8 +217,8 @@ namespace icg
 
         if (visualize_points_result_)
         {
-            // VisualizePointsDepthImage("depth_image_result", save_idx);
-            // FIXME: To be implemented
+            // Show feature and matching
+            VisualizePointsFeatureImage("feature_result", save_idx);
         }
         if (visualize_pose_result_)
         {

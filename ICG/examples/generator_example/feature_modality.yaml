@@ -6,6 +6,7 @@ visualize_hessian_optimization: 0
 visualize_correspondences_correspondence: 0
 visualize_points_correspondence: 0
 visualize_points_depth_rendering_correspondence: 0
+visualize_points_result: 1
 visualization_max_depth: 2.
 considered_distances:
    - 1.0000000000000001e-01

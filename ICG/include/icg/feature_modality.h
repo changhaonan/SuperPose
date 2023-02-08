@@ -54,11 +54,15 @@ namespace icg
         bool VisualizeCorrespondences(const std::string &title, int save_idx);
 
         // Processing method
-        std::shared_ptr<Frame> WrapFrame(cv::Mat& color_image, cv::Mat& depth_image);
+        std::shared_ptr<Frame> WrapFrame(cv::Mat &color_image, cv::Mat &depth_image);
+
     private:
         // Helper method for setup
         bool LoadMetaData();
 
+        // Helper method for visualization
+        void VisualizePointsFeatureImage(const std::string &title, int save_idx) const;
+        void ShowAndSaveImage(const std::string &title, int save_idx, const cv::Mat &image) const;
         // Other helper methods
         bool IsSetup() const;
 
@@ -82,6 +86,7 @@ namespace icg
         int port_;
         std::string feature_config_file_;
         std::shared_ptr<NetworkFeature> feature_manager_ptr_ = nullptr;
+        std::shared_ptr<Frame> current_frame_ptr_ = nullptr;
     };
 
 }

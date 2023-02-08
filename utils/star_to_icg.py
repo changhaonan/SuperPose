@@ -212,8 +212,8 @@ def generate_icg_tracker(
     viewer_list = ["color_viewer"]
     if enable_depth:
         viewer_list.append("depth_viewer")
-    if enable_feature:
-        viewer_list.append("feature_viewer")
+    # if enable_feature:
+    #     viewer_list.append("feature_viewer")
     config_s.write("viewers", viewer_list)
     config_s.write("detectors", ["detector"])
     config_s.write("optimizers", ["optimizer"])
@@ -328,6 +328,7 @@ def generate_icg_tracker(
     modality_s.write("visualize_correspondences_correspondence", 0)
     modality_s.write("visualize_points_correspondence", 0)
     modality_s.write("visualize_points_depth_rendering_correspondence", 0)
+    modality_s.write("visualize_points_result", 0)
     modality_s.write("visualization_max_depth", 2.0)  # the max depth for visualization
     modality_s.startWriteStruct("considered_distances", cv2.FileNode_SEQ)
     modality_s.write("", 0.05 * OBJECT_SCALE)

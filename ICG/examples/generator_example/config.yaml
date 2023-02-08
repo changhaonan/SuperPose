@@ -90,7 +90,6 @@ Tracker:
       viewers:
          - color_viewer
          - depth_viewer
-         - feature_viewer
       detectors:
          - detector
       optimizers:
