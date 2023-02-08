@@ -2,10 +2,11 @@
 #include <icg/camera.h>
 #include <icg/common.h>
 #include <icg/viewer.h>
-
+#include <icg/feature_manager.h>
 #include <memory>
 #include <opencv2/opencv.hpp>
 #include <string>
+
 
 namespace icg
 {
@@ -17,12 +18,10 @@ namespace icg
     {
     public:
         FeatureViewer(const std::string &name,
-                      const std::shared_ptr<ColorCamera> &color_camera_ptr,
-                      const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr);
+                      const std::shared_ptr<ColorCamera> &color_camera_ptr);
         FeatureViewer(const std::string &name,
                       const std::filesystem::path &metafile_path,
-                      const std::shared_ptr<ColorCamera> &color_camera_ptr,
-                      const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr);
+                      const std::shared_ptr<ColorCamera> &color_camera_ptr);
         bool SetUp() override;
 
         bool UpdateViewer(int save_index) override;
@@ -31,7 +30,7 @@ namespace icg
         // Helper method
         bool LoadMetaData();
         // Data
-        std::shared_ptr<RendererGeometry> renderer_geometry_ptr_ = nullptr;
+        std::shared_ptr<FeatureManager> feature_manager_ptr_ = nullptr;
     };
 
 }

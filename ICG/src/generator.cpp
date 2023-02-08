@@ -514,8 +514,6 @@ namespace icg
       const cv::FileStorage &file_storage, const std::string &class_name,
       const std::string &camera_parameter_name,
       const std::vector<std::shared_ptr<ColorCamera>> &camera_ptrs,
-      const std::vector<std::shared_ptr<RendererGeometry>> &
-          renderer_geometry_ptrs,
       std::vector<std::shared_ptr<Viewer>> *viewer_ptrs)
   {
     return ConfigureObjects<FeatureViewer>(
@@ -524,19 +522,15 @@ namespace icg
         [&](const auto &file_node, auto *viewer_ptr)
         {
           std::shared_ptr<ColorCamera> camera_ptr;
-          std::shared_ptr<RendererGeometry> renderer_geometry_ptr;
           if (!GetObject(file_node, camera_parameter_name, class_name,
-                         camera_ptrs, &camera_ptr) ||
-              !GetObject(file_node, "renderer_geometry", class_name,
-                         renderer_geometry_ptrs, &renderer_geometry_ptr))
+                         camera_ptrs, &camera_ptr))
             return false;
           if (MetafilePathEmpty(file_node))
-            *viewer_ptr = std::make_shared<FeatureViewer>(Name(file_node), camera_ptr,
-                                               renderer_geometry_ptr);
+            *viewer_ptr = std::make_shared<FeatureViewer>(Name(file_node), camera_ptr);
           else
             *viewer_ptr = std::make_shared<FeatureViewer>(
                 Name(file_node), MetafilePath(file_node, configfile_path),
-                camera_ptr, renderer_geometry_ptr);
+                camera_ptr);
           return true;
         },
         viewer_ptrs);
@@ -797,7 +791,7 @@ namespace icg
             depth_camera_ptrs, renderer_geometry_ptrs, &viewer_ptrs) ||
         !ConfigureFeatureViewers(
             configfile_path, fs, "FeatureViewer", "color_camera",
-            color_camera_ptrs, renderer_geometry_ptrs, &viewer_ptrs))
+            color_camera_ptrs, &viewer_ptrs))
       return false;
 
     // Configure detectors

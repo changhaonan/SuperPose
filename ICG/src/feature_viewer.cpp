@@ -4,15 +4,13 @@ namespace icg
 {
     FeatureViewer::FeatureViewer(
         const std::string &name,
-        const std::shared_ptr<ColorCamera> &color_camera_ptr,
-        const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr)
-        : ColorViewer{name, color_camera_ptr}, renderer_geometry_ptr_(renderer_geometry_ptr) {}
+        const std::shared_ptr<ColorCamera> &color_camera_ptr)
+        : ColorViewer{name, color_camera_ptr} {}
 
     FeatureViewer::FeatureViewer(
         const std::string &name, const std::filesystem::path &metafile_path,
-        const std::shared_ptr<ColorCamera> &color_camera_ptr,
-        const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr)
-        : ColorViewer{name, metafile_path, color_camera_ptr}, renderer_geometry_ptr_(renderer_geometry_ptr) {}
+        const std::shared_ptr<ColorCamera> &color_camera_ptr)
+        : ColorViewer{name, metafile_path, color_camera_ptr} {}
 
     bool FeatureViewer::SetUp()
     {
