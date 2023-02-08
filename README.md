@@ -39,7 +39,8 @@ Feb.5th to Feb.11th
     - [x] Create a feature Viewer. [Wed]
     - [ ] Create Sparse feature view of the object. [Wed]
         - [x] Understand what model should generate.
-        - [ ] Render different aspects of the CAD model
+        - [ ] Render different aspects of the CAD model.
+        - [ ] Augment the normal shader with RGB shader.
         - [ ] Extract Keypoint feature.
         - [ ] Save Keypoint feature into the model.
         - [ ] Create a sparse feature object. (Each view should have a feature.)
