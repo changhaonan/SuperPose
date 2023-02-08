@@ -12,3 +12,4 @@ considered_distances:
    - 4.0000000000000001e-02
    - 2.0000000000000000e-02
 port: 9090
+config_path: "/home/robot-learning/Projects/SuperPose/cfg/bundletrack/feature_config.yaml"

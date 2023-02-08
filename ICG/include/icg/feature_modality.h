@@ -75,6 +75,8 @@ namespace icg
 
         // Feature manager related
         int port_;
+        std::string feature_config_file_;
+        std::shared_ptr<NetworkFeature> feature_manager_ptr_ = nullptr;
     };
 
 }

@@ -22,7 +22,7 @@ endif ()
 
 # Define libraries
 # =============================================================================
-set(LIBRARIES Eigen3::Eigen OpenGL::GL GLEW::GLEW glfw ${OpenCV_LIBRARIES} zmq)
+set(LIBRARIES Eigen3::Eigen OpenGL::GL GLEW::GLEW glfw ${OpenCV_LIBRARIES} zmq yaml-cpp)
 if (USE_AZURE_KINECT)
     list(APPEND LIBRARIES k4a::k4a)
 endif ()

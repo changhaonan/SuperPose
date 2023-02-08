@@ -70,7 +70,7 @@ public:
     bool operator==(const Correspondence &other) const;
 };
 
-class SiftManager
+class FeatureManager
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -84,8 +84,8 @@ public:
     std::vector<std::shared_ptr<MapPoint>> _map_points_global;
 
 public:
-    SiftManager(std::shared_ptr<YAML::Node> yml1);
-    ~SiftManager();
+    FeatureManager(std::shared_ptr<YAML::Node> yml1);
+    ~FeatureManager();
     void detectFeature(std::shared_ptr<Frame> frame);
     int countInlierCorres(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB);
     void vizKeyPoints(std::shared_ptr<Frame> frame);
@@ -107,7 +107,7 @@ private:
     float point3fDist(cv::Point3f p1, cv::Point3f p2);
 };
 
-class NetworkFeature : public SiftManager
+class NetworkFeature : public FeatureManager
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;

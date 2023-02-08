@@ -323,6 +323,7 @@ def generate_icg_tracker(
     modality_s.write("", 0.01 * OBJECT_SCALE)
     modality_s.endWriteStruct()
     modality_s.write("port", feature_port)
+    modality_s.write("config_path", "/home/robot-learning/Projects/SuperPose/cfg/bundletrack/feature_config.yaml")
     modality_s.release()
 
     # save the object

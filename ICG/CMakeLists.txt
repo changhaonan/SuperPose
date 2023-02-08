@@ -29,6 +29,7 @@ endif()
 if (USE_REALSENSE)
     find_package(realsense2 REQUIRED)
 endif ()
+find_package(yaml-cpp REQUIRED)
 
 find_package(OpenMP REQUIRED)
 if (OPENMP_FOUND)

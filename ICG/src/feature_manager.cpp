@@ -53,22 +53,22 @@ bool Correspondence::operator==(const Correspondence &other) const
     return false;
 }
 
-SiftManager::SiftManager(std::shared_ptr<YAML::Node> yml1) : _rng(std::random_device{}())
+FeatureManager::FeatureManager(std::shared_ptr<YAML::Node> yml1) : _rng(std::random_device{}())
 {
     yml = yml1;
     srand(0);
     _rng.seed(0);
 }
 
-SiftManager::~SiftManager()
+FeatureManager::~FeatureManager()
 {
 }
 
-void SiftManager::detectFeature(std::shared_ptr<Frame> frame)
+void FeatureManager::detectFeature(std::shared_ptr<Frame> frame)
 {
 }
 
-void SiftManager::vizKeyPoints(std::shared_ptr<Frame> frame)
+void FeatureManager::vizKeyPoints(std::shared_ptr<Frame> frame)
 {
     const std::string out_dir = (*yml)["debug_dir"].as<std::string>() + "/" + frame->_id_str + "/";
     cv::Mat out = frame->_color.clone();
@@ -84,7 +84,7 @@ void SiftManager::vizKeyPoints(std::shared_ptr<Frame> frame)
     ff.close();
 }
 
-void SiftManager::forgetFrame(std::shared_ptr<Frame> frame)
+void FeatureManager::forgetFrame(std::shared_ptr<Frame> frame)
 {
     auto _matches_tmp = _matches;
     for (const auto &h : _matches_tmp)
@@ -114,7 +114,7 @@ void SiftManager::forgetFrame(std::shared_ptr<Frame> frame)
     }
 }
 
-bool SiftManager::isPixelInsideImage(const int H, const int W, float u, float v)
+bool FeatureManager::isPixelInsideImage(const int H, const int W, float u, float v)
 {
     u = std::round(u);
     v = std::round(v);
@@ -123,12 +123,12 @@ bool SiftManager::isPixelInsideImage(const int H, const int W, float u, float v)
     return true;
 }
 
-float SiftManager::point3fDist(cv::Point3f p1, cv::Point3f p2)
+float FeatureManager::point3fDist(cv::Point3f p1, cv::Point3f p2)
 {
     return std::sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y) + (p1.z - p2.z) * (p1.z - p2.z));
 }
 
-void SiftManager::findCorres(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB)
+void FeatureManager::findCorres(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB)
 {
     assert(frameA->_id > frameB->_id);
     if (_matches.find({frameA, frameB}) != _matches.end())
@@ -199,7 +199,7 @@ void SiftManager::findCorres(std::shared_ptr<Frame> frameA, std::shared_ptr<Fram
     }
 }
 
-void SiftManager::findCorresbyNN(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB)
+void FeatureManager::findCorresbyNN(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB)
 {
     assert(frameA->_id > frameB->_id);
     if (frameA->_keypts.size() == 0 || frameB->_keypts.size() == 0)
@@ -236,7 +236,7 @@ void SiftManager::findCorresbyNN(std::shared_ptr<Frame> frameA, std::shared_ptr<
     }
 }
 
-void SiftManager::pruneMatches(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::vector<std::vector<cv::DMatch>> &knn_matchesAB, std::vector<cv::DMatch> &matches_AB)
+void FeatureManager::pruneMatches(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::vector<std::vector<cv::DMatch>> &knn_matchesAB, std::vector<cv::DMatch> &matches_AB)
 {
     const float max_dist_no_neighbor = (*yml)["feature_corres"]["max_dist_no_neighbor"].as<float>();
     const float cos_max_normal_no_neighbor = std::cos((*yml)["feature_corres"]["max_normal_no_neighbor"].as<float>() / 180.0 * M_PI);
@@ -289,7 +289,7 @@ void SiftManager::pruneMatches(std::shared_ptr<Frame> frameA, std::shared_ptr<Fr
     }
 }
 
-void SiftManager::collectMutualMatches(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::vector<cv::DMatch> &matches_AB, const std::vector<cv::DMatch> &matches_BA)
+void FeatureManager::collectMutualMatches(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::vector<cv::DMatch> &matches_AB, const std::vector<cv::DMatch> &matches_BA)
 {
     auto &matches = _matches[{frameA, frameB}];
 
@@ -321,7 +321,7 @@ void SiftManager::collectMutualMatches(std::shared_ptr<Frame> frameA, std::share
     }
 }
 
-void SiftManager::findCorresbyNNMultiPair(std::vector<FramePair> &pairs)
+void FeatureManager::findCorresbyNNMultiPair(std::vector<FramePair> &pairs)
 {
     const bool mutual = (*yml)["feature_corres"]["mutual"].as<bool>();
     const float max_dist_no_neighbor = (*yml)["feature_corres"]["max_dist_no_neighbor"].as<float>();
@@ -366,7 +366,7 @@ void SiftManager::findCorresbyNNMultiPair(std::vector<FramePair> &pairs)
     }
 }
 
-void SiftManager::updateFramePairMapPoints(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB)
+void FeatureManager::updateFramePairMapPoints(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB)
 {
     assert(frameA->_id > frameB->_id);
     const auto &matches = _matches[{frameA, frameB}];
@@ -407,7 +407,7 @@ void SiftManager::updateFramePairMapPoints(std::shared_ptr<Frame> frameA, std::s
     }
 }
 
-void SiftManager::findCorresByMapPoints(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB)
+void FeatureManager::findCorresByMapPoints(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB)
 {
     assert(frameA->_id > frameB->_id);
     auto &matches = _matches[{frameA, frameB}];
@@ -443,7 +443,7 @@ void SiftManager::findCorresByMapPoints(std::shared_ptr<Frame> frameA, std::shar
     }
 }
 
-Eigen::Matrix4f SiftManager::procrustesByCorrespondence(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::vector<Correspondence> &matches)
+Eigen::Matrix4f FeatureManager::procrustesByCorrespondence(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::vector<Correspondence> &matches)
 {
     assert(frameA->_id > frameB->_id);
     Eigen::Matrix4f pose(Eigen::Matrix4f::Identity());
@@ -482,7 +482,7 @@ Eigen::Matrix4f SiftManager::procrustesByCorrespondence(std::shared_ptr<Frame> f
     return pose;
 }
 
-void SiftManager::runRansacBetween(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB)
+void FeatureManager::runRansacBetween(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB)
 {
     assert(frameA->_id > frameB->_id);
 
@@ -576,7 +576,7 @@ void SiftManager::runRansacBetween(std::shared_ptr<Frame> frameA, std::shared_pt
     // runRansacMultiPairGPU({{frameA, frameB}});
 }
 
-int SiftManager::countInlierCorres(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB)
+int FeatureManager::countInlierCorres(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB)
 {
     int cnt = 0;
     const auto &corres = _matches[{frameA, frameB}];
@@ -590,7 +590,7 @@ int SiftManager::countInlierCorres(std::shared_ptr<Frame> frameA, std::shared_pt
     return cnt;
 }
 
-void SiftManager::vizCorresBetween(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::string &name)
+void FeatureManager::vizCorresBetween(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::string &name)
 {
     if ((*yml)["LOG"].as<int>() < 1)
         return;
@@ -629,7 +629,7 @@ void SiftManager::vizCorresBetween(std::shared_ptr<Frame> frameA, std::shared_pt
     cv::imwrite(out_match_file, out, {cv::IMWRITE_JPEG_QUALITY, 80});
 }
 
-NetworkFeature::NetworkFeature(std::shared_ptr<YAML::Node> yml1) : SiftManager(yml1), _context(1), _socket(_context, ZMQ_REQ)
+NetworkFeature::NetworkFeature(std::shared_ptr<YAML::Node> yml1) : FeatureManager(yml1), _context(1), _socket(_context, ZMQ_REQ)
 {
     const std::string port = (*yml)["port"].as<std::string>();
     _socket.connect("tcp://0.0.0.0:" + port);
