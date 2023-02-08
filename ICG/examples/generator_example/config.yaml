@@ -18,9 +18,9 @@ Body:
    -
       name: cracker_box
       metafile_path: "object.yaml"
-NetworkDetector:
+StaticDetector:
    -
-      name: network_detector
+      name: detector
       metafile_path: "detector.yaml"
       body: cracker_box
       color_camera: loader_color
@@ -59,31 +59,12 @@ DepthModality:
       depth_camera: loader_depth
       depth_model: depth_model
       metafile_path: "depth_modality.yaml"
-FeatureViewer:
-   -
-      name: feature_viewer
-      color_camera: loader_color
-      renderer_geometry: renderer_geometry
-FeatureModel:
-   -
-      name: feature_model
-      metafile_path: "model.yaml"
-      body: cracker_box
-FeatureModality:
-   -
-      name: feature_modality
-      body: cracker_box
-      color_camera: loader_color
-      depth_camera: loader_depth
-      feature_model: feature_model
-      metafile_path: "feature_modality.yaml"
 Optimizer:
    -
       name: optimizer
       modalities:
          - region_modality
          - depth_modality
-         - feature_modality
 Tracker:
    -
       name: tracker
@@ -91,6 +72,6 @@ Tracker:
          - color_viewer
          - depth_viewer
       detectors:
-         - network_detector
+         - detector
       optimizers:
          - optimizer

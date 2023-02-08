@@ -8,8 +8,8 @@ visualize_points_correspondence: 0
 visualize_points_depth_rendering_correspondence: 0
 visualization_max_depth: 2.
 considered_distances:
-   - 1.0000000000000001e-01
-   - 4.0000000000000001e-02
+   - 5.0000000000000003e-02
    - 2.0000000000000000e-02
+   - 1.0000000000000000e-02
 port: 9090
 config_path: "/home/robot-learning/Projects/SuperPose/cfg/bundletrack/feature_config.yaml"

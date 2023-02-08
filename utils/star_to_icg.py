@@ -18,6 +18,7 @@ def generate_icg_tracker(
     model_dir,
     eval_dir,
     icg_dir,
+    use_network_detector=False,
     detector_port=8080,
     feature_port=9090,
     enable_depth=False,
@@ -26,7 +27,7 @@ def generate_icg_tracker(
 ):
     # config macro
     OBJECT_SCALE = (
-        2.0  # the size of object, influencing the accept threshold for depth modality
+        1.0  # the size of object, influencing the accept threshold for depth modality
     )
 
     # generate the obj file if not exist
@@ -84,9 +85,13 @@ def generate_icg_tracker(
     config_s.endWriteStruct()
 
     # save the network detector
-    config_s.startWriteStruct("NetworkDetector", cv2.FileNode_SEQ)
+    if use_network_detector:
+        detector_method = "NetworkDetector"
+    else:
+        detector_method = "StaticDetector"
+    config_s.startWriteStruct(detector_method, cv2.FileNode_SEQ)
     config_s.startWriteStruct("", cv2.FileNode_MAP)
-    config_s.write("name", "network_detector")
+    config_s.write("name", "detector")
     config_s.write("metafile_path", "detector.yaml")
     config_s.write("body", tracker_name)
     config_s.write("color_camera", "loader_color")
@@ -208,7 +213,7 @@ def generate_icg_tracker(
         config_s.write("viewers", ["color_viewer", "depth_viewer"])
     else:
         config_s.write("viewers", ["color_viewer"])
-    config_s.write("detectors", ["network_detector"])
+    config_s.write("detectors", ["detector"])
     config_s.write("optimizers", ["optimizer"])
     config_s.endWriteStruct()
     config_s.endWriteStruct()
@@ -366,6 +371,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--enable_feature", action="store_true", help="enable feature modality"
     )
+    parser.add_argument("--use_network_detector", action="store_true", help="use network detector")
     parser.add_argument("--detector_port", type=int, default=8080, help="detector port")
     parser.add_argument("--feature_port", type=int, default=9090, help="feature port")
     parser.add_argument("--redo_obj", action="store_true", help="redo the obj file")
@@ -376,6 +382,7 @@ if __name__ == "__main__":
         args.model_dir,
         args.eval_dir,
         args.icg_dir,
+        args.use_network_detector,
         args.detector_port,
         args.feature_port,
         args.enable_depth,

@@ -34,8 +34,14 @@ Feb.5th to Feb.11th
 - [ ] The current idea is to do a feature-based pure CPU method. ICG plus.
 - [x] Change SuperTrack to zmq socket.
 - [x] Run BundleTrack with r2d2.
-- [ ] Replace feature matching with bundletrack method.
-    - [ ] Get feature matching method run.
+- [x] Replace feature matching with bundletrack method.
+    - [x] Get feature generation finished.
+    - [ ] Create a feature Viewer.
+    - [ ] Create Sparse feature view of the object. [Wed]
+    - [ ] Build the feature matching. [Thurs]
+    - [ ] Compute Jacobian. [Fri]
+    - [ ] Test the system run. [Sat]
+    - [ ] Further test the system. [Sun]
 
 Feb.12th to Feb.18th
 - [ ] Combine ICG, OnePose and Two tracker.
