@@ -116,6 +116,7 @@ class Body {
   float maximum_body_diameter_ = 0.0f;
   // Texture-related
   std::vector<std::array<float, 2>> texture_coordinates_{};
+  std::vector<std::array<int, 3>> mesh_texture_indices_{};
   std::string texture_path_{};
 
   // Internal state

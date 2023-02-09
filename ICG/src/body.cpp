@@ -255,6 +255,7 @@ namespace icg
 
     // Load mesh vertices
     mesh_indices_.clear();
+    mesh_texture_indices_.clear();
     for (const auto &shape : shapes)
     {
       size_t index_offset = 0;
@@ -273,6 +274,12 @@ namespace icg
               shape.mesh.indices[index_offset].vertex_index,
               shape.mesh.indices[index_offset + 1].vertex_index,
               shape.mesh.indices[index_offset + 2].vertex_index});
+          if (geometry_enable_texture_ ) {
+            mesh_texture_indices_.push_back(std::array<int, 3>{
+                shape.mesh.indices[index_offset].texcoord_index,
+                shape.mesh.indices[index_offset + 1].texcoord_index,
+                shape.mesh.indices[index_offset + 2].texcoord_index});
+          }
         }
         else
         {
@@ -280,6 +287,12 @@ namespace icg
               shape.mesh.indices[index_offset + 2].vertex_index,
               shape.mesh.indices[index_offset + 1].vertex_index,
               shape.mesh.indices[index_offset].vertex_index});
+          if (geometry_enable_texture_ ) {
+            mesh_texture_indices_.push_back(std::array<int, 3>{
+                shape.mesh.indices[index_offset + 2].texcoord_index,
+                shape.mesh.indices[index_offset + 1].texcoord_index,
+                shape.mesh.indices[index_offset].texcoord_index});
+          }
         }
         index_offset += 3;
       }
