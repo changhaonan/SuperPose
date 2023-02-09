@@ -162,6 +162,8 @@ namespace icg
 
   bool Body::set_up() const { return set_up_; }
 
+  bool Body::enable_texture() const { return enable_texture_; }
+
   bool Body::LoadMetaData()
   {
     // Open file storage from yaml
@@ -178,7 +180,7 @@ namespace icg
           ReadRequiredValueFromYaml(fs, "geometry_enable_culling",
                                     &geometry_enable_culling_) &&
           ReadRequiredValueFromYaml(fs, "geometry_enable_texture",
-                                    &geometry_enable_texture_) &&
+                                    &enable_texture_) &&
           ReadRequiredValueFromYaml(fs, "geometry2body_pose",
                                     &geometry2body_pose_)))
     {
@@ -206,7 +208,7 @@ namespace icg
     std::vector<tinyobj::material_t> materials;
     std::string warning;
     std::string error;
-    if (geometry_enable_texture_)
+    if (enable_texture_)
     {
       // Load obj file with texture
       if (!tinyobj::LoadObj(&attributes, &shapes, &materials, &warning, &error,
@@ -247,7 +249,7 @@ namespace icg
     }
 
     // Load texture coordinates
-    if (geometry_enable_texture_)
+    if (enable_texture_)
     {
       texture_coords_.resize(attributes.texcoords.size() / 2);
       memcpy(texture_coords_.data(), attributes.texcoords.data(),
@@ -255,7 +257,7 @@ namespace icg
     }
 
     // Load material
-    if (geometry_enable_texture_)
+    if (enable_texture_)
     {
       if (materials.size() != 1)
       {
@@ -286,7 +288,7 @@ namespace icg
               shape.mesh.indices[index_offset].vertex_index,
               shape.mesh.indices[index_offset + 1].vertex_index,
               shape.mesh.indices[index_offset + 2].vertex_index});
-          if (geometry_enable_texture_)
+          if (enable_texture_)
           {
             mesh_texture_indices_.push_back(std::array<int, 3>{
                 shape.mesh.indices[index_offset].texcoord_index,
@@ -300,7 +302,7 @@ namespace icg
               shape.mesh.indices[index_offset + 2].vertex_index,
               shape.mesh.indices[index_offset + 1].vertex_index,
               shape.mesh.indices[index_offset].vertex_index});
-          if (geometry_enable_texture_)
+          if (enable_texture_)
           {
             mesh_texture_indices_.push_back(std::array<int, 3>{
                 shape.mesh.indices[index_offset + 2].texcoord_index,

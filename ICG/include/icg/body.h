@@ -90,6 +90,7 @@ namespace icg
 
           // Internal state
           bool set_up() const;
+          bool enable_texture() const;
 
      private:
           // Helper methods
@@ -104,7 +105,6 @@ namespace icg
           float geometry_unit_in_meter_ = 1.0f;
           bool geometry_counterclockwise_ = true;
           bool geometry_enable_culling_ = true;
-          bool geometry_enable_texture_ = false;
           Transform3fA geometry2body_pose_{Transform3fA::Identity()};
           uchar silhouette_id_ = 0;
 
@@ -125,6 +125,9 @@ namespace icg
 
           // Internal state
           bool set_up_ = false;
+
+          // Option
+          bool enable_texture_ = false;
      };
 
 } // namespace icg

@@ -80,6 +80,7 @@ class Renderer {
   float z_min() const;
   float z_max() const;
   bool set_up() const;
+  bool enable_texture() const;
 
   // Getters optional data
   virtual const std::vector<std::shared_ptr<Body>> &referenced_body_ptrs()
@@ -115,6 +116,9 @@ class Renderer {
   // State variables
   std::mutex mutex_{};
   bool set_up_ = false;
+  
+  // Option
+  bool enable_texture_ = false;
 };
 
 /**

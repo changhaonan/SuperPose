@@ -71,6 +71,7 @@ class RendererGeometry {
   const std::vector<std::shared_ptr<Body>> &body_ptrs() const;
   const std::vector<RenderDataBody> &render_data_bodies() const;
   bool set_up() const;
+  bool enable_texture() const;
 
  private:
   // Helper methods

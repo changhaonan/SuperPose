@@ -42,6 +42,15 @@ namespace icg
                   << std::endl;
         return false;
       }
+      if (enable_texture_)
+      {
+        if (!body_ptr->enable_texture())
+        {
+          std::cerr << "Body " << body_ptr->name() << " does not have a texture"
+                    << std::endl;
+          return false;
+        }
+      }
     }
 
     // Set up GLFW
@@ -87,8 +96,9 @@ namespace icg
     glfwMakeContextCurrent(window_);
     for (auto &render_data_body : render_data_bodies_)
     {
-      if (!enable_texture_) {
-         // Assemble vertex data
+      if (!enable_texture_)
+      {
+        // Assemble vertex data
         std::vector<float> vertex_data;
         AssembleVertexData(*render_data_body.body_ptr, &vertex_data);
         render_data_body.n_vertices = unsigned(vertex_data.size()) / 6;
@@ -98,7 +108,8 @@ namespace icg
           DeleteGLVertexObjects(&render_data_body);
         CreateGLVertexObjects(vertex_data, &render_data_body);
       }
-      else {
+      else
+      {
         // Assemble vertex data
         std::vector<float> vertex_data;
         AssembleVertexDataWithTexture(*render_data_body.body_ptr, &vertex_data);
@@ -136,15 +147,30 @@ namespace icg
     render_data_body.body_ptr = body_ptr.get();
     if (set_up_ && body_ptr->set_up())
     {
-      // Assemble vertex data
-      std::vector<float> vertex_data;
-      AssembleVertexData(*body_ptr.get(), &vertex_data);
-      render_data_body.n_vertices = unsigned(vertex_data.size()) / 6;
+      if (!enable_texture_)
+      {
+        // Assemble vertex data
+        std::vector<float> vertex_data;
+        AssembleVertexData(*body_ptr.get(), &vertex_data);
+        render_data_body.n_vertices = unsigned(vertex_data.size()) / 6;
 
-      // Create GL Vertex objects
-      glfwMakeContextCurrent(window_);
-      CreateGLVertexObjects(vertex_data, &render_data_body);
-      glfwMakeContextCurrent(nullptr);
+        // Create GL Vertex objects
+        glfwMakeContextCurrent(window_);
+        CreateGLVertexObjects(vertex_data, &render_data_body);
+        glfwMakeContextCurrent(nullptr);
+      }
+      else
+      {
+        // Assemble vertex data
+        std::vector<float> vertex_data;
+        AssembleVertexDataWithTexture(*body_ptr.get(), &vertex_data);
+        render_data_body.n_vertices = unsigned(vertex_data.size()) / 8;
+
+        // Create GL Vertex objects
+        glfwMakeContextCurrent(window_);
+        CreateGLVertexObjectsWithTexture(vertex_data, &render_data_body);
+        glfwMakeContextCurrent(nullptr);
+      }
     }
     else if (set_up_ && !body_ptr->set_up())
     {
@@ -235,6 +261,8 @@ namespace icg
 
   bool RendererGeometry::set_up() const { return set_up_; }
 
+  bool RendererGeometry::enable_texture() const { return enable_texture_; }
+
   void RendererGeometry::AssembleVertexData(const Body &body,
                                             std::vector<float> *vertex_data)
   {
@@ -305,7 +333,7 @@ namespace icg
   }
 
   void RendererGeometry::CreateGLVertexObjectsWithTexture(const std::vector<float> &vertices,
-                                               RenderDataBody *render_data_body)
+                                                          RenderDataBody *render_data_body)
   {
     glGenVertexArrays(1, &render_data_body->vao);
     glBindVertexArray(render_data_body->vao);

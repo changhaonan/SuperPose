@@ -10,7 +10,7 @@ set(SOURCES
         depth_modality.cpp optimizer.cpp detector.cpp static_detector.cpp network_detector.cpp
         manual_detector.cpp refiner.cpp publisher.cpp tracker.cpp
         frame.cpp feature_manager.cpp
-        feature_modality.cpp feature_model.cpp feature_viewer.cpp
+        feature_modality.cpp feature_model.cpp feature_viewer.cpp texture_renderer.cpp
         generator.cpp)
 
 if (USE_AZURE_KINECT)

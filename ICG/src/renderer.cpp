@@ -183,6 +183,8 @@ float Renderer::z_max() const { return z_max_; }
 
 bool Renderer::set_up() const { return set_up_; };
 
+bool Renderer::enable_texture() const { return enable_texture_; }
+
 const std::vector<std::shared_ptr<Body>> &Renderer::referenced_body_ptrs()
     const {
   return {};
