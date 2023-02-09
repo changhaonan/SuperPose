@@ -50,6 +50,7 @@ class RendererGeometry {
     GLuint vao = 0;
     GLuint vbo = 0;
     unsigned n_vertices = 0;
+    GLuint texture = 0;
   };
 
   // Constructor, destructor, and setup method
@@ -84,7 +85,8 @@ class RendererGeometry {
   static void CreateGLVertexObjectsWithTexture(const std::vector<float> &vertices,
                                     RenderDataBody *render_data_body);
   static void DeleteGLVertexObjects(RenderDataBody *render_data_body);
-
+  static void CreateGLTextureObjects(const Body &body,
+                                   RenderDataBody *render_data_body);
   // Variables
   std::string name_{};
   std::vector<std::shared_ptr<Body>> body_ptrs_;

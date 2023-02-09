@@ -130,6 +130,31 @@ bool Model::SetUpRenderer(
   return (*renderer_ptr)->SetUp();
 }
 
+bool Model::SetUpRenderer(
+    const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr,
+    std::shared_ptr<FullTextureRenderer> *renderer_ptr) const {
+  // Set up renderer geometry
+  auto copied_body_ptr{std::make_shared<Body>(*body_ptr_)};
+  copied_body_ptr->set_body2world_pose(Transform3fA::Identity());
+  if (!renderer_geometry_ptr->AddBody(copied_body_ptr)) return false;
+
+  // Calculate parameters
+  float focal_length =
+      float(image_size_ - kImageSizeSafetyBoundary) /
+      tanf(asinf(body_ptr_->maximum_body_diameter() / sphere_radius_));
+  float principal_point = float(image_size_) / 2.0f;
+  Intrinsics intrinsics{focal_length,    focal_length, principal_point,
+                        principal_point, image_size_,  image_size_};
+  float z_min = sphere_radius_ - body_ptr_->maximum_body_diameter() * 0.5f;
+  float z_max = sphere_radius_ + body_ptr_->maximum_body_diameter() * 0.5f;
+
+  // Set up renderer
+  *renderer_ptr = std::make_shared<FullTextureRenderer>(
+      "renderer", renderer_geometry_ptr, Transform3fA::Identity(), intrinsics,
+      z_min, z_max);
+  return (*renderer_ptr)->SetUp();
+}
+
 bool Model::LoadModelParameters(int version_id, char model_type,
                                 std::ifstream *ifs) {
   char model_type_file;

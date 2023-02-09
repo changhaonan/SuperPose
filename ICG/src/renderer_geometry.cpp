@@ -3,6 +3,9 @@
 
 #include <icg/renderer_geometry.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <icg/stb_image.h>
+
 namespace icg
 {
 
@@ -118,6 +121,7 @@ namespace icg
         // Create GL Vertex objects
         if (set_up_)
           DeleteGLVertexObjects(&render_data_body);
+        CreateGLTextureObjects(*render_data_body.body_ptr, &render_data_body);
         CreateGLVertexObjectsWithTexture(vertex_data, &render_data_body);
       }
     }
@@ -168,6 +172,7 @@ namespace icg
 
         // Create GL Vertex objects
         glfwMakeContextCurrent(window_);
+        CreateGLTextureObjects(*render_data_body.body_ptr, &render_data_body);
         CreateGLVertexObjectsWithTexture(vertex_data, &render_data_body);
         glfwMakeContextCurrent(nullptr);
       }
@@ -344,15 +349,15 @@ namespace icg
                  &vertices.front(), GL_STATIC_DRAW);
 
     // Vertex
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
     // Normal
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                           (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
     // Texture
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
-                          (void *)(2 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                          (void *)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -363,6 +368,38 @@ namespace icg
   {
     glDeleteBuffers(1, &render_data_body->vbo);
     glDeleteVertexArrays(1, &render_data_body->vao);
+    glDeleteTextures(1, &render_data_body->texture);
+  }
+
+  void RendererGeometry::CreateGLTextureObjects(const Body &body, RenderDataBody *render_data_body)
+  {
+    auto texture_image_path = body.texture_path();
+    if (texture_image_path.empty())
+    {
+      std::cerr << "No texture image path for body " << body.name() << std::endl;
+      return;
+    }
+
+    int width, height, nr_channels;
+    unsigned char *data = stbi_load(texture_image_path.c_str(), &width, &height, &nr_channels, 0);
+
+    // Create texture object
+    glGenTextures(1, &render_data_body->texture);
+    glBindTexture(GL_TEXTURE_2D, render_data_body->texture);
+
+    // Generate texture
+    if (data)
+    {
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+      glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+      std::cout << "Failed to load texture" << std::endl;
+    }
+
+    // Free image data
+    stbi_image_free(data);
   }
 
 } // namespace icg

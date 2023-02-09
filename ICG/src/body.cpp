@@ -160,6 +160,8 @@ namespace icg
 
   float Body::maximum_body_diameter() const { return maximum_body_diameter_; }
 
+  std::string Body::texture_path() const { return texture_path_; }
+
   bool Body::set_up() const { return set_up_; }
 
   bool Body::enable_texture() const { return enable_texture_; }

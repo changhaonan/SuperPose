@@ -3,8 +3,9 @@
 #include <icg/body.h>
 #include <icg/common.h>
 #include <icg/model.h>
-#include <icg/normal_renderer.h>
+// #include <icg/normal_renderer.h>
 #include <icg/renderer_geometry.h>
+#include <icg/texture_renderer.h>
 #include <omp.h>
 
 namespace icg
@@ -76,7 +77,7 @@ namespace icg
         bool SaveModel();
 
         // Helper methods for view generation
-        bool GeneratePointData(const FullNormalRenderer &renderer,
+        bool GeneratePointData(const FullTextureRenderer &renderer,
                                const Transform3fA &camera2body_pose,
                                std::vector<DataPoint> *data_points);
         // Model data

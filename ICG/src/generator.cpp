@@ -38,7 +38,7 @@ namespace icg
     if (!GetPtrIfNameExists(object_name, object_ptrs, object_ptr))
     {
       std::cerr << "Object " << object_name << " in " << parameter_name << ", "
-                << class_name << " does not exist.";
+                << class_name << " does not exist." << std::endl;
       return false;
     }
     return true;
@@ -56,7 +56,7 @@ namespace icg
     if (!GetPtrIfNameExists(object_name, object_ptrs, &object_ptr))
     {
       std::cerr << "Object " << object_name << " in " << parameter_name << ", "
-                << class_name << " does not exist.";
+                << class_name << " does not exist." << std::endl;
       return false;
     }
     return AddFunction(object_ptr);
@@ -77,7 +77,7 @@ namespace icg
       if (!GetPtrIfNameExists(object_name, object_ptrs, &object_ptr))
       {
         std::cerr << "Object " << object_name << " in " << parameter_name << ", "
-                  << class_name << " does not exist.";
+                  << class_name << " does not exist." << std::endl;
         return false;
       }
       if (!AddFunction(object_ptr))
@@ -404,12 +404,15 @@ namespace icg
           if (!GetObject(file_node, "body", class_name, body_ptrs, &body_ptr) ||
               !GetObject(file_node, "color_camera", class_name, color_camera_ptrs,
                          &color_camera_ptr) ||
-              !GetObject(file_node, "depth_camera", class_name, depth_camera_ptrs,
-                         &depth_camera_ptr) ||
               !GetObject(file_node, "feature_model", class_name, feature_model_ptrs,
                          &feature_model_ptr))
             return false;
 
+          // Depth Camera is optional
+          if(!GetObject(file_node, "depth_camera", class_name, depth_camera_ptrs, &depth_camera_ptr))
+          {
+            depth_camera_ptr = nullptr;
+          } 
           // Construct feature modality
           if (MetafilePathEmpty(file_node))
             *feature_modality_ptr = std::make_shared<FeatureModality>(

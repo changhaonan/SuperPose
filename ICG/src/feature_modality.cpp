@@ -8,6 +8,15 @@ namespace icg
                                      const std::shared_ptr<FeatureModel> &feature_model_ptr)
         : Modality(name, body_ptr), color_camera_ptr_(color_camera_ptr), depth_camera_ptr_(depth_camera_ptr), feature_model_ptr_(feature_model_ptr)
     {
+        if (depth_camera_ptr_ == nullptr)
+        {
+            std::cerr << "Depth camera is disabled" << std::endl;
+            depth_enabled_ = false;
+        }
+        else
+        {
+            depth_enabled_ = true;
+        }
     }
 
     FeatureModality::FeatureModality(
@@ -18,6 +27,15 @@ namespace icg
         const std::shared_ptr<FeatureModel> &feature_model_ptr)
         : Modality(name, metafile_path, body_ptr), color_camera_ptr_(color_camera_ptr), depth_camera_ptr_(depth_camera_ptr), feature_model_ptr_(feature_model_ptr)
     {
+        if (depth_camera_ptr_ == nullptr)
+        {
+            std::cerr << "Depth camera is disabled" << std::endl;
+            depth_enabled_ = false;
+        }
+        else
+        {
+            depth_enabled_ = true;
+        }
     }
 
     bool FeatureModality::SetUp()
@@ -52,7 +70,7 @@ namespace icg
                       << std::endl;
             return false;
         }
-        if (!depth_camera_ptr_->set_up())
+        if (depth_enabled_ && !depth_camera_ptr_->set_up())
         {
             std::cerr << "Depth camera " << depth_camera_ptr_->name()
                       << " was not set up" << std::endl;
@@ -81,8 +99,16 @@ namespace icg
             return false;
         // Create new frame object
         cv::Mat color_image = color_camera_ptr_->image();
-        cv::Mat depth_image = depth_camera_ptr_->image();
-        current_frame_ptr_ = WrapFrame(color_image, depth_image);
+        if (depth_enabled_)
+        {
+            cv::Mat depth_image = depth_camera_ptr_->image();
+            current_frame_ptr_ = WrapFrame(color_image, depth_image);
+        }
+        else
+        {
+            cv::Mat depth_image;
+            current_frame_ptr_ = WrapFrame(color_image, depth_image);
+        }
         feature_manager_ptr_->detectFeature(current_frame_ptr_, 0);
 
         return true;

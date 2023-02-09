@@ -87,6 +87,7 @@ namespace icg
           const std::vector<Eigen::Vector3f> &vertices() const;
           const std::vector<std::array<float, 2>> &texture_coords() const;
           float maximum_body_diameter() const;
+          std::string texture_path() const;
 
           // Internal state
           bool set_up() const;

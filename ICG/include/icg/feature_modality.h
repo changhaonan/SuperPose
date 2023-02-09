@@ -87,6 +87,9 @@ namespace icg
         std::string feature_config_file_;
         std::shared_ptr<NetworkFeature> feature_manager_ptr_ = nullptr;
         std::shared_ptr<Frame> current_frame_ptr_ = nullptr;
+
+        // Internal states
+        bool depth_enabled_ = false;
     };
 
 }

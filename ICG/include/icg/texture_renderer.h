@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2022 Manuel Stoiber, German Aerospace Center (DLR)
 
-#ifndef ICG_INCLUDE_ICG_NORMAL_RENDERER_H_
-#define ICG_INCLUDE_ICG_NORMAL_RENDERER_H_
+#pragma once
 
 #include <icg/body.h>
 #include <icg/camera.h>
@@ -22,7 +21,7 @@
 namespace icg {
 
 /**
- * \brief Class that implements the main functionality for a normal renderer and
+ * \brief Class that implements the main functionality for a texture renderer and
  * is used by \ref FullBasicDepthRenderer and \ref FocusedBasicDepthRenderer.
  */
 class TextureRendererCore {
@@ -35,7 +34,7 @@ class TextureRendererCore {
   // Main methods
   bool StartRendering(const Eigen::Matrix4f &projection_matrix,
                       const Transform3fA &world2camera_pose);
-  bool FetchNormalImage(cv::Mat *normal_image);
+  bool FetchTextureImage(cv::Mat *normal_image);
   bool FetchDepthImage(cv::Mat *depth_image);
 
  private:
@@ -71,7 +70,7 @@ class TextureRendererCore {
  * the normal vector of the surface is encoded in the color of each pixel.
  *
  * \details Rendering is started using `StartRendering()`. Images are fetched
- * from the GPU using `FetchNormalImage()` and `FetchDepthImage()`. They can
+ * from the GPU using `FetchTextureImage()` and `FetchDepthImage()`. They can
  * then be accessed using the `normal_image()` and `depth_image()` getter.
  * Setters and all main methods are thread-safe.
  */
@@ -96,7 +95,7 @@ class FullTextureRenderer : public FullDepthRenderer {
 
   // Main methods
   bool StartRendering() override;
-  bool FetchNormalImage();
+  bool FetchTextureImage();
   bool FetchDepthImage() override;
 
   // Getters
@@ -125,7 +124,7 @@ class FullTextureRenderer : public FullDepthRenderer {
  * \details It is able to render both a depth image and an image where the
  * normal vector of the surface is encoded in the color of each pixel. Rendering
  * is started using `StartRendering()`. Images are fetched from the GPU using
- * `FetchNormalImage()` and `FetchDepthImage()`. They can then be accessed using
+ * `FetchTextureImage()` and `FetchDepthImage()`. They can then be accessed using
  * the `normal_image()` and `depth_image()` getter. Setters and all main methods
  * are thread-safe.
  */
@@ -150,7 +149,7 @@ class FocusedTextureRenderer : public FocusedDepthRenderer {
 
   // Main methods
   bool StartRendering() override;
-  bool FetchNormalImage();
+  bool FetchTextureImage();
   bool FetchDepthImage() override;
 
   // Getters
@@ -173,5 +172,3 @@ class FocusedTextureRenderer : public FocusedDepthRenderer {
 };
 
 }  // namespace icg
-
-#endif  // ICG_INCLUDE_ICG_NORMAL_RENDERER_H_

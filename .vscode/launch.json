@@ -106,6 +106,7 @@
                 "${workspaceFolder}/ICG/examples/generator_example_v2",
                 "--detector_port=8080",
                 "--feature_port=9090",
+                "--enable_feature",
             ],
             "console": "integratedTerminal",
             "justMyCode": true

@@ -124,7 +124,7 @@ namespace icg
         std::atomic<int> count = 1;
 #pragma omp parallel
         {
-            std::shared_ptr<FullNormalRenderer> renderer_ptr;
+            std::shared_ptr<FullTextureRenderer> renderer_ptr;
             if (!SetUpRenderer(renderer_geometry_ptrs[omp_get_thread_num()],
                                &renderer_ptr))
                 cancel = true;
@@ -142,7 +142,7 @@ namespace icg
                 // Render images
                 renderer_ptr->set_camera2world_pose(camera2body_poses[i]);
                 renderer_ptr->StartRendering();
-                renderer_ptr->FetchNormalImage();
+                renderer_ptr->FetchTextureImage();
                 renderer_ptr->FetchDepthImage();
 
                 // Generate data
@@ -221,7 +221,7 @@ namespace icg
         return true;
     }
 
-    bool FeatureModel::GeneratePointData(const FullNormalRenderer &renderer,
+    bool FeatureModel::GeneratePointData(const FullTextureRenderer &renderer,
                                          const Transform3fA &camera2body_pose,
                                          std::vector<DataPoint> *data_points)
     {
