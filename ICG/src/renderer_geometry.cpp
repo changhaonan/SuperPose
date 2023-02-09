@@ -87,15 +87,28 @@ namespace icg
     glfwMakeContextCurrent(window_);
     for (auto &render_data_body : render_data_bodies_)
     {
-      // Assemble vertex data
-      std::vector<float> vertex_data;
-      AssembleVertexData(*render_data_body.body_ptr, &vertex_data);
-      render_data_body.n_vertices = unsigned(vertex_data.size()) / 6;
+      if (!enable_texture_) {
+         // Assemble vertex data
+        std::vector<float> vertex_data;
+        AssembleVertexData(*render_data_body.body_ptr, &vertex_data);
+        render_data_body.n_vertices = unsigned(vertex_data.size()) / 6;
 
-      // Create GL Vertex objects
-      if (set_up_)
-        DeleteGLVertexObjects(&render_data_body);
-      CreateGLVertexObjects(vertex_data, &render_data_body);
+        // Create GL Vertex objects
+        if (set_up_)
+          DeleteGLVertexObjects(&render_data_body);
+        CreateGLVertexObjects(vertex_data, &render_data_body);
+      }
+      else {
+        // Assemble vertex data
+        std::vector<float> vertex_data;
+        AssembleVertexDataWithTexture(*render_data_body.body_ptr, &vertex_data);
+        render_data_body.n_vertices = unsigned(vertex_data.size()) / 8;
+
+        // Create GL Vertex objects
+        if (set_up_)
+          DeleteGLVertexObjects(&render_data_body);
+        CreateGLVertexObjectsWithTexture(vertex_data, &render_data_body);
+      }
     }
     glfwMakeContextCurrent(nullptr);
 
@@ -286,6 +299,33 @@ namespace icg
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
                           (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+  }
+
+  void RendererGeometry::CreateGLVertexObjectsWithTexture(const std::vector<float> &vertices,
+                                               RenderDataBody *render_data_body)
+  {
+    glGenVertexArrays(1, &render_data_body->vao);
+    glBindVertexArray(render_data_body->vao);
+
+    glGenBuffers(1, &render_data_body->vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, render_data_body->vbo);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
+                 &vertices.front(), GL_STATIC_DRAW);
+
+    // Vertex
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
+    glEnableVertexAttribArray(0);
+    // Normal
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    // Texture
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+                          (void *)(2 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);

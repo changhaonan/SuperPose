@@ -80,6 +80,8 @@ class RendererGeometry {
                                  std::vector<float> *vertex_data);
   static void CreateGLVertexObjects(const std::vector<float> &vertices,
                                     RenderDataBody *render_data_body);
+  static void CreateGLVertexObjectsWithTexture(const std::vector<float> &vertices,
+                                    RenderDataBody *render_data_body);
   static void DeleteGLVertexObjects(RenderDataBody *render_data_body);
 
   // Variables
@@ -90,6 +92,7 @@ class RendererGeometry {
   std::mutex mutex_;
   bool initial_set_up_ = false;
   bool set_up_ = false;
+  bool enable_texture_ = true;
 };
 
 }  // namespace icg
