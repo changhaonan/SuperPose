@@ -106,7 +106,6 @@
                 "${workspaceFolder}/ICG/examples/generator_example_v2",
                 "--detector_port=8080",
                 "--feature_port=9090",
-                "--enable_feature",
             ],
             "console": "integratedTerminal",
             "justMyCode": true
@@ -171,7 +170,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/examples/run_generated_tracker",
             "args": [
-                "${workspaceFolder}/ICG/examples/generator_example/config.yaml"
+                "${workspaceFolder}/ICG/examples/generator_example_v2/config.yaml"
             ],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

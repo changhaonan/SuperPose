@@ -26,9 +26,24 @@ def generate_icg_tracker(
     )
 
     os.makedirs(icg_dir, exist_ok=True)
-    os.system("cp {} {}".format(os.path.join(model_dir, f"{tracker_name}.obj"), os.path.join(icg_dir, f"{tracker_name}.obj")))
-    os.system("cp {} {}".format(os.path.join(model_dir, f"{tracker_name}_tex.png"), os.path.join(icg_dir, f"{tracker_name}_tex.png")))
-    os.system("cp {} {}".format(os.path.join(model_dir, f"{tracker_name}.obj.mtl"), os.path.join(icg_dir, f"{tracker_name}.obj.mtl")))
+    os.system(
+        "cp {} {}".format(
+            os.path.join(model_dir, f"{tracker_name}.obj"),
+            os.path.join(icg_dir, f"{tracker_name}.obj"),
+        )
+    )
+    os.system(
+        "cp {} {}".format(
+            os.path.join(model_dir, f"{tracker_name}_tex.png"),
+            os.path.join(icg_dir, f"{tracker_name}_tex.png"),
+        )
+    )
+    os.system(
+        "cp {} {}".format(
+            os.path.join(model_dir, f"{tracker_name}.obj.mtl"),
+            os.path.join(icg_dir, f"{tracker_name}.obj.mtl"),
+        )
+    )
 
     # save the config yaml
     config_yaml_path = os.path.join(icg_dir, "config.yaml")
@@ -172,7 +187,7 @@ def generate_icg_tracker(
         config_s.write("feature_model", "feature_model")
         config_s.write("metafile_path", "feature_modality.yaml")
         config_s.endWriteStruct()
-        config_s.endWriteStruct() 
+        config_s.endWriteStruct()
 
     # save the optimizer
     config_s.startWriteStruct("Optimizer", cv2.FileNode_SEQ)
@@ -214,7 +229,7 @@ def generate_icg_tracker(
     cy = float(camera_data[1].split("\t")[3])
     config_yaml_path = os.path.join(icg_dir, "camera_color.yaml")
     cam_color_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
-    cam_color_s.write("load_directory", os.path.join(eval_dir, "color"))
+    cam_color_s.write("load_directory", os.path.join(eval_dir, "frames"))
     cam_color_s.startWriteStruct("intrinsics", cv2.FileNode_MAP)
     cam_color_s.write("f_u", fx)
     cam_color_s.write("f_v", fy)
@@ -224,7 +239,7 @@ def generate_icg_tracker(
     cam_color_s.write("height", 512)
     cam_color_s.endWriteStruct()
     cam_color_s.write("camara2world_pose", np.eye(4))
-    cam_color_s.write("depth_scale", 0.001)
+    cam_color_s.write("depth_scale", 1.0)
     cam_color_s.write("image_name_pre", "a_regular")
     cam_color_s.write("load_index", 0)
     cam_color_s.write("n_leading_zeros", 4)
@@ -235,7 +250,7 @@ def generate_icg_tracker(
     # save the cam depth
     config_yaml_path = os.path.join(icg_dir, "camera_depth.yaml")
     cam_depth_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
-    cam_depth_s.write("load_directory", os.path.join(eval_dir, "depth"))
+    cam_depth_s.write("load_directory", os.path.join(eval_dir, "frames"))
     cam_depth_s.startWriteStruct("intrinsics", cv2.FileNode_MAP)
     cam_depth_s.write("f_u", fx)
     cam_depth_s.write("f_v", fy)
@@ -245,7 +260,7 @@ def generate_icg_tracker(
     cam_depth_s.write("height", 512)
     cam_depth_s.endWriteStruct()
     cam_depth_s.write("camara2world_pose", np.eye(4))
-    cam_depth_s.write("depth_scale", 0.001)
+    cam_depth_s.write("depth_scale", 1.0)
     cam_depth_s.write("image_name_pre", "a_regular")
     cam_depth_s.write("load_index", 0)
     cam_depth_s.write("n_leading_zeros", 4)
@@ -254,9 +269,21 @@ def generate_icg_tracker(
     cam_depth_s.release()
 
     # save the detector
+    # load the init pose
+    pose_file = os.path.join(eval_dir, "../poses_first.txt")
+    with open(pose_file, "r") as f:
+        pose_data = f.readlines()
+    init_pose_list = [float(x) for x in pose_data[1].split("\t")]
+    init_pose = np.array(
+        [
+            init_pose_list[0:3] + [init_pose_list[9]],
+            init_pose_list[3:6] + [init_pose_list[10]],
+            init_pose_list[6:9] + [init_pose_list[11]],
+            [0, 0, 0, 1],
+        ]
+    )
     config_yaml_path = os.path.join(icg_dir, "detector.yaml")
     detector_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
-    init_pose = np.eye(4)  # TODO: find the corrrect init pose
     detector_s.write(
         "body2world_pose", np.linalg.inv(init_pose)
     )  # the object init position
@@ -317,16 +344,19 @@ def generate_icg_tracker(
     modality_s.write("", 0.01 * OBJECT_SCALE)
     modality_s.endWriteStruct()
     modality_s.write("port", feature_port)
-    modality_s.write("config_path", "/home/robot-learning/Projects/SuperPose/cfg/bundletrack/feature_config.yaml")
+    modality_s.write(
+        "config_path",
+        "/home/robot-learning/Projects/SuperPose/cfg/bundletrack/feature_config.yaml",
+    )
     modality_s.release()
 
     # save the object
     config_yaml_path = os.path.join(icg_dir, "object.yaml")
     object_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
-    object_s.write("geometry_path", "reconstruct.obj")
-    object_s.write("geometry_unit_in_meter", 1.0)
+    object_s.write("geometry_path", f"{tracker_name}.obj")
+    object_s.write("geometry_unit_in_meter", 0.001)  # rbot model is in mm
     object_s.write("geometry_counterclockwise", 1)
-    object_s.write("geometry_enable_culling", 1)
+    object_s.write("geometry_enable_culling", 0)
     object_s.write("geometry_enable_color", 1)  # enable color
     object_s.write(
         "geometry2body_pose", np.eye(4)
@@ -360,7 +390,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--enable_feature", action="store_true", help="enable feature modality"
     )
-    parser.add_argument("--use_network_detector", action="store_true", help="use network detector")
+    parser.add_argument(
+        "--use_network_detector", action="store_true", help="use network detector"
+    )
     parser.add_argument("--detector_port", type=int, default=8080, help="detector port")
     parser.add_argument("--feature_port", type=int, default=9090, help="feature port")
     parser.add_argument("--redo_obj", action="store_true", help="redo the obj file")
