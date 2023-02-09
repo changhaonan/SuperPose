@@ -1,10 +1,5 @@
-""" STAR data format to ICG data format
-We need to create a tracker folder for ICG
-Required files:
-- detector.yaml
-- reconstruct.obj
+""" RBOT data format to ICG generator data format
 """
-
 import os
 import numpy as np
 import yaml
@@ -30,22 +25,10 @@ def generate_icg_tracker(
         2.0  # the size of object, influencing the accept threshold for depth modality
     )
 
-    # generate the obj file if not exist
-    obj_path = os.path.join(model_dir, "star", "reconstruct.obj")
-    if redo_obj or not os.path.exists(obj_path):
-        print("Generating the obj file...")
-        pcd_path = os.path.join(model_dir, "star", "reconstruct.pcd")
-        pcd = o3d.io.read_point_cloud(pcd_path)
-        # transfer point cloud to obj using possion
-        mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(
-            pcd, depth=9
-        )
-        o3d.io.write_triangle_mesh(obj_path, mesh)
-
-    # copy the obj file
-    icg_obj_path = os.path.join(icg_dir, "reconstruct.obj")
-    os.makedirs(os.path.dirname(icg_obj_path), exist_ok=True)
-    os.system("cp {} {}".format(obj_path, icg_obj_path))
+    os.makedirs(icg_dir, exist_ok=True)
+    os.system("cp {} {}".format(os.path.join(model_dir, f"{tracker_name}.obj"), os.path.join(icg_dir, f"{tracker_name}.obj")))
+    os.system("cp {} {}".format(os.path.join(model_dir, f"{tracker_name}_tex.png"), os.path.join(icg_dir, f"{tracker_name}_tex.png")))
+    os.system("cp {} {}".format(os.path.join(model_dir, f"{tracker_name}.obj.mtl"), os.path.join(icg_dir, f"{tracker_name}.obj.mtl")))
 
     # save the config yaml
     config_yaml_path = os.path.join(icg_dir, "config.yaml")
@@ -221,26 +204,30 @@ def generate_icg_tracker(
     config_s.release()
 
     # save the cam color
-    context_json_file = os.path.join(model_dir, "star", "context.json")
-    with open(context_json_file, "r") as f:
-        context_data = json.load(f)
-
+    # load camera info
+    camera_config_file = os.path.join(model_dir, "../camera_calibration.txt")
+    with open(camera_config_file, "r") as f:
+        camera_data = f.readlines()
+    fx = float(camera_data[1].split("\t")[0])
+    fy = float(camera_data[1].split("\t")[1])
+    cx = float(camera_data[1].split("\t")[2])
+    cy = float(camera_data[1].split("\t")[3])
     config_yaml_path = os.path.join(icg_dir, "camera_color.yaml")
     cam_color_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
     cam_color_s.write("load_directory", os.path.join(eval_dir, "color"))
     cam_color_s.startWriteStruct("intrinsics", cv2.FileNode_MAP)
-    cam_color_s.write("f_u", context_data["cam-00"]["intrinsic"][0])
-    cam_color_s.write("f_v", context_data["cam-00"]["intrinsic"][1])
-    cam_color_s.write("pp_x", context_data["cam-00"]["intrinsic"][2])
-    cam_color_s.write("pp_y", context_data["cam-00"]["intrinsic"][3])
-    cam_color_s.write("width", context_data["cam-00"]["image_cols"])
-    cam_color_s.write("height", context_data["cam-00"]["image_rows"])
+    cam_color_s.write("f_u", fx)
+    cam_color_s.write("f_v", fy)
+    cam_color_s.write("pp_x", cx)
+    cam_color_s.write("pp_y", cy)
+    cam_color_s.write("width", 640)
+    cam_color_s.write("height", 512)
     cam_color_s.endWriteStruct()
     cam_color_s.write("camara2world_pose", np.eye(4))
     cam_color_s.write("depth_scale", 0.001)
-    cam_color_s.write("image_name_pre", "")
+    cam_color_s.write("image_name_pre", "a_regular")
     cam_color_s.write("load_index", 0)
-    cam_color_s.write("n_leading_zeros", 0)
+    cam_color_s.write("n_leading_zeros", 4)
     cam_color_s.write("image_name_post", "")
     cam_color_s.write("load_image_type", "png")
     cam_color_s.release()
@@ -250,31 +237,26 @@ def generate_icg_tracker(
     cam_depth_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
     cam_depth_s.write("load_directory", os.path.join(eval_dir, "depth"))
     cam_depth_s.startWriteStruct("intrinsics", cv2.FileNode_MAP)
-    cam_depth_s.write("f_u", context_data["cam-00"]["intrinsic"][0])
-    cam_depth_s.write("f_v", context_data["cam-00"]["intrinsic"][1])
-    cam_depth_s.write("pp_x", context_data["cam-00"]["intrinsic"][2])
-    cam_depth_s.write("pp_y", context_data["cam-00"]["intrinsic"][3])
-    cam_depth_s.write("width", context_data["cam-00"]["image_cols"])
-    cam_depth_s.write("height", context_data["cam-00"]["image_rows"])
+    cam_depth_s.write("f_u", fx)
+    cam_depth_s.write("f_v", fy)
+    cam_depth_s.write("pp_x", cx)
+    cam_depth_s.write("pp_y", cy)
+    cam_depth_s.write("width", 640)
+    cam_depth_s.write("height", 512)
     cam_depth_s.endWriteStruct()
     cam_depth_s.write("camara2world_pose", np.eye(4))
     cam_depth_s.write("depth_scale", 0.001)
-    cam_depth_s.write("image_name_pre", "")
+    cam_depth_s.write("image_name_pre", "a_regular")
     cam_depth_s.write("load_index", 0)
-    cam_depth_s.write("n_leading_zeros", 0)
+    cam_depth_s.write("n_leading_zeros", 4)
     cam_depth_s.write("image_name_post", "")
     cam_depth_s.write("load_image_type", "png")
     cam_depth_s.release()
 
     # save the detector
-    kf_results_file = os.path.join(args.eval_dir, "kf_results.npz")
-    if not os.path.exists(kf_results_file):
-        raise FileNotFoundError("kf_results.npz not found!")
-    kf_results = np.load(kf_results_file)
-    cam_poses = kf_results["cam_poses"]
     config_yaml_path = os.path.join(icg_dir, "detector.yaml")
     detector_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
-    init_pose = cam_poses[0]
+    init_pose = np.eye(4)  # TODO: find the corrrect init pose
     detector_s.write(
         "body2world_pose", np.linalg.inv(init_pose)
     )  # the object init position

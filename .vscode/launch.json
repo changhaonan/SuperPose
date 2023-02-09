@@ -91,6 +91,27 @@
             "justMyCode": true
         },
         {
+            "name": "Transfer [rbot]",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/utils/rbot_to_icg.py",
+            "args": [
+                "--tracker_name",
+                "bakingsoda",
+                "--model_dir",
+                "${workspaceFolder}/data/RBOT_dataset/bakingsoda",
+                "--eval_dir",
+                "${workspaceFolder}/data/RBOT_dataset/bakingsoda",
+                "--icg_dir",
+                "${workspaceFolder}/ICG/examples/generator_example_v2",
+                "--detector_port=8080",
+                "--feature_port=9090",
+                "--enable_feature",
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "OnePose: [sfm]",
             "type": "python",
             "request": "launch",

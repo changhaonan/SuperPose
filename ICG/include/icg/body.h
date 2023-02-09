@@ -100,6 +100,7 @@ class Body {
   float geometry_unit_in_meter_ = 1.0f;
   bool geometry_counterclockwise_ = true;
   bool geometry_enable_culling_ = true;
+  bool geometry_enable_color_ = false;
   Transform3fA geometry2body_pose_{Transform3fA::Identity()};
   uchar silhouette_id_ = 0;
 
