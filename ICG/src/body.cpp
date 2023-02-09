@@ -170,8 +170,8 @@ namespace icg
                                     &geometry_counterclockwise_) &&
           ReadRequiredValueFromYaml(fs, "geometry_enable_culling",
                                     &geometry_enable_culling_) &&
-          ReadRequiredValueFromYaml(fs, "geometry_enable_color",
-                                    &geometry_enable_color_) &&
+          ReadRequiredValueFromYaml(fs, "geometry_enable_texture",
+                                    &geometry_enable_texture_) &&
           ReadRequiredValueFromYaml(fs, "geometry2body_pose",
                                     &geometry2body_pose_)))
     {
@@ -199,14 +199,29 @@ namespace icg
     std::vector<tinyobj::material_t> materials;
     std::string warning;
     std::string error;
-    if (!tinyobj::LoadObj(&attributes, &shapes, &materials, &warning, &error,
+    if (geometry_enable_texture_) {
+      // Load obj file with texture
+      if (!tinyobj::LoadObj(&attributes, &shapes, &materials, &warning, &error,
+                          geometry_path_.string().c_str(), geometry_path_.parent_path().string().c_str(), true,
+                          false))
+      {
+        std::cerr << "TinyObjLoader failed to load data from " << geometry_path_
+                  << std::endl;
+        return false;
+      }
+    }
+    else {
+      // Load obj file without texture
+      if (!tinyobj::LoadObj(&attributes, &shapes, &materials, &warning, &error,
                           geometry_path_.string().c_str(), nullptr, true,
                           false))
-    {
-      std::cerr << "TinyObjLoader failed to load data from " << geometry_path_
-                << std::endl;
-      return false;
+      {
+        std::cerr << "TinyObjLoader failed to load data from " << geometry_path_
+                  << std::endl;
+        return false;
+      }
     }
+    
     if (!error.empty())
       std::cerr << error << std::endl;
 
@@ -220,6 +235,22 @@ namespace icg
       {
         vertex *= geometry_unit_in_meter_;
       }
+    }
+    
+    // Load texture coordinates
+    if (geometry_enable_texture_) {
+      texture_coordinates_.resize(attributes.texcoords.size() / 2);
+      memcpy(texture_coordinates_.data(), attributes.texcoords.data(),
+             sizeof(float) * attributes.texcoords.size());
+    }
+
+    // Load material
+    if (geometry_enable_texture_) {
+      if (materials.size() != 1) {
+        std::cerr << "Mesh contains more than one material" << std::endl;
+        return false;
+      }
+      texture_path_ = geometry_path_.parent_path() / materials[0].diffuse_texname;
     }
 
     // Load mesh vertices

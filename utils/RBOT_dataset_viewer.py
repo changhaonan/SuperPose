@@ -16,5 +16,9 @@ if __name__ == "__main__":
     # read the obj file
     mesh = o3d.io.read_triangle_mesh(obj_path, True)
     
+    # save the obj
+    output_path = os.path.join(args.dataset_dir, args.scene_name, f"{args.scene_name}_output.obj")
+    o3d.io.write_triangle_mesh(output_path, mesh)
+
     # visualize
-    o3d.visualization.draw_geometries([mesh])
+    # o3d.visualization.draw_geometries([mesh])

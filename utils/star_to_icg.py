@@ -345,7 +345,7 @@ def generate_icg_tracker(
     object_s.write("geometry_unit_in_meter", 1.0)
     object_s.write("geometry_counterclockwise", 1)
     object_s.write("geometry_enable_culling", 1)
-    object_s.write("geometry_enable_color", 1)  # enable color
+    object_s.write("geometry_enable_texture", 1)  # enable color
     object_s.write(
         "geometry2body_pose", np.eye(4)
     )  # the pose of the geometry in the body frame

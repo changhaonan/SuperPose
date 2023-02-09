@@ -100,7 +100,7 @@ class Body {
   float geometry_unit_in_meter_ = 1.0f;
   bool geometry_counterclockwise_ = true;
   bool geometry_enable_culling_ = true;
-  bool geometry_enable_color_ = false;
+  bool geometry_enable_texture_ = false;
   Transform3fA geometry2body_pose_{Transform3fA::Identity()};
   uchar silhouette_id_ = 0;
 
@@ -114,6 +114,9 @@ class Body {
   std::vector<std::array<int, 3>> mesh_indices_{};
   std::vector<Eigen::Vector3f> vertices_{};
   float maximum_body_diameter_ = 0.0f;
+  // Texture-related
+  std::vector<std::array<float, 2>> texture_coordinates_{};
+  std::string texture_path_{};
 
   // Internal state
   bool set_up_ = false;

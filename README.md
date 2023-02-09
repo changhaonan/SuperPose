@@ -39,13 +39,13 @@ Feb.5th to Feb.11th
     - [x] Create a feature Viewer. [Wed]
     - [ ] Create Sparse feature view of the object. [Wed]
         - [x] Understand what model should generate.
-        - [ ] Render different aspects of the CAD model.
-        - [ ] Augment the normal shader with RGB shader.
-        - [ ] Extract Keypoint feature.
+        - [ ] Render different aspects of the CAD model. [Thurs]
+        - [ ] Augment the normal shader with RGB shader. [Thurs]
+        - [ ] Extract Keypoint feature. [Thurs]
         - [ ] Save Keypoint feature into the model.
         - [ ] Create a sparse feature object. (Each view should have a feature.)
         - [ ] Build connection.
-    - [ ] Build the feature matching. [Thurs]
+    - [ ] Build the feature matching. [Fri]
     - [ ] Compute Jacobian. [Fri]
     - [ ] Test the system run. [Sat]
     - [ ] Further test the system. [Sun]
