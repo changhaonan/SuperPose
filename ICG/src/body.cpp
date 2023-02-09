@@ -6,6 +6,9 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader/tiny_obj_loader.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <icg/stb_image.h>
+
 namespace icg
 {
 
@@ -40,6 +43,16 @@ namespace icg
       return false;
     set_up_ = true;
     return true;
+  }
+
+  Body::~Body()
+  {
+    // FIXME: do I have memory leaks here?
+    if (texture_loaded_)
+    {
+      // stbi_image_free(texture_data_);
+      // texture_loaded_ = false;
+    }
   }
 
   void Body::set_name(const std::string &name) { name_ = name; }
@@ -162,6 +175,14 @@ namespace icg
 
   std::string Body::texture_path() const { return texture_path_; }
 
+  unsigned char *Body::texture_data() const { return texture_data_; }
+
+  int Body::texture_width() const { return texture_width_; }
+
+  int Body::texture_height() const { return texture_height_; }
+
+  int Body::texture_channels() const { return texture_channels_; }
+
   bool Body::set_up() const { return set_up_; }
 
   bool Body::enable_texture() const { return enable_texture_; }
@@ -266,7 +287,10 @@ namespace icg
         std::cerr << "Mesh contains more than one material" << std::endl;
         return false;
       }
+      // Load texture data
       texture_path_ = geometry_path_.parent_path() / materials[0].diffuse_texname;
+      texture_data_ = stbi_load(texture_path_.c_str(), &texture_width_, &texture_height_, &texture_channels_, 0);
+      texture_loaded_ = true;
     }
 
     // Load mesh vertices

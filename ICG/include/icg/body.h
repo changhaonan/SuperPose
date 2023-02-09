@@ -49,6 +49,7 @@ namespace icg
                bool geometry_enable_culling, const Transform3fA &geometry2body_pose,
                uchar silhouette_id = 0);
           Body(const std::string &name, const std::filesystem::path &metafile_path);
+          ~Body();
           bool SetUp();
 
           // Geometry setters
@@ -87,7 +88,12 @@ namespace icg
           const std::vector<Eigen::Vector3f> &vertices() const;
           const std::vector<std::array<float, 2>> &texture_coords() const;
           float maximum_body_diameter() const;
+          // Texture
           std::string texture_path() const;
+          unsigned char* texture_data() const;
+          int texture_width() const;
+          int texture_height() const;
+          int texture_channels() const;
 
           // Internal state
           bool set_up() const;
@@ -123,7 +129,11 @@ namespace icg
           std::vector<std::array<float, 2>> texture_coords_{};
           std::vector<std::array<int, 3>> mesh_texture_indices_{};
           std::string texture_path_{};
-
+          unsigned char* texture_data_{nullptr};
+          int texture_width_{0};
+          int texture_height_{0};
+          int texture_channels_{0};
+          bool texture_loaded_{false};
           // Internal state
           bool set_up_ = false;
 

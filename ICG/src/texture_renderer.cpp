@@ -266,7 +266,7 @@ namespace icg
             std::cerr << "Set up renderer " << name_ << " first" << std::endl;
             return false;
         }
-        return core_.FetchTextureImage(&normal_image_);
+        return core_.FetchTextureImage(&texture_image_);
     }
 
     bool FullTextureRenderer::FetchDepthImage()
@@ -280,9 +280,9 @@ namespace icg
         return core_.FetchDepthImage(&depth_image_);
     }
 
-    const cv::Mat &FullTextureRenderer::normal_image() const
+    const cv::Mat &FullTextureRenderer::texture_image() const
     {
-        return normal_image_;
+        return texture_image_;
     }
 
     Eigen::Vector3f FullTextureRenderer::NormalVector(
@@ -296,7 +296,7 @@ namespace icg
     Eigen::Vector3f FullTextureRenderer::NormalVector(
         const cv::Point2i &image_coordinate) const
     {
-        auto normal_image_value{normal_image_.at<cv::Vec4b>(image_coordinate)};
+        auto normal_image_value{texture_image_.at<cv::Vec4b>(image_coordinate)};
         return Eigen::Vector3f{1.0f - float(normal_image_value[0]) / 127.5f,
                                1.0f - float(normal_image_value[1]) / 127.5f,
                                1.0f - float(normal_image_value[2]) / 127.5f};
@@ -305,7 +305,7 @@ namespace icg
     cv::Vec4b FullTextureRenderer::NormalImageValue(
         const cv::Point2i &image_coordinate) const
     {
-        return normal_image_.at<cv::Vec4b>(image_coordinate);
+        return texture_image_.at<cv::Vec4b>(image_coordinate);
     }
 
     bool FullTextureRenderer::LoadMetaData()
@@ -324,9 +324,9 @@ namespace icg
 
     void FullTextureRenderer::ClearNormalImage()
     {
-        normal_image_.create(cv::Size{intrinsics_.width, intrinsics_.height},
+        texture_image_.create(cv::Size{intrinsics_.width, intrinsics_.height},
                              CV_8UC4);
-        normal_image_.setTo(cv::Vec4b{0, 0, 0, 0});
+        texture_image_.setTo(cv::Vec4b{0, 0, 0, 0});
     }
 
     FocusedTextureRenderer::FocusedTextureRenderer(
@@ -422,7 +422,7 @@ namespace icg
             std::cerr << "Set up renderer " << name_ << " first" << std::endl;
             return false;
         }
-        return core_.FetchTextureImage(&focused_normal_image_);
+        return core_.FetchTextureImage(&focused_texture_image_);
     }
 
     bool FocusedTextureRenderer::FetchDepthImage()
@@ -436,9 +436,9 @@ namespace icg
         return core_.FetchDepthImage(&focused_depth_image_);
     }
 
-    const cv::Mat &FocusedTextureRenderer::focused_normal_image() const
+    const cv::Mat &FocusedTextureRenderer::focused_texture_image() const
     {
-        return focused_normal_image_;
+        return focused_texture_image_;
     }
 
     Eigen::Vector3f FocusedTextureRenderer::NormalVector(
@@ -454,7 +454,7 @@ namespace icg
     {
         int u = int((image_coordinate.x - corner_u_) * scale_ + 0.5f);
         int v = int((image_coordinate.y - corner_v_) * scale_ + 0.5f);
-        auto normal_image_value{focused_normal_image_.at<cv::Vec4b>(v, u)};
+        auto normal_image_value{focused_texture_image_.at<cv::Vec4b>(v, u)};
         return Eigen::Vector3f{1.0f - float(normal_image_value[0]) / 127.5f,
                                1.0f - float(normal_image_value[1]) / 127.5f,
                                1.0f - float(normal_image_value[2]) / 127.5f};
@@ -465,7 +465,7 @@ namespace icg
     {
         int u = int((image_coordinate.x - corner_u_) * scale_ + 0.5f);
         int v = int((image_coordinate.y - corner_v_) * scale_ + 0.5f);
-        return focused_normal_image_.at<cv::Vec4b>(v, u);
+        return focused_texture_image_.at<cv::Vec4b>(v, u);
     }
 
     bool FocusedTextureRenderer::LoadMetaData()
@@ -485,8 +485,8 @@ namespace icg
 
     void FocusedTextureRenderer::ClearNormalImage()
     {
-        focused_normal_image_.create(cv::Size{image_size_, image_size_}, CV_8UC4);
-        focused_normal_image_.setTo(cv::Vec4b{0, 0, 0, 0});
+        focused_texture_image_.create(cv::Size{image_size_, image_size_}, CV_8UC4);
+        focused_texture_image_.setTo(cv::Vec4b{0, 0, 0, 0});
     }
 
 } // namespace icg

@@ -99,7 +99,7 @@ class FullTextureRenderer : public FullDepthRenderer {
   bool FetchDepthImage() override;
 
   // Getters
-  const cv::Mat &normal_image() const;
+  const cv::Mat &texture_image() const;
 
   // Getters that calculate values based on the rendered normal image
   Eigen::Vector3f NormalVector(cv::Vec4b normal_image_value) const;
@@ -112,7 +112,7 @@ class FullTextureRenderer : public FullDepthRenderer {
   void ClearNormalImage();
 
   // Data
-  cv::Mat normal_image_;
+  cv::Mat texture_image_;
   TextureRendererCore core_{};
 };
 
@@ -153,7 +153,7 @@ class FocusedTextureRenderer : public FocusedDepthRenderer {
   bool FetchDepthImage() override;
 
   // Getters
-  const cv::Mat &focused_normal_image() const;
+  const cv::Mat &focused_texture_image() const;
 
   // Getters that calculate values based on the rendered normal image for the
   // original image coordinates
@@ -167,7 +167,7 @@ class FocusedTextureRenderer : public FocusedDepthRenderer {
   void ClearNormalImage();
 
   // Data
-  cv::Mat focused_normal_image_;
+  cv::Mat focused_texture_image_;
   TextureRendererCore core_{};
 };
 

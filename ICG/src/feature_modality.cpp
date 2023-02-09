@@ -300,7 +300,7 @@ namespace icg
     {
         if (!set_up_)
         {
-            std::cerr << "Set up depth modality " << name_ << " first" << std::endl;
+            std::cerr << "Set up feature modality " << name_ << " first" << std::endl;
             return false;
         }
         return true;

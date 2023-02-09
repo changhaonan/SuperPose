@@ -3,9 +3,6 @@
 
 #include <icg/renderer_geometry.h>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <icg/stb_image.h>
-
 namespace icg
 {
 
@@ -380,26 +377,23 @@ namespace icg
       return;
     }
 
-    int width, height, nr_channels;
-    unsigned char *data = stbi_load(texture_image_path.c_str(), &width, &height, &nr_channels, 0);
-
-    // Create texture object
     glGenTextures(1, &render_data_body->texture);
     glBindTexture(GL_TEXTURE_2D, render_data_body->texture);
+    // set the texture wrapping/filtering options (on the currently bound texture object)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // Generate texture
-    if (data)
-    {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-      glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-      std::cout << "Failed to load texture" << std::endl;
-    }
+    // Alignment setting
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+    glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
 
-    // Free image data
-    stbi_image_free(data);
+    // load and generate the texture
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, body.texture_width(), body.texture_height(), 0, GL_RGB, GL_UNSIGNED_BYTE, body.texture_data());
+    glGenerateMipmap(GL_TEXTURE_2D);
   }
 
 } // namespace icg
