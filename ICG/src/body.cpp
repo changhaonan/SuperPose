@@ -144,12 +144,19 @@ namespace icg
     return world2geometry_pose_;
   }
 
-  const std::vector<std::array<int, 3>> &Body::mesh_indices() const
+  const std::vector<std::array<int, 3>> &Body::mesh_vertex_indices() const
   {
-    return mesh_indices_;
+    return mesh_vertex_indices_;
+  }
+
+  const std::vector<std::array<int, 3>> &Body::mesh_texture_indices() const
+  {
+    return mesh_texture_indices_;
   }
 
   const std::vector<Eigen::Vector3f> &Body::vertices() const { return vertices_; }
+
+  const std::vector<std::array<float, 2>> &Body::texture_coords() const { return texture_coords_; }
 
   float Body::maximum_body_diameter() const { return maximum_body_diameter_; }
 
@@ -199,29 +206,31 @@ namespace icg
     std::vector<tinyobj::material_t> materials;
     std::string warning;
     std::string error;
-    if (geometry_enable_texture_) {
+    if (geometry_enable_texture_)
+    {
       // Load obj file with texture
       if (!tinyobj::LoadObj(&attributes, &shapes, &materials, &warning, &error,
-                          geometry_path_.string().c_str(), geometry_path_.parent_path().string().c_str(), true,
-                          false))
+                            geometry_path_.string().c_str(), geometry_path_.parent_path().string().c_str(), true,
+                            false))
       {
         std::cerr << "TinyObjLoader failed to load data from " << geometry_path_
                   << std::endl;
         return false;
       }
     }
-    else {
+    else
+    {
       // Load obj file without texture
       if (!tinyobj::LoadObj(&attributes, &shapes, &materials, &warning, &error,
-                          geometry_path_.string().c_str(), nullptr, true,
-                          false))
+                            geometry_path_.string().c_str(), nullptr, true,
+                            false))
       {
         std::cerr << "TinyObjLoader failed to load data from " << geometry_path_
                   << std::endl;
         return false;
       }
     }
-    
+
     if (!error.empty())
       std::cerr << error << std::endl;
 
@@ -236,17 +245,20 @@ namespace icg
         vertex *= geometry_unit_in_meter_;
       }
     }
-    
+
     // Load texture coordinates
-    if (geometry_enable_texture_) {
-      texture_coordinates_.resize(attributes.texcoords.size() / 2);
-      memcpy(texture_coordinates_.data(), attributes.texcoords.data(),
+    if (geometry_enable_texture_)
+    {
+      texture_coords_.resize(attributes.texcoords.size() / 2);
+      memcpy(texture_coords_.data(), attributes.texcoords.data(),
              sizeof(float) * attributes.texcoords.size());
     }
 
     // Load material
-    if (geometry_enable_texture_) {
-      if (materials.size() != 1) {
+    if (geometry_enable_texture_)
+    {
+      if (materials.size() != 1)
+      {
         std::cerr << "Mesh contains more than one material" << std::endl;
         return false;
       }
@@ -254,7 +266,7 @@ namespace icg
     }
 
     // Load mesh vertices
-    mesh_indices_.clear();
+    mesh_vertex_indices_.clear();
     mesh_texture_indices_.clear();
     for (const auto &shape : shapes)
     {
@@ -270,11 +282,12 @@ namespace icg
 
         if (geometry_counterclockwise_)
         {
-          mesh_indices_.push_back(std::array<int, 3>{
+          mesh_vertex_indices_.push_back(std::array<int, 3>{
               shape.mesh.indices[index_offset].vertex_index,
               shape.mesh.indices[index_offset + 1].vertex_index,
               shape.mesh.indices[index_offset + 2].vertex_index});
-          if (geometry_enable_texture_ ) {
+          if (geometry_enable_texture_)
+          {
             mesh_texture_indices_.push_back(std::array<int, 3>{
                 shape.mesh.indices[index_offset].texcoord_index,
                 shape.mesh.indices[index_offset + 1].texcoord_index,
@@ -283,11 +296,12 @@ namespace icg
         }
         else
         {
-          mesh_indices_.push_back(std::array<int, 3>{
+          mesh_vertex_indices_.push_back(std::array<int, 3>{
               shape.mesh.indices[index_offset + 2].vertex_index,
               shape.mesh.indices[index_offset + 1].vertex_index,
               shape.mesh.indices[index_offset].vertex_index});
-          if (geometry_enable_texture_ ) {
+          if (geometry_enable_texture_)
+          {
             mesh_texture_indices_.push_back(std::array<int, 3>{
                 shape.mesh.indices[index_offset + 2].texcoord_index,
                 shape.mesh.indices[index_offset + 1].texcoord_index,

@@ -76,6 +76,8 @@ class RendererGeometry {
   // Helper methods
   static void AssembleVertexData(const Body &body,
                                  std::vector<float> *vertex_data);
+  static void AssembleVertexDataWithTexture(const Body &body,
+                                 std::vector<float> *vertex_data);
   static void CreateGLVertexObjects(const std::vector<float> &vertices,
                                     RenderDataBody *render_data_body);
   static void DeleteGLVertexObjects(RenderDataBody *render_data_body);
