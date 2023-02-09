@@ -53,7 +53,7 @@ class TextureRendererCore {
 
   // OpenGL variables
   unsigned fbo_ = 0;
-  unsigned rbo_normal_ = 0;
+  unsigned rbo_texture_ = 0;
   unsigned rbo_depth_ = 0;
   unsigned shader_program_ = 0;
 

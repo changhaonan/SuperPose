@@ -308,7 +308,7 @@ namespace icg
       {
         vertex_data->insert(end(*vertex_data), points[i].data(), points[i].data() + 3);
         vertex_data->insert(end(*vertex_data), normal.data(), normal.data() + 3);
-        vertex_data->insert(end(*vertex_data), texture_coords[i].data(), texture_coords[i].data() + 3);
+        vertex_data->insert(end(*vertex_data), texture_coords[i].data(), texture_coords[i].data() + 2);
       }
     }
   }

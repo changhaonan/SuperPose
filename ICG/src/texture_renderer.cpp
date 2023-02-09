@@ -125,7 +125,7 @@ namespace icg
         glPixelStorei(GL_PACK_ROW_LENGTH,
                       GLint(normal_image->step / normal_image->elemSize()));
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo_normal_);
+        glBindRenderbuffer(GL_RENDERBUFFER, rbo_texture_);
         glReadPixels(0, 0, image_width_, image_height_, GL_BGRA, GL_UNSIGNED_BYTE,
                      normal_image->data);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
@@ -161,8 +161,8 @@ namespace icg
         renderer_geometry_ptr_->MakeContextCurrent();
 
         // Initialize renderbuffer bodies_render_data
-        glGenRenderbuffers(1, &rbo_normal_);
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo_normal_);
+        glGenRenderbuffers(1, &rbo_texture_);
+        glBindRenderbuffer(GL_RENDERBUFFER, rbo_texture_);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, image_width_, image_height_);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
@@ -176,7 +176,7 @@ namespace icg
         glGenFramebuffers(1, &fbo_);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                  GL_RENDERBUFFER, rbo_normal_);
+                                  GL_RENDERBUFFER, rbo_texture_);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                   GL_RENDERBUFFER, rbo_depth_);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -186,7 +186,7 @@ namespace icg
     void TextureRendererCore::DeleteBufferObjects()
     {
         renderer_geometry_ptr_->MakeContextCurrent();
-        glDeleteRenderbuffers(1, &rbo_normal_);
+        glDeleteRenderbuffers(1, &rbo_texture_);
         glDeleteRenderbuffers(1, &rbo_depth_);
         glDeleteFramebuffers(1, &fbo_);
         renderer_geometry_ptr_->DetachContext();

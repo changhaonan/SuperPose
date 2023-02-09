@@ -149,7 +149,7 @@ namespace icg
                 cv::imshow("depth", renderer_ptr->depth_image());
                 cv::imshow("texture", renderer_ptr->texture_image());
                 cv::waitKey(0);
-                
+
                 // Generate data
                 views_[i].orientation =
                     camera2body_poses[i].matrix().col(2).segment(0, 3);
