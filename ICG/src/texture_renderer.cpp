@@ -14,23 +14,32 @@ namespace icg
         "layout(location = 0) in vec3 aPos;\n"
         "layout(location = 1) in vec3 aNormal;\n"
         "layout(location = 2) in vec2 aTexCoord;\n"
-        "out vec2 TexCoord;"
+        "out VertexOut {\n"
+        "   vec3 normal;\n"
+        "   vec2 texcoord;\n"
+        "   flat int vertex_id;\n"
+        "} vertex_shader_out;\n"
         "uniform mat4 Trans;\n"
         "uniform mat3 Rot;\n"
         "void main()\n"
         "{\n"
         "  gl_Position = Trans * vec4(aPos, 1.0);\n"
-        "  TexCoord = aTexCoord;\n"
+        "  vertex_shader_out.texcoord = aTexCoord;\n"
+        "  vertex_shader_out.normal = Rot * aNormal;\n"
         "}";
 
     std::string TextureRendererCore::fragment_shader_code_ =
         "#version 330 core\n"
-        "in vec2 TexCoord;"
+        "in VertexOut {\n"
+        "   vec3 normal;\n"
+        "   vec2 texcoord;\n"
+        "   flat int vertex_id;\n"
+        "} vertex_shader_in;\n"
         "out vec4 FragColor;\n"
         "uniform sampler2D Texture;\n"
         "void main()\n"
         "{\n"
-        "	 FragColor = texture(Texture, TexCoord);\n"
+        "	 FragColor = texture(Texture, vertex_shader_in.texcoord);\n"
         "}";
 
     TextureRendererCore::~TextureRendererCore()
@@ -326,7 +335,7 @@ namespace icg
     void FullTextureRenderer::ClearNormalImage()
     {
         texture_image_.create(cv::Size{intrinsics_.width, intrinsics_.height},
-                             CV_8UC4);
+                              CV_8UC4);
         texture_image_.setTo(cv::Vec4b{0, 0, 0, 0});
     }
 

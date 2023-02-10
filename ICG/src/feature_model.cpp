@@ -154,26 +154,6 @@ namespace icg
             renderer_ptr->FetchTextureImage();
             renderer_ptr->FetchDepthImage();
 
-            // Extract kp and desc
-            cv::Mat texture_image = renderer_ptr->texture_image();
-            // Resize image to 400x400
-            cv::resize(texture_image, texture_image, cv::Size(600, 600));
-            cv::Mat depth_image;
-            auto frame = WrapFrame(texture_image, depth_image);
-            feature_manager_ptr_->detectFeature(frame);
-
-            // Visualize
-#define VISUALIZE_SPARSE_MODEL
-#ifdef VISUALIZE_SPARSE_MODEL        
-            // Visualize keypoints
-            for (auto &kp : frame->_keypts)
-            {
-                cv::circle(texture_image, kp.pt, 2, cv::Scalar(0, 0, 255), -1);
-            }
-            cv::imshow("texture", texture_image);
-            cv::waitKey(0);
-#endif
-
             // Generate data
             views_[i].orientation =
                 camera2body_poses[i].matrix().col(2).segment(0, 3);
@@ -254,6 +234,45 @@ namespace icg
                                          const Transform3fA &camera2body_pose,
                                          std::vector<DataPoint> *data_points)
     {
+        // Extract kp and desc
+        cv::Mat texture_image = renderer.texture_image();
+        // Resize image to 400x400
+        cv::resize(texture_image, texture_image, cv::Size(600, 600));
+        cv::Mat depth_image;
+        auto frame = WrapFrame(texture_image, depth_image);
+        feature_manager_ptr_->detectFeature(frame);
+
+        // Visualize
+#define VISUALIZE_SPARSE_MODEL
+#ifdef VISUALIZE_SPARSE_MODEL
+        // Visualize keypoints
+        for (auto &kp : frame->_keypts)
+        {
+            cv::circle(texture_image, kp.pt, 2, cv::Scalar(0, 0, 255), -1);
+        }
+        cv::imshow("texture", texture_image);
+        cv::waitKey(0);
+#endif
+
+        // Calculate data for contour points
+        int counter = 0;
+        for (auto data_point{begin(*data_points)}; data_point != end(*data_points);)
+        {
+            if (counter >= frame->_num_feat)
+                return true; // Early stop
+            auto kp = frame->_keypts[counter];
+            cv::Point2i center{kp.pt.x, kp.pt.y};
+            Eigen::Vector3f center_f_camera{renderer.PointVector(center)};
+            Eigen::Vector3f normal_f_camera{renderer.NormalVector(center)};
+            data_point->center_f_body = camera2body_pose * center_f_camera;
+            data_point->normal_f_body = camera2body_pose.rotation() * normal_f_camera;
+
+            // Copy feature descriptor
+            memcpy(data_point->descriptor.data(), (void *)(frame->_feat_des.ptr<float>(counter, 0)), sizeof(float) * frame->_feat_dim);
+
+            data_point++;
+            counter++;
+        }
         return true;
     }
 

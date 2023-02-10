@@ -711,6 +711,9 @@ void NetworkFeature::detectFeature(std::shared_ptr<Frame> frame, const float rot
     std::memcpy(info.data(), recv_msgs[0].data(), info.size() * sizeof(int));
     const int num_feat = info[0];
     const int feat_dim = info[1];
+    // Update info
+    frame->_num_feat = num_feat;
+    frame->_feat_dim = feat_dim;
 
     std::vector<float> kpts_array(num_feat * 2);
     std::memcpy(kpts_array.data(), recv_msgs[1].data(), kpts_array.size() * sizeof(float));

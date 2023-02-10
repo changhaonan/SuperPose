@@ -82,6 +82,9 @@ public:
     bool _pose_inited;
     std::map<std::pair<float, float>, std::shared_ptr<MapPoint>> _map_points;
 
+    // info
+    int _num_feat;
+    int _feat_dim;
     static zmq::context_t context;
     static zmq::socket_t socket;
 
