@@ -160,7 +160,7 @@ namespace icg
                 camera2body_poses[i].matrix().col(2).segment(0, 3);
             views_[i].data_points.resize(n_points_);
             if (!GeneratePointData(*renderer_ptr, camera2body_poses[i],
-                                   &views_[i].data_points))
+                                   &views_[i].data_points, views_[i].feature_descriptor))
                 cancel = true;
         }
 
@@ -233,7 +233,8 @@ namespace icg
 
     bool FeatureModel::GeneratePointData(const FullTextureRenderer &renderer,
                                          const Transform3fA &camera2body_pose,
-                                         std::vector<DataPoint> *data_points)
+                                         std::vector<DataPoint> *data_points,
+                                         cv::Mat &descriptor)
     {
         // Extract kp and desc
         cv::Mat texture_image = renderer.texture_image();
@@ -247,12 +248,12 @@ namespace icg
         feature_manager_ptr_->detectFeature(frame);
 
         // Visualize
-#define VISUALIZE_SPARSE_MODEL
+// #define VISUALIZE_SPARSE_MODEL
 #ifdef VISUALIZE_SPARSE_MODEL
         // Visualize keypoints
         for (auto &kp : frame->_keypts)
         {
-            cv::circle(texture_image, kp.pt, 2, cv::Scalar(0, 0, 255), -1);
+            cv::circle(texture_image, kp.pt, 4, cv::Scalar(0, 255, 0), 1);
         }
         cv::imshow("texture", texture_image);
         cv::imshow("depth", depth_image);
@@ -260,7 +261,7 @@ namespace icg
         cv::waitKey(0);
 #endif
 
-        // Calculate data for contour points
+        // Calculate data for feature points
         int counter = 0;
         for (auto data_point{begin(*data_points)}; data_point != end(*data_points);)
         {
@@ -273,19 +274,27 @@ namespace icg
             data_point->center_f_body = camera2body_pose * center_f_camera;
             data_point->normal_f_body = camera2body_pose.rotation() * normal_f_camera;
 
-            // Copy feature descriptor
-            memcpy(data_point->descriptor.data(), (void *)(frame->_feat_des.ptr<float>(counter, 0)), sizeof(float) * frame->_feat_dim);
-
             data_point++;
             counter++;
         }
+
+        // Copy descriptor
+        descriptor = frame->_feat_des.clone();
         return true;
     }
 
     std::shared_ptr<Frame> FeatureModel::WrapFrame(cv::Mat &color_image, cv::Mat &depth_image)
     {
         auto frame_ptr = std::make_shared<Frame>();
-        frame_ptr->_color = color_image;
+        // If channel is 4, change it to 3
+        if (color_image.channels() == 4)
+        {
+            cv::cvtColor(color_image, frame_ptr->_color, cv::COLOR_RGBA2RGB);
+        }
+        else
+        {
+            frame_ptr->_color = color_image;
+        }
         frame_ptr->_depth = depth_image;
 
         // ROI

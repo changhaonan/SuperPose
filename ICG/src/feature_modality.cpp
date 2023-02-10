@@ -87,6 +87,12 @@ namespace icg
     {
         if (!IsSetup())
             return false;
+
+        PrecalculatePoseVariables();
+        PrecalculateIterationDependentVariables(corr_iteration);
+
+        // Compute current ROI first
+
         // Create new frame object
         cv::Mat color_image = color_camera_ptr_->image();
         if (depth_enabled_)
@@ -101,6 +107,15 @@ namespace icg
         }
         feature_manager_ptr_->detectFeature(current_frame_ptr_, 0);
 
+        // Search closest template view
+        const FeatureModel::View *view;
+        feature_model_ptr_->GetClosestView(body2camera_pose_, &view);
+
+        // Compute correspondences
+        std::vector<cv::DMatch> matches;
+        MatchFeatures(view->feature_descriptor, current_frame_ptr_->_feat_des, matches);
+
+        std::cout << "Found " << matches.size() << " matches.." << std::endl;
         return true;
     }
 
@@ -153,6 +168,41 @@ namespace icg
         return true;
     }
 
+    void FeatureModality::PrecalculateCameraVariables()
+    {
+        // We majorly use the color camera intrinsics
+        fu_ = color_camera_ptr_->intrinsics().fu;
+        fv_ = color_camera_ptr_->intrinsics().fv;
+        ppu_ = color_camera_ptr_->intrinsics().ppu;
+        ppv_ = color_camera_ptr_->intrinsics().ppv;
+        image_width_minus_1_ = color_camera_ptr_->intrinsics().width - 1;
+        image_height_minus_1_ = color_camera_ptr_->intrinsics().height - 1;
+    }
+
+    bool FeatureModality::PrecalculateModelVariables()
+    {
+        float stride = feature_model_ptr_->stride_depth_offset();
+        float max_radius = feature_model_ptr_->max_radius_depth_offset();
+        return true;
+    }
+
+    void FeatureModality::PrecalculateRendererVariables()
+    {
+    }
+
+    void FeatureModality::PrecalculatePoseVariables()
+    {
+        body2camera_pose_ =
+            color_camera_ptr_->world2camera_pose() * body_ptr_->body2world_pose();
+        camera2body_pose_ = body2camera_pose_.inverse();
+        body2camera_rotation_ = body2camera_pose_.rotation().matrix();
+    }
+
+    void FeatureModality::PrecalculateIterationDependentVariables(
+        int corr_iteration)
+    {
+    }
+
     void FeatureModality::VisualizePointsFeatureImage(const std::string &title, int save_idx) const
     {
         // Visualize the current feature object
@@ -161,6 +211,9 @@ namespace icg
         {
             cv::circle(visualization_image, kpts.pt, 2, cv::Scalar(0, 255, 0), 2);
         }
+
+        // Visualize the current feature view
+
         ShowAndSaveImage(name_ + "_" + title, save_idx, visualization_image);
     }
 
@@ -269,6 +322,38 @@ namespace icg
     // Visualization method
     bool FeatureModality::VisualizeCorrespondences(const std::string &title, int save_idx)
     {
+        return true;
+    }
+
+    // Helper methods for Correspodence
+    bool FeatureModality::MatchFeatures(
+        const cv::Mat &view_descriptor, const cv::Mat &frame_descriptor, std::vector<cv::DMatch> &matches, float ratio_thresh)
+    {
+        // Create cv::Mat from std::vector<float>
+        cv::Mat descriptor_query_mat; // Query descriptor
+        cv::Mat descriptor_train_mat;
+
+        view_descriptor.convertTo(descriptor_query_mat, CV_32F);
+        frame_descriptor.convertTo(descriptor_train_mat, CV_32F);
+
+        // Match
+        cv::FlannBasedMatcher matcher = cv::FlannBasedMatcher(cv::makePtr<cv::flann::LshIndexParams>(12, 20, 2));
+        std::vector<std::vector<cv::DMatch>> knn_matches;
+        matcher.knnMatch(descriptor_query_mat, descriptor_train_mat, knn_matches, 2);
+
+        // Filter matches using the Lowe's ratio test
+        std::vector<std::pair<int, int>> good_matches_int2;
+        for (auto j = 0; j < knn_matches.size(); j++)
+        {
+            if (knn_matches[j].size() >= 2)
+            {
+                if (knn_matches[j][0].distance < ratio_thresh * knn_matches[j][1].distance)
+                {
+                    matches.push_back(knn_matches[j][0]);
+                }
+            }
+        }
+
         return true;
     }
 

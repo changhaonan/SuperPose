@@ -25,9 +25,7 @@ namespace icg
             const std::shared_ptr<FeatureModel> &feature_model_ptr);
         bool SetUp() override;
 
-        struct DataPoint
-        {
-        };
+        using DataPoint = FeatureModel::DataPoint;
 
         // Main methods
         bool StartModality(int iteration, int corr_iteration) override;
@@ -56,6 +54,16 @@ namespace icg
     private:
         // Helper method for setup
         bool LoadMetaData();
+
+        // Helper methods for precalculation of referenced data and changing data
+        void PrecalculateCameraVariables();
+        bool PrecalculateModelVariables();
+        void PrecalculateRendererVariables();
+        void PrecalculatePoseVariables();
+        void PrecalculateIterationDependentVariables(int corr_iteration);
+
+        // Helper methods for CalculateCorrespondences
+        bool MatchFeatures(const cv::Mat& view_descriptor, const cv::Mat& frame_descriptor, std::vector<cv::DMatch> &matches, float ratio_thresh=0.8f);
 
         // Helper method for visualization
         void VisualizePointsFeatureImage(const std::string &title, int save_idx) const;
@@ -87,6 +95,20 @@ namespace icg
 
         // Internal states
         bool depth_enabled_ = false;
+
+        // Precalculated variables for camera (referenced data)
+        float fu_{};
+        float fv_{};
+        float ppu_{};
+        float ppv_{};
+        int image_width_minus_1_{};
+        int image_height_minus_1_{};
+        float depth_scale_{};
+
+        // Precalculated variables for poses (continuously changing)
+        Transform3fA body2camera_pose_{};
+        Transform3fA camera2body_pose_{};
+        Eigen::Matrix3f body2camera_rotation_{};
     };
 
 }

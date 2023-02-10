@@ -24,11 +24,11 @@ namespace icg
     private:
         // Model definition
         static constexpr char kModelType = 'f';
-        static constexpr int kVersionID = 6;
+        static constexpr int kVersionID = 7;
 
         // Some constants
-        static constexpr char kFeatureType = 'r';  // 'r' for R2D2, 's' for superpoint, 'o' for orb
-        static constexpr int kDescriptorDim = 128; // Use R2D2
+        // static constexpr char kFeatureType = 'r';  // 'r' for R2D2, 's' for superpoint, 'o' for orb
+        // static constexpr int kDescriptorDim = 128; // Use R2D2
 
     public:
         FeatureModel(const std::string &name,
@@ -40,16 +40,11 @@ namespace icg
          * used by the \ref FeatureModel.
          * @param center_f_body 3D feature point.
          * @param normal_f_body 3D surface normal vector at feature point location.
-         * @param depth_offsets differences between the depth value of the
-         * `center_f_body` coordinate and the minimum depth value within a quadratic
-         * kernel for which radius values are increasing by the parameter
-         * `stride_depth_offset`.
          */
         struct DataPoint
         {
             Eigen::Vector3f center_f_body;
             Eigen::Vector3f normal_f_body;
-            std::array<float, kDescriptorDim> descriptor{};
         };
 
         /**
@@ -63,6 +58,7 @@ namespace icg
         struct View
         {
             std::vector<DataPoint> data_points;
+            cv::Mat feature_descriptor{};
             Eigen::Vector3f orientation;
         };
 
@@ -86,7 +82,8 @@ namespace icg
         // Helper methods for view generation
         bool GeneratePointData(const FullTextureRenderer &renderer,
                                const Transform3fA &camera2body_pose,
-                               std::vector<DataPoint> *data_points);
+                               std::vector<DataPoint> *data_points,
+                               cv::Mat& descriptor);
         // Model data
         std::vector<View> views_;
         // Feature manager

@@ -112,12 +112,13 @@ hydra:
     hydra:
     - hydra.mode=RUN
     task:
-    - +experiment=one_pose_server.yaml
-    - port=8080
+    - +experiment=one_pose_prior.yaml
+    - input.eval_dirs=[/home/robot-learning/Projects/SuperPose/data/cracker_box/cracker_box_4]
+    - video_mode=image
   job:
-    name: one_pose_server
+    name: one_pose_prior
     chdir: null
-    override_dirname: +experiment=one_pose_server.yaml,port=8080
+    override_dirname: +experiment=one_pose_prior.yaml,input.eval_dirs=[/home/robot-learning/Projects/SuperPose/data/cracker_box/cracker_box_4],video_mode=image
     id: ???
     num: ???
     config_name: config.yaml
@@ -144,7 +145,7 @@ hydra:
       provider: schema
     output_dir: /home/robot-learning/Projects/SuperPose
     choices:
-      experiment: one_pose_server.yaml
+      experiment: one_pose_prior.yaml
       logger: null
       callbacks: null
       datamodule: null
