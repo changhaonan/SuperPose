@@ -35,13 +35,13 @@ namespace icg
         "   vec2 texcoord;\n"
         "   flat int vertex_id;\n"
         "} vertex_shader_in;\n"
-        "layout(location = 0) out vec4 FragColor;\n"
-        "layout(location = 1) out vec4 FragNormal;\n"
+        "layout(location = 0) out vec4 FragColor0;\n"
+        "layout(location = 1) out vec4 FragColor1;\n"
         "uniform sampler2D Texture;\n"
         "void main()\n"
         "{\n"
-        "	 FragColor = texture(Texture, vertex_shader_in.texcoord);\n"
-        "	 FragNormal = vec4(0.5 - 0.5 * vertex_shader_in.normal, 1.0).zyxw;\n"
+        "	gl_FragData[0] = texture(Texture, vertex_shader_in.texcoord);\n"
+        "   gl_FragData[1] = vec4(0.5 - 0.5 * vertex_shader_in.normal, 1.0).zyxw;\n"
         "}";
 
     TextureRendererCore::~TextureRendererCore()
@@ -121,6 +121,7 @@ namespace icg
 
         image_rendered_ = true;
         texture_image_fetched_ = false;
+        normal_image_fetched_ = false;
         depth_image_fetched_ = false;
         return true;
     }
@@ -136,10 +137,11 @@ namespace icg
         glPixelStorei(GL_PACK_ROW_LENGTH,
                       GLint(texture_image->step / texture_image->elemSize()));
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo_texture_);
+        // glBindRenderbuffer(GL_RENDERBUFFER, rbo_texture_);
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
         glReadPixels(0, 0, image_width_, image_height_, GL_BGRA, GL_UNSIGNED_BYTE,
                      texture_image->data);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        // glBindRenderbuffer(GL_RENDERBUFFER, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         renderer_geometry_ptr_->DetachContext();
         texture_image_fetched_ = true;
@@ -157,15 +159,16 @@ namespace icg
         glPixelStorei(GL_PACK_ROW_LENGTH,
                       GLint(normal_image->step / normal_image->elemSize()));
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo_normal_);
+        // glBindRenderbuffer(GL_RENDERBUFFER, rbo_normal_);
+        glReadBuffer(GL_COLOR_ATTACHMENT1);
         glReadPixels(0, 0, image_width_, image_height_, GL_BGRA, GL_UNSIGNED_BYTE,
                      normal_image->data);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        // glBindRenderbuffer(GL_RENDERBUFFER, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         renderer_geometry_ptr_->DetachContext();
         normal_image_fetched_ = true;
         return true;
-    }    
+    }
 
     bool TextureRendererCore::FetchDepthImage(cv::Mat *depth_image)
     {
@@ -213,6 +216,14 @@ namespace icg
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo_texture_);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, rbo_normal_);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_depth_);
+
+        // Enable draw-buffers
+        GLuint draw_buffers[] = {
+            GL_COLOR_ATTACHMENT0,
+            GL_COLOR_ATTACHMENT1};
+        glDrawBuffers(2, draw_buffers);
+
+        // Clean-up
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         renderer_geometry_ptr_->DetachContext();
     }
@@ -377,7 +388,7 @@ namespace icg
     void FullTextureRenderer::ClearNormalImage()
     {
         normal_image_.create(cv::Size{intrinsics_.width, intrinsics_.height},
-                              CV_8UC4);
+                             CV_8UC4);
         normal_image_.setTo(cv::Vec4b{0, 0, 0, 0});
     }
 
@@ -564,7 +575,7 @@ namespace icg
         focused_texture_image_.create(cv::Size{image_size_, image_size_}, CV_8UC4);
         focused_texture_image_.setTo(cv::Vec4b{0, 0, 0, 0});
     }
-    
+
     void FocusedTextureRenderer::ClearNormalImage()
     {
         focused_normal_image_.create(cv::Size{image_size_, image_size_}, CV_8UC4);

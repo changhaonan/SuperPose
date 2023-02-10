@@ -152,6 +152,7 @@ namespace icg
             renderer_ptr->set_camera2world_pose(camera2body_poses[i]);
             renderer_ptr->StartRendering();
             renderer_ptr->FetchTextureImage();
+            renderer_ptr->FetchNormalImage();
             renderer_ptr->FetchDepthImage();
 
             // Generate data
