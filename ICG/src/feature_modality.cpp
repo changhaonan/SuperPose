@@ -45,19 +45,6 @@ namespace icg
             if (!LoadMetaData())
                 return false;
 
-        // Set up the feature manager
-        // Open the yaml file
-        std::filesystem::path feature_manager_path(feature_config_file_);
-        if (!std::filesystem::exists(feature_manager_path))
-        {
-            std::cerr << "Feature manager file " << feature_manager_path << " does not exist"
-                      << std::endl;
-            return false;
-        }
-        YAML::Node feature_manager_config = YAML::LoadFile(feature_manager_path.string());
-        auto feature_manager_config_ptr = std::make_shared<YAML::Node>(feature_manager_config);
-        feature_manager_ptr_ = std::make_shared<NetworkFeature>(feature_manager_config_ptr);
-
         // Check if all required objects are set up
         if (!body_ptr_->set_up())
         {
@@ -82,6 +69,9 @@ namespace icg
                       << " was not set up" << std::endl;
             return false;
         }
+
+        // Set up the feature manager (Shared from feature model)
+        feature_manager_ptr_ = feature_model_ptr_->feature_manager_ptr();
 
         set_up_ = true;
         return true;

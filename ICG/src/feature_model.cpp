@@ -17,6 +17,19 @@ namespace icg
             if (!LoadMetaData())
                 return false;
 
+        // Set up feature manager
+        // Read yaml feature config first
+        std::filesystem::path feature_manager_path(feature_config_path_);
+        if (!std::filesystem::exists(feature_manager_path))
+        {
+            std::cerr << "Feature manager file " << feature_manager_path << " does not exist"
+                      << std::endl;
+            return false;
+        }
+        YAML::Node feature_manager_config = YAML::LoadFile(feature_manager_path.string());
+        auto feature_manager_config_ptr = std::make_shared<YAML::Node>(feature_manager_config);
+        feature_manager_ptr_ = std::make_shared<NetworkFeature>(feature_manager_config_ptr);
+
         // Check if all required objects are set up
         if (!body_ptr_->set_up())
         {
@@ -69,6 +82,11 @@ namespace icg
         return true;
     }
 
+    std::shared_ptr<NetworkFeature> FeatureModel::feature_manager_ptr() const
+    {
+        return feature_manager_ptr_;
+    }
+
     bool FeatureModel::LoadMetaData()
     {
         // Open file storage from yaml
@@ -91,6 +109,7 @@ namespace icg
         ReadOptionalValueFromYaml(fs, "stride_depth_offset", &stride_depth_offset_);
         ReadOptionalValueFromYaml(fs, "use_random_seed", &use_random_seed_);
         ReadOptionalValueFromYaml(fs, "image_size", &image_size_);
+        ReadOptionalValueFromYaml(fs, "feature_config_path", &feature_config_path_);
         fs.release();
 
         // Process parameters
@@ -135,7 +154,7 @@ namespace icg
                 if (cancel)
                     continue;
                 std::stringstream msg;
-                msg << "Generate depth model " << name_ << ": view " << count++ << " of "
+                msg << "Generate feature model " << name_ << ": view " << count++ << " of "
                     << views_.size() << std::endl;
                 std::cout << msg.str();
 
@@ -145,18 +164,25 @@ namespace icg
                 renderer_ptr->FetchTextureImage();
                 renderer_ptr->FetchDepthImage();
 
-                // Visualize
+// Visualize
+#ifdef VISUALIZE_SPARSE_MODEL
                 int vis_height = 600;
                 cv::Mat depth_image = renderer_ptr->depth_image();
                 cv::Mat texture_image = renderer_ptr->texture_image();
                 cv::resize(depth_image, depth_image, cv::Size(), 1.0f * vis_height / depth_image.rows,
                            1.0f * vis_height / depth_image.rows);
                 cv::resize(texture_image, texture_image, cv::Size(), 1.0f * vis_height / texture_image.rows,
-                            1.0f * vis_height / texture_image.rows);
+                           1.0f * vis_height / texture_image.rows);
 
                 cv::imshow("depth", depth_image);
                 cv::imshow("texture", texture_image);
                 cv::waitKey(0);
+#endif
+
+                // Extract kp and desc
+                cv::Mat texture_image = renderer_ptr->texture_image();
+                // Resize image to 400x400
+                cv::resize(texture_image, texture_image, cv::Size(400, 400));
 
                 // Generate data
                 views_[i].orientation =

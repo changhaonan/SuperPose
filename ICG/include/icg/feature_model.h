@@ -6,6 +6,7 @@
 // #include <icg/normal_renderer.h>
 #include <icg/renderer_geometry.h>
 #include <icg/texture_renderer.h>
+#include <icg/feature_manager.h>
 #include <omp.h>
 
 namespace icg
@@ -69,6 +70,9 @@ namespace icg
         bool GetClosestView(const Transform3fA &body2camera_pose,
                             const View **closest_view) const;
 
+        // Share feature manager
+        std::shared_ptr<NetworkFeature> feature_manager_ptr() const;
+
     private:
         // Helper methods for model set up
         bool LoadMetaData();
@@ -82,6 +86,9 @@ namespace icg
                                std::vector<DataPoint> *data_points);
         // Model data
         std::vector<View> views_;
+        // Feature manager
+        std::shared_ptr<NetworkFeature> feature_manager_ptr_;
+        std::string feature_config_path_;
     };
 
 }

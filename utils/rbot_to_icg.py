@@ -172,7 +172,7 @@ def generate_icg_tracker(
         config_s.startWriteStruct("FeatureModel", cv2.FileNode_SEQ)
         config_s.startWriteStruct("", cv2.FileNode_MAP)
         config_s.write("name", "feature_model")
-        config_s.write("metafile_path", "model.yaml")
+        config_s.write("metafile_path", "feature_model.yaml")
         config_s.write("body", tracker_name)
         config_s.endWriteStruct()
         config_s.endWriteStruct()
@@ -299,6 +299,18 @@ def generate_icg_tracker(
     config_yaml_path = os.path.join(icg_dir, "model.yaml")
     model_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
     model_s.write("model_path", "INFER_FROM_NAME")
+    model_s.release()
+
+    # save the feature model
+    config_yaml_path = os.path.join(icg_dir, "feature_model.yaml")
+    model_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
+    model_s.write("model_path", "INFER_FROM_NAME")
+    model_s.write("feature_type", "R2D2")
+    model_s.write("n_features", 200)
+    model_s.write(
+        "feature_config_path",
+        "/home/robot-learning/Projects/SuperPose/cfg/bundletrack/feature_config.yaml",
+    )
     model_s.release()
 
     # save the modality file
