@@ -146,8 +146,16 @@ namespace icg
                 renderer_ptr->FetchDepthImage();
 
                 // Visualize
-                cv::imshow("depth", renderer_ptr->depth_image());
-                cv::imshow("texture", renderer_ptr->texture_image());
+                int vis_height = 600;
+                cv::Mat depth_image = renderer_ptr->depth_image();
+                cv::Mat texture_image = renderer_ptr->texture_image();
+                cv::resize(depth_image, depth_image, cv::Size(), 1.0f * vis_height / depth_image.rows,
+                           1.0f * vis_height / depth_image.rows);
+                cv::resize(texture_image, texture_image, cv::Size(), 1.0f * vis_height / texture_image.rows,
+                            1.0f * vis_height / texture_image.rows);
+
+                cv::imshow("depth", depth_image);
+                cv::imshow("texture", texture_image);
                 cv::waitKey(0);
 
                 // Generate data

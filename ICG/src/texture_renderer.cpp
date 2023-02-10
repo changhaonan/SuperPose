@@ -109,29 +109,29 @@ namespace icg
         renderer_geometry_ptr_->DetachContext();
 
         image_rendered_ = true;
-        normal_image_fetched_ = false;
+        texture_image_fetched_ = false;
         depth_image_fetched_ = false;
         return true;
     }
 
-    bool TextureRendererCore::FetchTextureImage(cv::Mat *normal_image)
+    bool TextureRendererCore::FetchTextureImage(cv::Mat *texture_image)
     {
         if (!initial_set_up_ || !image_rendered_)
             return false;
-        if (normal_image_fetched_)
+        if (texture_image_fetched_)
             return true;
         renderer_geometry_ptr_->MakeContextCurrent();
-        glPixelStorei(GL_PACK_ALIGNMENT, (normal_image->step & 3) ? 1 : 4);
+        glPixelStorei(GL_PACK_ALIGNMENT, (texture_image->step & 3) ? 1 : 4);
         glPixelStorei(GL_PACK_ROW_LENGTH,
-                      GLint(normal_image->step / normal_image->elemSize()));
+                      GLint(texture_image->step / texture_image->elemSize()));
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
         glBindRenderbuffer(GL_RENDERBUFFER, rbo_texture_);
         glReadPixels(0, 0, image_width_, image_height_, GL_BGRA, GL_UNSIGNED_BYTE,
-                     normal_image->data);
+                     texture_image->data);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         renderer_geometry_ptr_->DetachContext();
-        normal_image_fetched_ = true;
+        texture_image_fetched_ = true;
         return true;
     }
 
@@ -394,7 +394,7 @@ namespace icg
         CalculateProjectionMatrix();
         CalculateProjectionTerms();
         ClearDepthImage();
-        ClearNormalImage();
+        ClearTextureImage();
         if (!core_.SetUp(renderer_geometry_ptr_, image_size_, image_size_))
             return false;
 
@@ -483,7 +483,7 @@ namespace icg
         return true;
     }
 
-    void FocusedTextureRenderer::ClearNormalImage()
+    void FocusedTextureRenderer::ClearTextureImage()
     {
         focused_texture_image_.create(cv::Size{image_size_, image_size_}, CV_8UC4);
         focused_texture_image_.setTo(cv::Vec4b{0, 0, 0, 0});

@@ -34,7 +34,7 @@ class TextureRendererCore {
   // Main methods
   bool StartRendering(const Eigen::Matrix4f &projection_matrix,
                       const Transform3fA &world2camera_pose);
-  bool FetchTextureImage(cv::Mat *normal_image);
+  bool FetchTextureImage(cv::Mat *texture_image);
   bool FetchDepthImage(cv::Mat *depth_image);
 
  private:
@@ -59,7 +59,7 @@ class TextureRendererCore {
 
   // Internal state
   bool image_rendered_ = false;
-  bool normal_image_fetched_ = false;
+  bool texture_image_fetched_ = false;
   bool depth_image_fetched_ = false;
   bool initial_set_up_ = false;
 };
@@ -71,7 +71,7 @@ class TextureRendererCore {
  *
  * \details Rendering is started using `StartRendering()`. Images are fetched
  * from the GPU using `FetchTextureImage()` and `FetchDepthImage()`. They can
- * then be accessed using the `normal_image()` and `depth_image()` getter.
+ * then be accessed using the `texture_image()` and `depth_image()` getter.
  * Setters and all main methods are thread-safe.
  */
 class FullTextureRenderer : public FullDepthRenderer {
@@ -125,7 +125,7 @@ class FullTextureRenderer : public FullDepthRenderer {
  * normal vector of the surface is encoded in the color of each pixel. Rendering
  * is started using `StartRendering()`. Images are fetched from the GPU using
  * `FetchTextureImage()` and `FetchDepthImage()`. They can then be accessed using
- * the `normal_image()` and `depth_image()` getter. Setters and all main methods
+ * the `texture_image()` and `depth_image()` getter. Setters and all main methods
  * are thread-safe.
  */
 class FocusedTextureRenderer : public FocusedDepthRenderer {
@@ -164,7 +164,7 @@ class FocusedTextureRenderer : public FocusedDepthRenderer {
  private:
   // Helper methods
   bool LoadMetaData();
-  void ClearNormalImage();
+  void ClearTextureImage();
 
   // Data
   cv::Mat focused_texture_image_;
