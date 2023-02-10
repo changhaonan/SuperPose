@@ -126,76 +126,63 @@ namespace icg
         std::vector<Transform3fA> camera2body_poses;
         GenerateGeodesicPoses(&camera2body_poses);
 
-        // Create RendererGeometries in main thread to comply with GLFW thread safety
-        // requirements
-        std::vector<std::shared_ptr<RendererGeometry>> renderer_geometry_ptrs(
-            omp_get_max_threads());
-        for (auto &renderer_geometry_ptr : renderer_geometry_ptrs)
-        {
-            renderer_geometry_ptr = std::make_shared<RendererGeometry>("rg");
-            renderer_geometry_ptr->SetUp();
-        }
+        std::shared_ptr<RendererGeometry> renderer_geometry_ptr;
+        renderer_geometry_ptr = std::make_shared<RendererGeometry>("rg");
+        renderer_geometry_ptr->SetUp();
 
         // Generate template views
         std::cout << "Start generating model " << name_ << std::endl;
         views_.resize(camera2body_poses.size());
         bool cancel = false;
-        std::atomic<int> count = 1;
-#pragma omp parallel
+        int count = 1;
+        std::shared_ptr<FullTextureRenderer> renderer_ptr;
+        if (!SetUpRenderer(renderer_geometry_ptr, &renderer_ptr))
+            cancel = true;
+
+        for (int i = 0; i < int(views_.size()); ++i)
         {
-            std::shared_ptr<FullTextureRenderer> renderer_ptr;
-            if (!SetUpRenderer(renderer_geometry_ptrs[omp_get_thread_num()],
-                               &renderer_ptr))
-                cancel = true;
+            if (cancel)
+                continue;
+            std::stringstream msg;
+            msg << "Generate feature model " << name_ << ": view " << count++ << " of "
+                << views_.size() << std::endl;
+            std::cout << msg.str();
 
-#pragma omp for
-            for (int i = 0; i < int(views_.size()); ++i)
+            // Render images
+            renderer_ptr->set_camera2world_pose(camera2body_poses[i]);
+            renderer_ptr->StartRendering();
+            renderer_ptr->FetchTextureImage();
+            renderer_ptr->FetchDepthImage();
+
+            // Extract kp and desc
+            cv::Mat texture_image = renderer_ptr->texture_image();
+            // Resize image to 400x400
+            cv::resize(texture_image, texture_image, cv::Size(400, 400));
+            cv::Mat depth_image;
+            auto frame = WrapFrame(texture_image, depth_image);
+            feature_manager_ptr_->detectFeature(frame);
+
+            // Visualize
+#define VISUALIZE_SPARSE_MODEL
+#ifdef VISUALIZE_SPARSE_MODEL        
+            // Visualize keypoints
+            for (auto &kp : frame->_keypts)
             {
-                if (cancel)
-                    continue;
-                std::stringstream msg;
-                msg << "Generate feature model " << name_ << ": view " << count++ << " of "
-                    << views_.size() << std::endl;
-                std::cout << msg.str();
-
-                // Render images
-                renderer_ptr->set_camera2world_pose(camera2body_poses[i]);
-                renderer_ptr->StartRendering();
-                renderer_ptr->FetchTextureImage();
-                renderer_ptr->FetchDepthImage();
-
-// Visualize
-#ifdef VISUALIZE_SPARSE_MODEL
-                int vis_height = 600;
-                cv::Mat depth_image = renderer_ptr->depth_image();
-                cv::Mat texture_image = renderer_ptr->texture_image();
-                cv::resize(depth_image, depth_image, cv::Size(), 1.0f * vis_height / depth_image.rows,
-                           1.0f * vis_height / depth_image.rows);
-                cv::resize(texture_image, texture_image, cv::Size(), 1.0f * vis_height / texture_image.rows,
-                           1.0f * vis_height / texture_image.rows);
-
-                cv::imshow("depth", depth_image);
-                cv::imshow("texture", texture_image);
-                cv::waitKey(0);
+                cv::circle(texture_image, kp.pt, 2, cv::Scalar(0, 0, 255), -1);
+            }
+            cv::imshow("texture", texture_image);
+            cv::waitKey(0);
 #endif
 
-                // Extract kp and desc
-                cv::Mat texture_image = renderer_ptr->texture_image();
-                // Resize image to 400x400
-                cv::resize(texture_image, texture_image, cv::Size(400, 400));
-                cv::Mat depth_image;
-                auto frame = WrapFrame(texture_image, depth_image);
-                feature_manager_ptr_->detectFeature(frame);
-
-                // Generate data
-                views_[i].orientation =
-                    camera2body_poses[i].matrix().col(2).segment(0, 3);
-                views_[i].data_points.resize(n_points_);
-                if (!GeneratePointData(*renderer_ptr, camera2body_poses[i],
-                                       &views_[i].data_points))
-                    cancel = true;
-            }
+            // Generate data
+            views_[i].orientation =
+                camera2body_poses[i].matrix().col(2).segment(0, 3);
+            views_[i].data_points.resize(n_points_);
+            if (!GeneratePointData(*renderer_ptr, camera2body_poses[i],
+                                   &views_[i].data_points))
+                cancel = true;
         }
+
         if (cancel)
             return false;
         std::cout << "Finish generating model " << name_ << std::endl;
