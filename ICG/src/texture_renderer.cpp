@@ -35,11 +35,13 @@ namespace icg
         "   vec2 texcoord;\n"
         "   flat int vertex_id;\n"
         "} vertex_shader_in;\n"
-        "out vec4 FragColor;\n"
+        "layout(location = 0) out vec4 FragColor;\n"
+        "layout(location = 1) out vec4 FragNormal;\n"
         "uniform sampler2D Texture;\n"
         "void main()\n"
         "{\n"
         "	 FragColor = texture(Texture, vertex_shader_in.texcoord);\n"
+        "	 FragNormal = vec4(0.5 - 0.5 * vertex_shader_in.normal, 1.0).zyxw;\n"
         "}";
 
     TextureRendererCore::~TextureRendererCore()
@@ -112,7 +114,6 @@ namespace icg
             glBindTexture(GL_TEXTURE_2D, render_data_body.texture);
             glBindVertexArray(render_data_body.vao);
             glDrawArrays(GL_TRIANGLES, 0, render_data_body.n_vertices);
-            // glDrawElements(GL_TRIANGLES, render_data_body.n_vertices, GL_UNSIGNED_INT, 0);
             glBindVertexArray(0);
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -145,6 +146,27 @@ namespace icg
         return true;
     }
 
+    bool TextureRendererCore::FetchNormalImage(cv::Mat *normal_image)
+    {
+        if (!initial_set_up_ || !image_rendered_)
+            return false;
+        if (normal_image_fetched_)
+            return true;
+        renderer_geometry_ptr_->MakeContextCurrent();
+        glPixelStorei(GL_PACK_ALIGNMENT, (normal_image->step & 3) ? 1 : 4);
+        glPixelStorei(GL_PACK_ROW_LENGTH,
+                      GLint(normal_image->step / normal_image->elemSize()));
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
+        glBindRenderbuffer(GL_RENDERBUFFER, rbo_normal_);
+        glReadPixels(0, 0, image_width_, image_height_, GL_BGRA, GL_UNSIGNED_BYTE,
+                     normal_image->data);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        renderer_geometry_ptr_->DetachContext();
+        normal_image_fetched_ = true;
+        return true;
+    }    
+
     bool TextureRendererCore::FetchDepthImage(cv::Mat *depth_image)
     {
         if (!initial_set_up_ || !image_rendered_)
@@ -172,23 +194,25 @@ namespace icg
 
         // Initialize renderbuffer bodies_render_data
         glGenRenderbuffers(1, &rbo_texture_);
+        glGenRenderbuffers(1, &rbo_normal_);
+        glGenRenderbuffers(1, &rbo_depth_);
+
+        // Allocate data storage
         glBindRenderbuffer(GL_RENDERBUFFER, rbo_texture_);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, image_width_, image_height_);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-        glGenRenderbuffers(1, &rbo_depth_);
+        glBindRenderbuffer(GL_RENDERBUFFER, rbo_normal_);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, image_width_, image_height_);
         glBindRenderbuffer(GL_RENDERBUFFER, rbo_depth_);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, image_width_,
-                              image_height_);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, image_width_, image_height_);
+        // Detach renderbuffer
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
         // Initialize framebuffer bodies_render_data
         glGenFramebuffers(1, &fbo_);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                  GL_RENDERBUFFER, rbo_texture_);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                                  GL_RENDERBUFFER, rbo_depth_);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo_texture_);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, rbo_normal_);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_depth_);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         renderer_geometry_ptr_->DetachContext();
     }
@@ -197,6 +221,7 @@ namespace icg
     {
         renderer_geometry_ptr_->MakeContextCurrent();
         glDeleteRenderbuffers(1, &rbo_texture_);
+        glDeleteRenderbuffers(1, &rbo_normal_);
         glDeleteRenderbuffers(1, &rbo_depth_);
         glDeleteFramebuffers(1, &fbo_);
         renderer_geometry_ptr_->DetachContext();
@@ -249,6 +274,7 @@ namespace icg
         CalculateProjectionTerms();
         ClearDepthImage();
         ClearNormalImage();
+        ClearTextureImage();
         if (!core_.SetUp(renderer_geometry_ptr_, intrinsics_.width,
                          intrinsics_.height))
             return false;
@@ -279,6 +305,17 @@ namespace icg
         return core_.FetchTextureImage(&texture_image_);
     }
 
+    bool FullTextureRenderer::FetchNormalImage()
+    {
+        const std::lock_guard<std::mutex> lock{mutex_};
+        if (!set_up_)
+        {
+            std::cerr << "Set up renderer " << name_ << " first" << std::endl;
+            return false;
+        }
+        return core_.FetchNormalImage(&normal_image_);
+    }
+
     bool FullTextureRenderer::FetchDepthImage()
     {
         const std::lock_guard<std::mutex> lock{mutex_};
@@ -295,6 +332,11 @@ namespace icg
         return texture_image_;
     }
 
+    const cv::Mat &FullTextureRenderer::normal_image() const
+    {
+        return normal_image_;
+    }
+
     Eigen::Vector3f FullTextureRenderer::NormalVector(
         cv::Vec4b normal_image_value) const
     {
@@ -306,7 +348,7 @@ namespace icg
     Eigen::Vector3f FullTextureRenderer::NormalVector(
         const cv::Point2i &image_coordinate) const
     {
-        auto normal_image_value{texture_image_.at<cv::Vec4b>(image_coordinate)};
+        auto normal_image_value{normal_image_.at<cv::Vec4b>(image_coordinate)};
         return Eigen::Vector3f{1.0f - float(normal_image_value[0]) / 127.5f,
                                1.0f - float(normal_image_value[1]) / 127.5f,
                                1.0f - float(normal_image_value[2]) / 127.5f};
@@ -315,7 +357,7 @@ namespace icg
     cv::Vec4b FullTextureRenderer::NormalImageValue(
         const cv::Point2i &image_coordinate) const
     {
-        return texture_image_.at<cv::Vec4b>(image_coordinate);
+        return normal_image_.at<cv::Vec4b>(image_coordinate);
     }
 
     bool FullTextureRenderer::LoadMetaData()
@@ -333,6 +375,13 @@ namespace icg
     }
 
     void FullTextureRenderer::ClearNormalImage()
+    {
+        normal_image_.create(cv::Size{intrinsics_.width, intrinsics_.height},
+                              CV_8UC4);
+        normal_image_.setTo(cv::Vec4b{0, 0, 0, 0});
+    }
+
+    void FullTextureRenderer::ClearTextureImage()
     {
         texture_image_.create(cv::Size{intrinsics_.width, intrinsics_.height},
                               CV_8UC4);
@@ -404,6 +453,7 @@ namespace icg
         CalculateProjectionMatrix();
         CalculateProjectionTerms();
         ClearDepthImage();
+        ClearNormalImage();
         ClearTextureImage();
         if (!core_.SetUp(renderer_geometry_ptr_, image_size_, image_size_))
             return false;
@@ -435,6 +485,17 @@ namespace icg
         return core_.FetchTextureImage(&focused_texture_image_);
     }
 
+    bool FocusedTextureRenderer::FetchNormalImage()
+    {
+        const std::lock_guard<std::mutex> lock{mutex_};
+        if (!set_up_)
+        {
+            std::cerr << "Set up renderer " << name_ << " first" << std::endl;
+            return false;
+        }
+        return core_.FetchNormalImage(&focused_normal_image_);
+    }
+
     bool FocusedTextureRenderer::FetchDepthImage()
     {
         const std::lock_guard<std::mutex> lock{mutex_};
@@ -451,6 +512,11 @@ namespace icg
         return focused_texture_image_;
     }
 
+    const cv::Mat &FocusedTextureRenderer::focused_normal_image() const
+    {
+        return focused_normal_image_;
+    }
+
     Eigen::Vector3f FocusedTextureRenderer::NormalVector(
         cv::Vec4b normal_image_value) const
     {
@@ -464,7 +530,7 @@ namespace icg
     {
         int u = int((image_coordinate.x - corner_u_) * scale_ + 0.5f);
         int v = int((image_coordinate.y - corner_v_) * scale_ + 0.5f);
-        auto normal_image_value{focused_texture_image_.at<cv::Vec4b>(v, u)};
+        auto normal_image_value{focused_normal_image_.at<cv::Vec4b>(v, u)};
         return Eigen::Vector3f{1.0f - float(normal_image_value[0]) / 127.5f,
                                1.0f - float(normal_image_value[1]) / 127.5f,
                                1.0f - float(normal_image_value[2]) / 127.5f};
@@ -475,7 +541,7 @@ namespace icg
     {
         int u = int((image_coordinate.x - corner_u_) * scale_ + 0.5f);
         int v = int((image_coordinate.y - corner_v_) * scale_ + 0.5f);
-        return focused_texture_image_.at<cv::Vec4b>(v, u);
+        return focused_normal_image_.at<cv::Vec4b>(v, u);
     }
 
     bool FocusedTextureRenderer::LoadMetaData()
@@ -497,6 +563,12 @@ namespace icg
     {
         focused_texture_image_.create(cv::Size{image_size_, image_size_}, CV_8UC4);
         focused_texture_image_.setTo(cv::Vec4b{0, 0, 0, 0});
+    }
+    
+    void FocusedTextureRenderer::ClearNormalImage()
+    {
+        focused_normal_image_.create(cv::Size{image_size_, image_size_}, CV_8UC4);
+        focused_normal_image_.setTo(cv::Vec4b{0, 0, 0, 0});
     }
 
 } // namespace icg

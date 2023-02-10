@@ -18,157 +18,171 @@
 #include <string>
 #include <vector>
 
-namespace icg {
+namespace icg
+{
 
-/**
- * \brief Class that implements the main functionality for a texture renderer and
- * is used by \ref FullBasicDepthRenderer and \ref FocusedBasicDepthRenderer.
- */
-class TextureRendererCore {
- public:
-  // Destructor and setup method
-  ~TextureRendererCore();
-  bool SetUp(const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr,
-             int image_width, int image_height);
+    /**
+     * \brief Class that implements the main functionality for a texture renderer and
+     * is used by \ref FullBasicDepthRenderer and \ref FocusedBasicDepthRenderer.
+     */
+    class TextureRendererCore
+    {
+    public:
+        // Destructor and setup method
+        ~TextureRendererCore();
+        bool SetUp(const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr,
+                   int image_width, int image_height);
 
-  // Main methods
-  bool StartRendering(const Eigen::Matrix4f &projection_matrix,
-                      const Transform3fA &world2camera_pose);
-  bool FetchTextureImage(cv::Mat *texture_image);
-  bool FetchDepthImage(cv::Mat *depth_image);
+        // Main methods
+        bool StartRendering(const Eigen::Matrix4f &projection_matrix,
+                            const Transform3fA &world2camera_pose);
+        bool FetchTextureImage(cv::Mat *texture_image);
+        bool FetchNormalImage(cv::Mat *normal_image);
+        bool FetchDepthImage(cv::Mat *depth_image);
+        
+    private:
+        // Helper methods
+        void CreateBufferObjects();
+        void DeleteBufferObjects();
 
- private:
-  // Helper methods
-  void CreateBufferObjects();
-  void DeleteBufferObjects();
+        // Internal data
+        std::shared_ptr<RendererGeometry> renderer_geometry_ptr_;
+        int image_width_;
+        int image_height_;
 
-  // Internal data
-  std::shared_ptr<RendererGeometry> renderer_geometry_ptr_;
-  int image_width_;
-  int image_height_;
+        // Shader code
+        static std::string vertex_shader_code_;
+        static std::string fragment_shader_code_;
 
-  // Shader code
-  static std::string vertex_shader_code_;
-  static std::string fragment_shader_code_;
+        // OpenGL variables
+        unsigned fbo_ = 0;
+        unsigned rbo_texture_ = 0;
+        unsigned rbo_depth_ = 0;
+        unsigned rbo_normal_ = 0;
+        unsigned shader_program_ = 0;
 
-  // OpenGL variables
-  unsigned fbo_ = 0;
-  unsigned rbo_texture_ = 0;
-  unsigned rbo_depth_ = 0;
-  unsigned shader_program_ = 0;
+        // Internal state
+        bool image_rendered_ = false;
+        bool texture_image_fetched_ = false;
+        bool normal_image_fetched_ = false;
+        bool depth_image_fetched_ = false;
+        bool initial_set_up_ = false;
+    };
 
-  // Internal state
-  bool image_rendered_ = false;
-  bool texture_image_fetched_ = false;
-  bool depth_image_fetched_ = false;
-  bool initial_set_up_ = false;
-};
+    /**
+     * \brief Renderer that extends the full depth renderer class with functionality
+     * from \ref TextureRendererCore to render both a depth image and an image where
+     * the normal vector of the surface is encoded in the color of each pixel.
+     *
+     * \details Rendering is started using `StartRendering()`. Images are fetched
+     * from the GPU using `FetchTextureImage()` and `FetchDepthImage()`. They can
+     * then be accessed using the `texture_image()` and `depth_image()` getter.
+     * Setters and all main methods are thread-safe.
+     */
+    class FullTextureRenderer : public FullDepthRenderer
+    {
+    public:
+        // Constructors, destructors, and setup method
+        FullTextureRenderer(
+            const std::string &name,
+            const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr,
+            const Transform3fA &world2camera_pose, const Intrinsics &intrinsics,
+            float z_min = 0.01f, float z_max = 5.0f);
+        FullTextureRenderer(
+            const std::string &name,
+            const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr,
+            const std::shared_ptr<Camera> &camera_ptr, float z_min = 0.01f,
+            float z_max = 5.0f);
+        FullTextureRenderer(
+            const std::string &name, const std::filesystem::path &metafile_path,
+            const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr,
+            const std::shared_ptr<Camera> &camera_ptr);
+        bool SetUp() override;
 
-/**
- * \brief Renderer that extends the full depth renderer class with functionality
- * from \ref TextureRendererCore to render both a depth image and an image where
- * the normal vector of the surface is encoded in the color of each pixel.
- *
- * \details Rendering is started using `StartRendering()`. Images are fetched
- * from the GPU using `FetchTextureImage()` and `FetchDepthImage()`. They can
- * then be accessed using the `texture_image()` and `depth_image()` getter.
- * Setters and all main methods are thread-safe.
- */
-class FullTextureRenderer : public FullDepthRenderer {
- public:
-  // Constructors, destructors, and setup method
-  FullTextureRenderer(
-      const std::string &name,
-      const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr,
-      const Transform3fA &world2camera_pose, const Intrinsics &intrinsics,
-      float z_min = 0.01f, float z_max = 5.0f);
-  FullTextureRenderer(
-      const std::string &name,
-      const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr,
-      const std::shared_ptr<Camera> &camera_ptr, float z_min = 0.01f,
-      float z_max = 5.0f);
-  FullTextureRenderer(
-      const std::string &name, const std::filesystem::path &metafile_path,
-      const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr,
-      const std::shared_ptr<Camera> &camera_ptr);
-  bool SetUp() override;
+        // Main methods
+        bool StartRendering() override;
+        bool FetchTextureImage();
+        bool FetchNormalImage();
+        bool FetchDepthImage() override;
 
-  // Main methods
-  bool StartRendering() override;
-  bool FetchTextureImage();
-  bool FetchDepthImage() override;
+        // Getters
+        const cv::Mat &texture_image() const;
+        const cv::Mat &normal_image() const;
 
-  // Getters
-  const cv::Mat &texture_image() const;
+        // Getters that calculate values based on the rendered normal image
+        Eigen::Vector3f NormalVector(cv::Vec4b normal_image_value) const;
+        Eigen::Vector3f NormalVector(const cv::Point2i &image_coordinate) const;
+        cv::Vec4b NormalImageValue(const cv::Point2i &image_coordinate) const;
 
-  // Getters that calculate values based on the rendered normal image
-  Eigen::Vector3f NormalVector(cv::Vec4b normal_image_value) const;
-  Eigen::Vector3f NormalVector(const cv::Point2i &image_coordinate) const;
-  cv::Vec4b NormalImageValue(const cv::Point2i &image_coordinate) const;
+    private:
+        // Helper methods
+        bool LoadMetaData();
+        void ClearNormalImage();
+        void ClearTextureImage();
 
- private:
-  // Helper methods
-  bool LoadMetaData();
-  void ClearNormalImage();
+        // Data
+        cv::Mat texture_image_;
+        cv::Mat normal_image_;
+        TextureRendererCore core_{};
+    };
 
-  // Data
-  cv::Mat texture_image_;
-  TextureRendererCore core_{};
-};
+    /**
+     * \brief Renderer that extends the focused depth renderer class with
+     * functionality from \ref TextureRendererCore to render images with a defined
+     * size that is focused on referenced bodies.
+     *
+     * \details It is able to render both a depth image and an image where the
+     * normal vector of the surface is encoded in the color of each pixel. Rendering
+     * is started using `StartRendering()`. Images are fetched from the GPU using
+     * `FetchTextureImage()` and `FetchDepthImage()`. They can then be accessed using
+     * the `texture_image()` and `depth_image()` getter. Setters and all main methods
+     * are thread-safe.
+     */
+    class FocusedTextureRenderer : public FocusedDepthRenderer
+    {
+    public:
+        // Constructors, destructors, and setup method
+        FocusedTextureRenderer(
+            const std::string &name,
+            const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr,
+            const Transform3fA &world2camera_pose, const Intrinsics &intrinsics,
+            int image_size = 200, float z_min = 0.01f, float z_max = 5.0f);
+        FocusedTextureRenderer(
+            const std::string &name,
+            const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr,
+            const std::shared_ptr<Camera> &camera_ptr, int image_size = 200,
+            float z_min = 0.01f, float z_max = 5.0f);
+        FocusedTextureRenderer(
+            const std::string &name, const std::filesystem::path &metafile_path,
+            const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr,
+            const std::shared_ptr<Camera> &camera_ptr);
+        bool SetUp() override;
 
-/**
- * \brief Renderer that extends the focused depth renderer class with
- * functionality from \ref TextureRendererCore to render images with a defined
- * size that is focused on referenced bodies.
- *
- * \details It is able to render both a depth image and an image where the
- * normal vector of the surface is encoded in the color of each pixel. Rendering
- * is started using `StartRendering()`. Images are fetched from the GPU using
- * `FetchTextureImage()` and `FetchDepthImage()`. They can then be accessed using
- * the `texture_image()` and `depth_image()` getter. Setters and all main methods
- * are thread-safe.
- */
-class FocusedTextureRenderer : public FocusedDepthRenderer {
- public:
-  // Constructors, destructors, and setup method
-  FocusedTextureRenderer(
-      const std::string &name,
-      const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr,
-      const Transform3fA &world2camera_pose, const Intrinsics &intrinsics,
-      int image_size = 200, float z_min = 0.01f, float z_max = 5.0f);
-  FocusedTextureRenderer(
-      const std::string &name,
-      const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr,
-      const std::shared_ptr<Camera> &camera_ptr, int image_size = 200,
-      float z_min = 0.01f, float z_max = 5.0f);
-  FocusedTextureRenderer(
-      const std::string &name, const std::filesystem::path &metafile_path,
-      const std::shared_ptr<RendererGeometry> &renderer_geometry_ptr,
-      const std::shared_ptr<Camera> &camera_ptr);
-  bool SetUp() override;
+        // Main methods
+        bool StartRendering() override;
+        bool FetchTextureImage();
+        bool FetchNormalImage();
+        bool FetchDepthImage() override;
 
-  // Main methods
-  bool StartRendering() override;
-  bool FetchTextureImage();
-  bool FetchDepthImage() override;
+        // Getters
+        const cv::Mat &focused_texture_image() const;
+        const cv::Mat &focused_normal_image() const;
 
-  // Getters
-  const cv::Mat &focused_texture_image() const;
+        // Getters that calculate values based on the rendered normal image for the
+        // original image coordinates
+        Eigen::Vector3f NormalVector(cv::Vec4b normal_image_value) const;
+        Eigen::Vector3f NormalVector(const cv::Point2i &image_coordinate) const;
+        cv::Vec4b NormalImageValue(const cv::Point2i &image_coordinate) const;
 
-  // Getters that calculate values based on the rendered normal image for the
-  // original image coordinates
-  Eigen::Vector3f NormalVector(cv::Vec4b normal_image_value) const;
-  Eigen::Vector3f NormalVector(const cv::Point2i &image_coordinate) const;
-  cv::Vec4b NormalImageValue(const cv::Point2i &image_coordinate) const;
+    private:
+        // Helper methods
+        bool LoadMetaData();
+        void ClearTextureImage();
+        void ClearNormalImage();
+        // Data
+        cv::Mat focused_texture_image_;
+        cv::Mat focused_normal_image_;
+        TextureRendererCore core_{};
+    };
 
- private:
-  // Helper methods
-  bool LoadMetaData();
-  void ClearTextureImage();
-
-  // Data
-  cv::Mat focused_texture_image_;
-  TextureRendererCore core_{};
-};
-
-}  // namespace icg
+} // namespace icg

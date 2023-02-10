@@ -236,9 +236,12 @@ namespace icg
     {
         // Extract kp and desc
         cv::Mat texture_image = renderer.texture_image();
+        cv::Mat depth_image = renderer.depth_image();
+        cv::Mat normal_image = renderer.normal_image();
         // Resize image to 400x400
         cv::resize(texture_image, texture_image, cv::Size(600, 600));
-        cv::Mat depth_image;
+        cv::resize(depth_image, depth_image, cv::Size(600, 600));
+        cv::resize(normal_image, normal_image, cv::Size(600, 600));
         auto frame = WrapFrame(texture_image, depth_image);
         feature_manager_ptr_->detectFeature(frame);
 
@@ -251,6 +254,8 @@ namespace icg
             cv::circle(texture_image, kp.pt, 2, cv::Scalar(0, 0, 255), -1);
         }
         cv::imshow("texture", texture_image);
+        cv::imshow("depth", depth_image);
+        cv::imshow("normal", normal_image);
         cv::waitKey(0);
 #endif
 
