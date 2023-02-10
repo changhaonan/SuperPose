@@ -73,6 +73,9 @@ namespace icg
         // Share feature manager
         std::shared_ptr<NetworkFeature> feature_manager_ptr() const;
 
+        // Shared Processing method
+        static std::shared_ptr<Frame> WrapFrame(cv::Mat &color_image, cv::Mat &depth_image);
+
     private:
         // Helper methods for model set up
         bool LoadMetaData();

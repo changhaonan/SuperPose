@@ -183,6 +183,9 @@ namespace icg
                 cv::Mat texture_image = renderer_ptr->texture_image();
                 // Resize image to 400x400
                 cv::resize(texture_image, texture_image, cv::Size(400, 400));
+                cv::Mat depth_image;
+                auto frame = WrapFrame(texture_image, depth_image);
+                feature_manager_ptr_->detectFeature(frame);
 
                 // Generate data
                 views_[i].orientation =
@@ -266,4 +269,18 @@ namespace icg
     {
         return true;
     }
+
+    std::shared_ptr<Frame> FeatureModel::WrapFrame(cv::Mat &color_image, cv::Mat &depth_image)
+    {
+        auto frame_ptr = std::make_shared<Frame>();
+        frame_ptr->_color = color_image;
+        frame_ptr->_depth = depth_image;
+
+        // ROI
+        Eigen::Vector4f roi;
+        roi << 0, color_image.cols, 0, color_image.rows;
+        frame_ptr->_roi = roi;
+        return frame_ptr;
+    }
+
 }

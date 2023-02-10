@@ -92,12 +92,12 @@ namespace icg
         if (depth_enabled_)
         {
             cv::Mat depth_image = depth_camera_ptr_->image();
-            current_frame_ptr_ = WrapFrame(color_image, depth_image);
+            current_frame_ptr_ = FeatureModel::WrapFrame(color_image, depth_image);
         }
         else
         {
             cv::Mat depth_image;
-            current_frame_ptr_ = WrapFrame(color_image, depth_image);
+            current_frame_ptr_ = FeatureModel::WrapFrame(color_image, depth_image);
         }
         feature_manager_ptr_->detectFeature(current_frame_ptr_, 0);
 
@@ -112,19 +112,6 @@ namespace icg
         if (visualize_correspondences_correspondence_)
             VisualizeCorrespondences("correspondences_correspondence", save_idx);
         return true;
-    }
-
-    std::shared_ptr<Frame> FeatureModality::WrapFrame(cv::Mat &color_image, cv::Mat &depth_image)
-    {
-        auto frame_ptr = std::make_shared<Frame>();
-        frame_ptr->_color = color_image;
-        frame_ptr->_depth = depth_image;
-
-        // ROI
-        Eigen::Vector4f roi;
-        roi << 0, color_image.cols, 0, color_image.rows;
-        frame_ptr->_roi = roi;
-        return frame_ptr;
     }
 
     bool FeatureModality::LoadMetaData()
