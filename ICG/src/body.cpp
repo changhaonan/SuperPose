@@ -289,6 +289,7 @@ namespace icg
       }
       // Load texture data
       texture_path_ = geometry_path_.parent_path() / materials[0].diffuse_texname;
+      stbi_set_flip_vertically_on_load(true);  // OpenGL expects lower left corner
       texture_data_ = stbi_load(texture_path_.c_str(), &texture_width_, &texture_height_, &texture_channels_, 0);
       texture_loaded_ = true;
     }

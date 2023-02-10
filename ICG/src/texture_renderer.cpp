@@ -103,6 +103,7 @@ namespace icg
             glBindTexture(GL_TEXTURE_2D, render_data_body.texture);
             glBindVertexArray(render_data_body.vao);
             glDrawArrays(GL_TRIANGLES, 0, render_data_body.n_vertices);
+            // glDrawElements(GL_TRIANGLES, render_data_body.n_vertices, GL_UNSIGNED_INT, 0);
             glBindVertexArray(0);
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
