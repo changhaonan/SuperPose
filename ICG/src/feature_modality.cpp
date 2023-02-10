@@ -73,6 +73,11 @@ namespace icg
         // Set up the feature manager (Shared from feature model)
         feature_manager_ptr_ = feature_model_ptr_->feature_manager_ptr();
 
+        PrecalculateCameraVariables();
+        if (!PrecalculateModelVariables())
+            return false;
+        PrecalculateRendererVariables();
+
         set_up_ = true;
         return true;
     }
@@ -91,20 +96,22 @@ namespace icg
         PrecalculatePoseVariables();
         PrecalculateIterationDependentVariables(corr_iteration);
 
-        // Compute current ROI first
-
         // Create new frame object
         cv::Mat color_image = color_camera_ptr_->image();
+        // Compute current ROI first
+        ComputeCurrentROI();
+
         if (depth_enabled_)
         {
             cv::Mat depth_image = depth_camera_ptr_->image();
-            current_frame_ptr_ = FeatureModel::WrapFrame(color_image, depth_image);
+            current_frame_ptr_ = FeatureModel::WrapFrame(color_image, depth_image, current_roi_);
         }
         else
         {
             cv::Mat depth_image;
-            current_frame_ptr_ = FeatureModel::WrapFrame(color_image, depth_image);
+            current_frame_ptr_ = FeatureModel::WrapFrame(color_image, depth_image, current_roi_);
         }
+
         feature_manager_ptr_->detectFeature(current_frame_ptr_, 0);
 
         // Search closest template view
@@ -211,6 +218,10 @@ namespace icg
         {
             cv::circle(visualization_image, kpts.pt, 2, cv::Scalar(0, 255, 0), 2);
         }
+
+        // Draw the current roi
+        cv::Rect2i roi = {current_roi_[0], current_roi_[2], current_roi_[1], current_roi_[3]};
+        cv::rectangle(visualization_image, roi, cv::Scalar(0, 0, 255), 2);
 
         // Visualize the current feature view
 
@@ -355,6 +366,36 @@ namespace icg
         }
 
         return true;
+    }
+
+    void FeatureModality::ComputeCurrentROI()
+    {
+        // Compute the ROI by projecting max body diameter to the image plane and then expand the ROI by a margin
+        float max_body_radius = body_ptr_->maximum_body_diameter();
+        auto object_pose = body2camera_pose_.translation();
+        std::cout << "object_pose: " << object_pose << std::endl;
+        float focal_length = std::max(fu_, fv_);
+        float max_body_radius_in_image = max_body_radius * focal_length / object_pose.z();
+        float object_center_in_image_x = object_pose.x() / object_pose.z() * focal_length + ppu_;
+        float object_center_in_image_y = object_pose.x() / object_pose.z() * focal_length + ppv_;
+        // Compute the ROI
+        int roi_x = object_center_in_image_x - max_body_radius_in_image - roi_margin_;
+        int roi_y = object_center_in_image_y - max_body_radius_in_image - roi_margin_;
+        int roi_width = 2 * max_body_radius_in_image + 2 * roi_margin_;
+        int roi_height = 2 * max_body_radius_in_image + 2 * roi_margin_;
+
+        // Check if the ROI is out of the image
+        if (roi_x < 0)
+            roi_x = 0;
+        if (roi_y < 0)
+            roi_y = 0;
+        if ((roi_x + roi_width) >= image_width_minus_1_)
+            roi_width = image_width_minus_1_ - roi_x;
+        if (roi_y + roi_height >= image_height_minus_1_)
+            roi_height = image_height_minus_1_ - roi_y;
+
+        current_roi_ = Eigen::Vector4f(roi_x, roi_x + roi_width, roi_y, roi_y + roi_height);
+        std::cout << "Current ROI: " << current_roi_.transpose() << std::endl;
     }
 
     // Helper functions

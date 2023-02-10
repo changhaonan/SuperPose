@@ -304,4 +304,23 @@ namespace icg
         return frame_ptr;
     }
 
+    std::shared_ptr<Frame> FeatureModel::WrapFrame(cv::Mat &color_image, cv::Mat &depth_image, const Eigen::Vector4f& roi)
+    {
+        auto frame_ptr = std::make_shared<Frame>();
+        // If channel is 4, change it to 3
+        if (color_image.channels() == 4)
+        {
+            cv::cvtColor(color_image, frame_ptr->_color, cv::COLOR_RGBA2RGB);
+        }
+        else
+        {
+            frame_ptr->_color = color_image;
+        }
+        frame_ptr->_depth = depth_image;
+
+        // ROI
+        frame_ptr->_roi = roi;
+        return frame_ptr;
+    }
+
 }

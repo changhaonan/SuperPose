@@ -658,6 +658,7 @@ void NetworkFeature::detectFeature(std::shared_ptr<Frame> frame, const float rot
             img.at<cv::Vec3b>(h, w) = frame->_color.at<cv::Vec3b>(h + roi(2), w + roi(0));
         }
     }
+
     new_transform.setIdentity();
     new_transform(0, 2) = -roi(0);
     new_transform(1, 2) = -roi(2);
@@ -714,6 +715,12 @@ void NetworkFeature::detectFeature(std::shared_ptr<Frame> frame, const float rot
     // Update info
     frame->_num_feat = num_feat;
     frame->_feat_dim = feat_dim;
+
+    if (num_feat == 0)
+    {
+        std::cout << "[feature manager]: no feature detected." << std::endl;
+        return;
+    }
 
     std::vector<float> kpts_array(num_feat * 2);
     std::memcpy(kpts_array.data(), recv_msgs[1].data(), kpts_array.size() * sizeof(float));

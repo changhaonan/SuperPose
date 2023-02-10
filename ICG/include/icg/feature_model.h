@@ -71,6 +71,7 @@ namespace icg
 
         // Shared Processing method
         static std::shared_ptr<Frame> WrapFrame(cv::Mat &color_image, cv::Mat &depth_image);
+        static std::shared_ptr<Frame> WrapFrame(cv::Mat &color_image, cv::Mat &depth_image, const Eigen::Vector4f& roi);
 
     private:
         // Helper methods for model set up

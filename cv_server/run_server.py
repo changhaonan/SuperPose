@@ -75,6 +75,10 @@ if __name__ == "__main__":
         num_feat = len(xys)
         feat_dim = desc.shape[1]
         print(f"num_feat={num_feat}, feat_dim={feat_dim}.")
+        if num_feat == 0:
+            msg = np.array([0, 0]).reshape(-1).astype(np.int32).tobytes()
+            socket.send(msg, 0)
+            continue
         msg = np.array([num_feat, feat_dim]).reshape(-1).astype(np.int32).tobytes()
         socket.send(msg, 2)
         msg = xys.astype(np.float32).reshape(-1).tobytes()

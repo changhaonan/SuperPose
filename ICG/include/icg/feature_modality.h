@@ -64,6 +64,7 @@ namespace icg
 
         // Helper methods for CalculateCorrespondences
         bool MatchFeatures(const cv::Mat& view_descriptor, const cv::Mat& frame_descriptor, std::vector<cv::DMatch> &matches, float ratio_thresh=0.8f);
+        void ComputeCurrentROI();
 
         // Helper method for visualization
         void VisualizePointsFeatureImage(const std::string &title, int save_idx) const;
@@ -92,6 +93,8 @@ namespace icg
         std::string feature_config_file_;
         std::shared_ptr<NetworkFeature> feature_manager_ptr_ = nullptr;
         std::shared_ptr<Frame> current_frame_ptr_ = nullptr;
+        Eigen::Vector4f current_roi_ = Eigen::Vector4f::Zero();
+        int roi_margin_ = 100;
 
         // Internal states
         bool depth_enabled_ = false;

@@ -283,6 +283,7 @@ def generate_icg_tracker(
             [0, 0, 0, 1],
         ]
     )
+    init_pose = np.linalg.inv(init_pose)
     config_yaml_path = os.path.join(icg_dir, "detector.yaml")
     detector_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
     detector_s.write(
