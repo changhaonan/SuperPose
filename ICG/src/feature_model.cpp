@@ -157,7 +157,7 @@ namespace icg
             // Extract kp and desc
             cv::Mat texture_image = renderer_ptr->texture_image();
             // Resize image to 400x400
-            cv::resize(texture_image, texture_image, cv::Size(400, 400));
+            cv::resize(texture_image, texture_image, cv::Size(600, 600));
             cv::Mat depth_image;
             auto frame = WrapFrame(texture_image, depth_image);
             feature_manager_ptr_->detectFeature(frame);
