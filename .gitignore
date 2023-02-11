@@ -4,3 +4,4 @@ data
 build
 .hydra
 *.bin
+debug

@@ -5,6 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "F-Match",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/cv_server/run_matching_server.py",
+            "args": [
+                "--type=R2D2",
+                "--save_dir=${workspaceFolder}/debug/Match",
+                "--query_dir=${workspaceFolder}/debug/Scene",
+                "--train_dir=${workspaceFolder}/debug/SFM",
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "View Model",
             "type": "python",
             "request": "launch",
