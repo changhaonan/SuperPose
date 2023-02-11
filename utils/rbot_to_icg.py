@@ -199,6 +199,7 @@ def generate_icg_tracker(
         modality_list.append("depth_modality")
     if enable_feature:
         modality_list.append("feature_modality")
+    config_s.write("metafile_path", "optimizer.yaml")
     config_s.write("modalities", modality_list)
     config_s.endWriteStruct()
     config_s.endWriteStruct()
@@ -215,6 +216,7 @@ def generate_icg_tracker(
     config_s.write("viewers", viewer_list)
     config_s.write("detectors", ["detector"])
     config_s.write("optimizers", ["optimizer"])
+    config_s.write("metafile_path", "tracker.yaml")
     config_s.endWriteStruct()
     config_s.endWriteStruct()
     config_s.release()
@@ -317,6 +319,35 @@ def generate_icg_tracker(
     # save the modality file
     config_yaml_path = os.path.join(icg_dir, "region_modality.yaml")
     modality_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
+    # rbot-related param
+    modality_s.write("n_lines", 200)
+    modality_s.write("min_continuous_distance", 6.0)
+    modality_s.write("function_length", 8)
+    modality_s.write("distribution_length", 12)
+    modality_s.write("function_amplitude", 0.36)
+    modality_s.write("function_slope", 0.0)
+    modality_s.write("learning_rate", 1.3)
+    modality_s.startWriteStruct("scales", cv2.FileNode_SEQ)
+    modality_s.write("", 5)
+    modality_s.write("", 2)
+    modality_s.write("", 2)
+    modality_s.write("", 1)
+    modality_s.endWriteStruct()
+    modality_s.startWriteStruct("standard_deviations", cv2.FileNode_SEQ)
+    modality_s.write("", 15.0)
+    modality_s.write("", 5.0)
+    modality_s.write("", 3.5)
+    modality_s.write("", 1.5)
+    modality_s.endWriteStruct()
+    modality_s.write("n_histogram_bins", 32)
+    modality_s.write("learning_rate_f", 0.2)
+    modality_s.write("learning_rate_b", 0.2)
+    modality_s.write("unconsidered_line_length", 1.0)
+    modality_s.write("max_considered_line_length", 18.0)
+    modality_s.write("modeled_depth_offset_radius", 0.0)
+    modality_s.write("modeled_occlusion_radius", 0.0)
+    modality_s.write("modeled_occlusion_threshold", 0.03)
+    # vis
     modality_s.write("visualize_pose_result", 0)
     modality_s.write("visualize_gradient_optimization", 0)
     modality_s.write("visualize_hessian_optimization", 0)
@@ -376,6 +407,22 @@ def generate_icg_tracker(
         "geometry2body_pose", np.eye(4)
     )  # the pose of the geometry in the body frame
     object_s.release()
+
+    # save the opt file
+    config_yaml_path = os.path.join(icg_dir, "optimizer.yaml")
+    opt_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
+    # rbot-related param
+    opt_s.write("tikhonov_parameter_rotation", 1000.0)
+    opt_s.write("tikhonov_parameter_translation", 100000.0)
+    opt_s.release()
+
+    # save the tracker file
+    config_yaml_path = os.path.join(icg_dir, "tracker.yaml")
+    tracker_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
+    # rbot-related param
+    tracker_s.write("n_update_iterations", 2)
+    tracker_s.write("n_corr_iterations", 7)
+    tracker_s.release()
 
 
 def check_sparse_model():

@@ -22,9 +22,9 @@ class ORBExtractor:
         scores = np.array([k.response for k in kpts])
         idxs = scores.argsort()[-self.top_k or None :]
         # visualize
-        # img = cv2.drawKeypoints(img, kpts, None, color=(0, 255, 0), flags=0)
-        # cv2.imshow('img', img)
-        # cv2.waitKey(0)
+        img = cv2.drawKeypoints(img, kpts, None, color=(0, 255, 0), flags=0)
+        cv2.imshow('img', img)
+        cv2.waitKey(1)
         if len(idxs) == 0:
             return np.zeros((0, 2)), np.zeros((0, 32)), np.zeros((0, ))
         return xys[idxs], desc[idxs], scores[idxs]
