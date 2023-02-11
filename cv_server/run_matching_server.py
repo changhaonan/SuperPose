@@ -57,7 +57,7 @@ class FeatureMatcher:
             # match
             bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
             matches = bf.match(desc_query, desc_train)
-        elif self.feature_type == "R2D2":
+        elif self.feature_type == "R2D2" or self.feature_type == "SIFT":
             # change to CV_32F
             desc_query = desc_query.astype(np.float32)
             desc_train = desc_train.astype(np.float32)
@@ -69,7 +69,7 @@ class FeatureMatcher:
         matches = sorted(matches, key=lambda x: x.distance)
 
         # filter
-        matches = [m for m in matches if m.distance < threshold * 100]
+        # matches = [m for m in matches if m.distance < threshold * 100]
 
         # visualize
         if len(matches) == 0:
@@ -80,7 +80,7 @@ class FeatureMatcher:
             [cv2.KeyPoint(x, y, 1) for x, y in xys_query],
             image_train,
             [cv2.KeyPoint(x, y, 1) for x, y in xys_train],
-            matches[:10],
+            matches[:],
             None,
             flags=2,
         )
