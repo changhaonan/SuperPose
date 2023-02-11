@@ -25,6 +25,8 @@ class ORBExtractor:
         # img = cv2.drawKeypoints(img, kpts, None, color=(0, 255, 0), flags=0)
         # cv2.imshow('img', img)
         # cv2.waitKey(0)
+        if len(idxs) == 0:
+            return np.zeros((0, 2)), np.zeros((0, 32)), np.zeros((0, ))
         return xys[idxs], desc[idxs], scores[idxs]
 
 

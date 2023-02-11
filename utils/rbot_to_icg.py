@@ -277,9 +277,9 @@ def generate_icg_tracker(
     init_pose_list = [float(x) for x in pose_data[1].split("\t")]
     init_pose = np.array(
         [
-            init_pose_list[0:3] + [init_pose_list[9]],
-            init_pose_list[3:6] + [init_pose_list[10]],
-            init_pose_list[6:9] + [init_pose_list[11]],
+            init_pose_list[0:3] + [init_pose_list[9] * 0.001],
+            init_pose_list[3:6] + [init_pose_list[10] * 0.001],
+            init_pose_list[6:9] + [init_pose_list[11] * 0.001],
             [0, 0, 0, 1],
         ]
     )

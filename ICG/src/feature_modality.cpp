@@ -220,7 +220,7 @@ namespace icg
         }
 
         // Draw the current roi
-        cv::Rect2i roi = {current_roi_[0], current_roi_[2], current_roi_[1], current_roi_[3]};
+        cv::Rect2i roi = {current_roi_[0], current_roi_[2], current_roi_[1] - current_roi_[0], current_roi_[3] - current_roi_[2]};
         cv::rectangle(visualization_image, roi, cv::Scalar(0, 0, 255), 2);
 
         // Visualize the current feature view
@@ -371,31 +371,20 @@ namespace icg
     void FeatureModality::ComputeCurrentROI()
     {
         // Compute the ROI by projecting max body diameter to the image plane and then expand the ROI by a margin
-        float max_body_radius = body_ptr_->maximum_body_diameter();
+        float max_body_radius = body_ptr_->maximum_body_diameter() / 2.f;
         auto object_pose = body2camera_pose_.translation();
-        std::cout << "object_pose: " << object_pose << std::endl;
         float focal_length = std::max(fu_, fv_);
         float max_body_radius_in_image = max_body_radius * focal_length / object_pose.z();
-        float object_center_in_image_x = object_pose.x() / object_pose.z() * focal_length + ppu_;
-        float object_center_in_image_y = object_pose.x() / object_pose.z() * focal_length + ppv_;
+        float center_x = object_pose.x() / object_pose.z() * fu_ + ppu_;
+        float center_y = object_pose.y() / object_pose.z() * fv_ + ppv_;
         // Compute the ROI
-        int roi_x = object_center_in_image_x - max_body_radius_in_image - roi_margin_;
-        int roi_y = object_center_in_image_y - max_body_radius_in_image - roi_margin_;
-        int roi_width = 2 * max_body_radius_in_image + 2 * roi_margin_;
-        int roi_height = 2 * max_body_radius_in_image + 2 * roi_margin_;
+        int roi_x = center_x - max_body_radius_in_image - roi_margin_;
+        int roi_y = center_y - max_body_radius_in_image - roi_margin_;
+        int roi_side = 2 * max_body_radius_in_image + 2 * roi_margin_;
 
-        // Check if the ROI is out of the image
-        if (roi_x < 0)
-            roi_x = 0;
-        if (roi_y < 0)
-            roi_y = 0;
-        if ((roi_x + roi_width) >= image_width_minus_1_)
-            roi_width = image_width_minus_1_ - roi_x;
-        if (roi_y + roi_height >= image_height_minus_1_)
-            roi_height = image_height_minus_1_ - roi_y;
-
-        current_roi_ = Eigen::Vector4f(roi_x, roi_x + roi_width, roi_y, roi_y + roi_height);
-        std::cout << "Current ROI: " << current_roi_.transpose() << std::endl;
+        current_roi_ = Eigen::Vector4f(
+            std::max(0, roi_x), std::min(image_width_minus_1_, roi_x + roi_side),
+            std::max(0, roi_y), std::min(image_height_minus_1_, roi_y + roi_side));
     }
 
     // Helper functions
