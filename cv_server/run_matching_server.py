@@ -41,23 +41,36 @@ class NetworkExtractor:
 
 
 class FeatureMatcher:
-    def __init__(self, extractor, feature_type="ORB") -> None:
+    def __init__(self, extractor, feature_type="orb") -> None:
         self.extractor = extractor
         self.feature_type = feature_type
+        # set score scale
+        if self.feature_type == "orb":
+            self.score_scale = 1
+            self.distance_scale = 1
+        elif self.feature_type == "r2d2":
+            self.score_scale = 1
+            self.distance_scale = 1
+        elif self.feature_type == "sift":
+            self.score_scale = 1
+            self.distance_scale = 1
+        elif self.feature_type == "super_point":
+            self.score_scale = 1
+            self.distance_scale = 1
 
     def match(self, image_query, image_train, threshold=0.7):
         # extract keypoints/descriptors for a single image
         xys_query, desc_query, scores_query = self.extractor.extract(image_query, 0)
         xys_train, desc_train, scores_train = self.extractor.extract(image_train, 1)
 
-        if self.feature_type == "ORB":
+        if self.feature_type == "orb":
             # change to CV_8U
             desc_query = desc_query.astype(np.uint8)
             desc_train = desc_train.astype(np.uint8)
             # match
             bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
             matches = bf.match(desc_query, desc_train)
-        elif self.feature_type == "R2D2" or self.feature_type == "SIFT":
+        elif self.feature_type == "r2d2" or self.feature_type == "sift" or self.feature_type == "super_point":
             # change to CV_32F
             desc_query = desc_query.astype(np.float32)
             desc_train = desc_train.astype(np.float32)
@@ -75,7 +88,7 @@ class FeatureMatcher:
         if len(matches) == 0:
             return []
 
-        img3 = cv2.drawMatches(
+        img_vis = cv2.drawMatches(
             image_query,
             [cv2.KeyPoint(x, y, 1) for x, y in xys_query],
             image_train,
@@ -84,7 +97,7 @@ class FeatureMatcher:
             None,
             flags=2,
         )
-        cv2.imshow("img", img3)
+        cv2.imshow("img", img_vis)
         cv2.waitKey(0)
 
         return matches
@@ -92,9 +105,8 @@ class FeatureMatcher:
 
 if __name__ == "__main__":
     import argparse
-
     parser = argparse.ArgumentParser()
-    parser.add_argument("--type", type=str, default="ORB", help="feature type")
+    parser.add_argument("--type", type=str, default="orb", help="feature type")
     parser.add_argument("--save_dir", type=str, default=None, help="save directory")
     parser.add_argument(
         "--query_dir", type=str, default=None, help="query image directory"

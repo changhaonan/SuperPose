@@ -10,11 +10,28 @@
             "request": "launch",
             "program": "${workspaceFolder}/cv_server/run_matching_server.py",
             "args": [
-                "--type=SIFT",
+                "--type=super_point",
                 "--save_dir=${workspaceFolder}/debug/Match",
                 "--query_dir=${workspaceFolder}/debug/Scene",
                 "--train_dir=${workspaceFolder}/debug/SFM",
+                "--port=9090"
             ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "S-Match",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/super_point/run_superglue_server.py",
+            "args": [
+                "--type=super_point",
+                "--save_dir=${workspaceFolder}/debug/Match",
+                "--query_dir=${workspaceFolder}/debug/Scene",
+                "--train_dir=${workspaceFolder}/debug/SFM",
+                "--port=9090"
+            ],
+            "cwd": "${workspaceFolder}/super_point/",
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -219,5 +236,18 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}/r2d2"
         },
+        {
+            "name": "super_point (server)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/super_point/run_superpoint_server.py",
+            "args": [
+                "--port=9090",
+                "--top-k=500"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/super_point"
+        }
     ]
 }
