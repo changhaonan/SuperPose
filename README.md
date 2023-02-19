@@ -46,9 +46,10 @@ Feb.5th to Feb.11th
         - [x] Create a sparse feature object. (Each view should have a feature.)
         - [x] Build connection.
     - [x] Build the feature matching. [Sun]
-        - [ ] Build the feature matching pipeline and compair the result.
-        - [ ] Merge the system with pfb.
-            - [ ] Make the image sparse model very sparse. (Just contain multiple images with poses.)
+        - [x] Build the feature matching pipeline and compair the result.
+        - [x] Merge the system with pfb.
+            - [x] Make the image sparse model very sparse. (Just contain multiple images with poses.)
+            - [ ] I can try to improve the closestview and compute the rot-angle.
     - [ ] Compute Jacobian. [Mon]
     - [ ] Test the system run. [Tues]
     - [ ] Further test the system. [Tues]

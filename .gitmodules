@@ -1,12 +1,6 @@
 [submodule "ICG/third_party/cppzmq"]
 	path = ICG/third_party/cppzmq
 	url = https://github.com/zeromq/cppzmq.git
-[submodule "r2d2"]
-	path = r2d2
-	url = git@github.com:changhaonan/r2d2.git
-[submodule "super_point"]
-	path = super_point
-	url = git@github.com:YuqiuGan/SuperGluePretrainedNetwork.git
 [submodule "ICG/third_party/PointFeatureHub2"]
 	path = ICG/third_party/PointFeatureHub2
 	url = git@github.com:changhaonan/PointFeatureHub2.git
