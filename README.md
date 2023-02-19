@@ -45,19 +45,24 @@ Feb.5th to Feb.11th
         - [x] Save Keypoint feature into the model.
         - [x] Create a sparse feature object. (Each view should have a feature.)
         - [x] Build connection.
-    - [ ] Build the feature matching. [Sun]
+    - [x] Build the feature matching. [Sun]
         - [ ] Build the feature matching pipeline and compair the result.
+        - [ ] Merge the system with pfb.
+            - [ ] Make the image sparse model very sparse. (Just contain multiple images with poses.)
     - [ ] Compute Jacobian. [Mon]
     - [ ] Test the system run. [Tues]
     - [ ] Further test the system. [Tues]
 
-Feb.12th to Feb.18th
-- [ ] Combine ICG, OnePose and Two tracker.
-- [ ] Test them on benchmark.
-- [ ] Collect our own dataset.
+Feb.17th
+- [ ] Finish the matching process.
+- [ ] Debug ICG on YCB-V dataset to avoid the .txt requirement.
+
+Feb.16th-Feb.18th
+- [ ] Add the feature lost.
 
 Feb.19th to Feb.25th
-- [ ] Run on the DIY dataset.
+- [ ] Run result on the selected dataset.
+- [ ] Improve the method with adaptive structure.
 - [ ] Write the paper.
 - [ ] Polish the method
 

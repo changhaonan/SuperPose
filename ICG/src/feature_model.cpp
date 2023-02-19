@@ -122,6 +122,9 @@ namespace icg
 
     bool FeatureModel::GenerateModel()
     {
+        // Feature model has much less views than the full model
+        // Use 12 views for the feature model
+        set_n_divides(0);
         // Generate camera poses
         std::vector<Transform3fA> camera2body_poses;
         GenerateGeodesicPoses(&camera2body_poses);

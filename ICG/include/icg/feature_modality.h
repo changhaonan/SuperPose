@@ -7,6 +7,11 @@
 #include <icg/feature_manager.h>
 #include <icg/feature_model.h>
 
+namespace pfh
+{
+    class MatcherClient;
+}
+
 namespace icg
 {
 
@@ -63,7 +68,7 @@ namespace icg
         void PrecalculateIterationDependentVariables(int corr_iteration);
 
         // Helper methods for CalculateCorrespondences
-        bool MatchFeatures(const cv::Mat& view_descriptor, const cv::Mat& frame_descriptor, std::vector<cv::DMatch> &matches, float ratio_thresh=0.8f);
+        bool MatchFeatures(const cv::Mat &view_descriptor, const cv::Mat &frame_descriptor, std::vector<cv::DMatch> &matches, float ratio_thresh = 0.8f);
         void ComputeCurrentROI();
 
         // Helper method for visualization
@@ -95,6 +100,8 @@ namespace icg
         std::shared_ptr<Frame> current_frame_ptr_ = nullptr;
         Eigen::Vector4f current_roi_ = Eigen::Vector4f::Zero();
         int roi_margin_ = 20;
+
+        std::shared_ptr<pfh::MatcherClient> matcher_client_ptr_ = nullptr;
 
         // Internal states
         bool depth_enabled_ = false;

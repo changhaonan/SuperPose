@@ -125,6 +125,7 @@ endif ()
 # Include Directories
 include_directories("${CMAKE_SOURCE_DIR}/include")
 include_directories("${CMAKE_SOURCE_DIR}/third_party")
+include_directories("${CMAKE_SOURCE_DIR}/third_party/PointFeatureHub2/include")
 
 # Sub Directories
 add_subdirectory(src)

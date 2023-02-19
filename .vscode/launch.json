@@ -36,6 +36,38 @@
             "justMyCode": true
         },
         {
+            "name": "AdaLAM",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/cv_server/run_adalam_server.py",
+            "args": [
+                "--type=super_point",
+                "--save_dir=${workspaceFolder}/debug/Match",
+                "--query_dir=${workspaceFolder}/debug/Scene",
+                "--train_dir=${workspaceFolder}/debug/SFM",
+                "--port=9090"
+            ],
+            "cwd": "${workspaceFolder}/cv_server/",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Loftr",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/cv_server/run_loftr_server.py",
+            "args": [
+                "--type=super_point",
+                "--save_dir=${workspaceFolder}/debug/Match",
+                "--query_dir=${workspaceFolder}/debug/Scene",
+                "--train_dir=${workspaceFolder}/debug/SFM",
+                "--port=9090"
+            ],
+            "cwd": "${workspaceFolder}/cv_server/",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
             "name": "View Model",
             "type": "python",
             "request": "launch",
@@ -226,14 +258,14 @@
             "name": "r2d2 (server)",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/r2d2/run_server.py",
+            "program": "${workspaceFolder}/r2d2/run_r2d2_server.py",
             "args": [
                 "--port=9090",
                 "--model=models/r2d2_WASF_N16.pt",
                 "--top-k=500"
             ],
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
             "cwd": "${workspaceFolder}/r2d2"
         },
         {
