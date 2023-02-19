@@ -73,8 +73,6 @@ namespace icg
             return false;
         }
 
-        // Set up the feature manager (Shared from feature model)
-        feature_manager_ptr_ = feature_model_ptr_->feature_manager_ptr();
         // Set up the matcher_clinet
         matcher_client_ptr_ = std::make_shared<pfh::MatcherClient>(port_, 400);
         if (!matcher_client_ptr_->SetUp())
@@ -111,34 +109,25 @@ namespace icg
         // Compute current ROI first
         ComputeCurrentROI();
 
-        if (depth_enabled_)
-        {
-            cv::Mat depth_image = depth_camera_ptr_->image();
-            current_frame_ptr_ = FeatureModel::WrapFrame(color_image, depth_image, current_roi_);
-        }
-        else
-        {
-            cv::Mat depth_image;
-            current_frame_ptr_ = FeatureModel::WrapFrame(color_image, depth_image, current_roi_);
-        }
-
-        feature_manager_ptr_->detectFeature(current_frame_ptr_, 0);
-
         // Search closest template view
         const FeatureModel::View *view;
         feature_model_ptr_->GetClosestView(body2camera_pose_, &view);
 
         // Compute correspondences
         std::vector<cv::DMatch> matches;
-        MatchFeatures(view->feature_descriptor, current_frame_ptr_->_feat_des, matches);
 
-        // Directly find match using pointfeature hub
-        // cv::Mat image1 = view->color_image;
-        // cv::Mat image2 = current_frame_ptr_->_color_image;
         std::vector<cv::KeyPoint> keypoints1;
         std::vector<cv::KeyPoint> keypoints2;
 
-        std::cout << "Found " << matches.size() << " matches.." << std::endl;
+        Eigen::Vector4f view_roi;
+        view_roi << 0, view->texture_image.cols, 0, view->texture_image.rows;
+        // Do matching
+        matcher_client_ptr_->Match(
+            color_image, view->texture_image,
+            current_roi_, view_roi,
+            0, 0,
+            keypoints1, keypoints2);
+
         return true;
     }
 

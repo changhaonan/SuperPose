@@ -30,7 +30,7 @@ namespace icg
             const std::shared_ptr<FeatureModel> &feature_model_ptr);
         bool SetUp() override;
 
-        using DataPoint = FeatureModel::DataPoint;
+        // using DataPoint = FeatureModel::DataPoint;
 
         // Main methods
         bool StartModality(int iteration, int corr_iteration) override;
@@ -78,7 +78,7 @@ namespace icg
         bool IsSetup() const;
 
         // Internal data objects
-        std::vector<DataPoint> data_points_;
+        // std::vector<DataPoint> data_points_;
 
         // Pointers to referenced objects
         std::shared_ptr<ColorCamera> color_camera_ptr_ = nullptr;

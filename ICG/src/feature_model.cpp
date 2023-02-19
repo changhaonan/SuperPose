@@ -1,4 +1,5 @@
 #include <icg/feature_model.h>
+#include <opencv2/opencv.hpp>
 
 namespace icg
 {
@@ -13,22 +14,14 @@ namespace icg
     bool FeatureModel::SetUp()
     {
         set_up_ = false;
+
+        // Feature model has much less views than the full model
+        // Use 12 views for the feature model
+        set_n_divides(0);
+
         if (!metafile_path_.empty())
             if (!LoadMetaData())
                 return false;
-
-        // Set up feature manager
-        // Read yaml feature config first
-        std::filesystem::path feature_manager_path(feature_config_path_);
-        if (!std::filesystem::exists(feature_manager_path))
-        {
-            std::cerr << "Feature manager file " << feature_manager_path << " does not exist"
-                      << std::endl;
-            return false;
-        }
-        YAML::Node feature_manager_config = YAML::LoadFile(feature_manager_path.string());
-        auto feature_manager_config_ptr = std::make_shared<YAML::Node>(feature_manager_config);
-        feature_manager_ptr_ = std::make_shared<NetworkFeature>(feature_manager_config_ptr);
 
         // Check if all required objects are set up
         if (!body_ptr_->set_up())
@@ -82,11 +75,6 @@ namespace icg
         return true;
     }
 
-    std::shared_ptr<NetworkFeature> FeatureModel::feature_manager_ptr() const
-    {
-        return feature_manager_ptr_;
-    }
-
     bool FeatureModel::LoadMetaData()
     {
         // Open file storage from yaml
@@ -109,7 +97,6 @@ namespace icg
         ReadOptionalValueFromYaml(fs, "stride_depth_offset", &stride_depth_offset_);
         ReadOptionalValueFromYaml(fs, "use_random_seed", &use_random_seed_);
         ReadOptionalValueFromYaml(fs, "image_size", &image_size_);
-        ReadOptionalValueFromYaml(fs, "feature_config_path", &feature_config_path_);
         fs.release();
 
         // Process parameters
@@ -122,9 +109,6 @@ namespace icg
 
     bool FeatureModel::GenerateModel()
     {
-        // Feature model has much less views than the full model
-        // Use 12 views for the feature model
-        set_n_divides(0);
         // Generate camera poses
         std::vector<Transform3fA> camera2body_poses;
         GenerateGeodesicPoses(&camera2body_poses);
@@ -161,9 +145,7 @@ namespace icg
             // Generate data
             views_[i].orientation =
                 camera2body_poses[i].matrix().col(2).segment(0, 3);
-            views_[i].data_points.resize(n_points_);
-            if (!GeneratePointData(*renderer_ptr, camera2body_poses[i],
-                                   &views_[i].data_points, views_[i].feature_descriptor))
+            if (!GenerateViewData(*renderer_ptr, camera2body_poses[i], views_[i]))
                 cancel = true;
         }
 
@@ -198,15 +180,25 @@ namespace icg
         }
 
         // Load view data
-        size_t n_views;
+        size_t n_views, image_width, image_height;
         ifs.read((char *)(&n_views), sizeof(n_views));
+        ifs.read((char *)(&image_width), sizeof(image_width));
+        ifs.read((char *)(&image_height), sizeof(image_height));
         views_.clear();
         views_.reserve(n_views);
         for (size_t i = 0; i < n_views; i++)
         {
             View tv;
-            tv.data_points.resize(n_points_);
-            ifs.read((char *)(tv.data_points.data()), n_points_ * sizeof(DataPoint));
+            // Load texture image
+            tv.texture_image = cv::Mat(image_height, image_width, CV_8UC4);
+            ifs.read((char *)(tv.texture_image.data), tv.texture_image.elemSize() * tv.texture_image.total());
+            // Load depth image
+            tv.depth_image = cv::Mat(image_height, image_width, CV_16FC1);
+            ifs.read((char *)(tv.depth_image.data), tv.depth_image.elemSize() * tv.depth_image.total());
+            // Load normal image
+            tv.normal_image = cv::Mat(image_height, image_width, CV_8UC4);
+            ifs.read((char *)(tv.normal_image.data), tv.normal_image.elemSize() * tv.normal_image.total());
+
             ifs.read((char *)(tv.orientation.data()), sizeof(tv.orientation));
             views_.push_back(std::move(tv));
         }
@@ -222,11 +214,16 @@ namespace icg
 
         // Save main data
         size_t n_views = views_.size();
+        size_t image_width = views_[0].texture_image.cols;
+        size_t image_height = views_[0].texture_image.rows;
         ofs.write((const char *)(&n_views), sizeof(n_views));
+        ofs.write((const char *)(&image_width), sizeof(image_width));
+        ofs.write((const char *)(&image_height), sizeof(image_height));
         for (const auto &v : views_)
         {
-            ofs.write((const char *)(v.data_points.data()),
-                      n_points_ * sizeof(DataPoint));
+            ofs.write((const char *)v.texture_image.data, v.texture_image.total() * v.texture_image.elemSize());
+            ofs.write((const char *)v.depth_image.data, v.depth_image.total() * v.depth_image.elemSize());
+            ofs.write((const char *)v.normal_image.data, v.normal_image.total() * v.normal_image.elemSize());
             ofs.write((const char *)(v.orientation.data()), sizeof(v.orientation));
         }
         ofs.flush();
@@ -234,10 +231,8 @@ namespace icg
         return true;
     }
 
-    bool FeatureModel::GeneratePointData(const FullTextureRenderer &renderer,
-                                         const Transform3fA &camera2body_pose,
-                                         std::vector<DataPoint> *data_points,
-                                         cv::Mat &descriptor)
+    bool FeatureModel::GenerateViewData(const FullTextureRenderer &renderer, const Transform3fA &camera2body_pose,
+                                        View &view)
     {
         // Extract kp and desc
         cv::Mat texture_image = renderer.texture_image();
@@ -247,83 +242,12 @@ namespace icg
         cv::resize(texture_image, texture_image, cv::Size(600, 600));
         cv::resize(depth_image, depth_image, cv::Size(600, 600));
         cv::resize(normal_image, normal_image, cv::Size(600, 600));
-        auto frame = WrapFrame(texture_image, depth_image);
-        feature_manager_ptr_->detectFeature(frame);
 
-        // Visualize
-// #define VISUALIZE_SPARSE_MODEL
-#ifdef VISUALIZE_SPARSE_MODEL
-        // Visualize keypoints
-        for (auto &kp : frame->_keypts)
-        {
-            cv::circle(texture_image, kp.pt, 4, cv::Scalar(0, 255, 0), 1);
-        }
-        cv::imshow("texture", texture_image);
-        cv::imshow("depth", depth_image);
-        cv::imshow("normal", normal_image);
-        cv::waitKey(0);
-#endif
-
-        // Calculate data for feature points
-        int counter = 0;
-        for (auto data_point{begin(*data_points)}; data_point != end(*data_points);)
-        {
-            if (counter >= frame->_num_feat)
-                return true; // Early stop
-            auto kp = frame->_keypts[counter];
-            cv::Point2i center{kp.pt.x, kp.pt.y};
-            Eigen::Vector3f center_f_camera{renderer.PointVector(center)};
-            Eigen::Vector3f normal_f_camera{renderer.NormalVector(center)};
-            data_point->center_f_body = camera2body_pose * center_f_camera;
-            data_point->normal_f_body = camera2body_pose.rotation() * normal_f_camera;
-
-            data_point++;
-            counter++;
-        }
-
-        // Copy descriptor
-        descriptor = frame->_feat_des.clone();
+        // Save view data
+        view.texture_image = texture_image.clone();
+        view.depth_image = depth_image.clone();
+        view.normal_image = normal_image.clone();
         return true;
-    }
-
-    std::shared_ptr<Frame> FeatureModel::WrapFrame(cv::Mat &color_image, cv::Mat &depth_image)
-    {
-        auto frame_ptr = std::make_shared<Frame>();
-        // If channel is 4, change it to 3
-        if (color_image.channels() == 4)
-        {
-            cv::cvtColor(color_image, frame_ptr->_color, cv::COLOR_RGBA2RGB);
-        }
-        else
-        {
-            frame_ptr->_color = color_image;
-        }
-        frame_ptr->_depth = depth_image;
-
-        // ROI
-        Eigen::Vector4f roi;
-        roi << 0, color_image.cols, 0, color_image.rows;
-        frame_ptr->_roi = roi;
-        return frame_ptr;
-    }
-
-    std::shared_ptr<Frame> FeatureModel::WrapFrame(cv::Mat &color_image, cv::Mat &depth_image, const Eigen::Vector4f& roi)
-    {
-        auto frame_ptr = std::make_shared<Frame>();
-        // If channel is 4, change it to 3
-        if (color_image.channels() == 4)
-        {
-            cv::cvtColor(color_image, frame_ptr->_color, cv::COLOR_RGBA2RGB);
-        }
-        else
-        {
-            frame_ptr->_color = color_image;
-        }
-        frame_ptr->_depth = depth_image;
-
-        // ROI
-        frame_ptr->_roi = roi;
-        return frame_ptr;
     }
 
 }

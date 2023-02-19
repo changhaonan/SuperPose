@@ -6,7 +6,7 @@
 // #include <icg/normal_renderer.h>
 #include <icg/renderer_geometry.h>
 #include <icg/texture_renderer.h>
-#include <icg/feature_manager.h>
+#include <Eigen/Eigen>
 #include <omp.h>
 
 namespace icg
@@ -24,7 +24,7 @@ namespace icg
     private:
         // Model definition
         static constexpr char kModelType = 'f';
-        static constexpr int kVersionID = 7;
+        static constexpr int kVersionID = 6;
 
         // Some constants
         // static constexpr char kFeatureType = 'r';  // 'r' for R2D2, 's' for superpoint, 'o' for orb
@@ -35,43 +35,28 @@ namespace icg
                      const std::filesystem::path &metafile_path,
                      const std::shared_ptr<Body> &body_ptr);
         bool SetUp() override;
-        /**
-         * \brief Struct that contains all data related to a contour point and that is
-         * used by the \ref FeatureModel.
-         * @param center_f_body 3D feature point.
-         * @param normal_f_body 3D surface normal vector at feature point location.
-         */
-        struct DataPoint
-        {
-            Eigen::Vector3f center_f_body;
-            Eigen::Vector3f normal_f_body;
-        };
 
         /**
          * \brief Struct that contains all data that is generated from the rendered
          * geometry of a body for a specific viewpoint and that is used by the \ref
          * FeatureModel.
-         * @param data_points vector of all contour point information.
+         * @param texture_image color image of the rendered geometry.
+         * @param depth_image depth image of the rendered geometry
+         * @param normal_image normal image of the rendered geometry.
          * @param orientation vector that points from the camera center to the body
          * center.
          */
         struct View
         {
-            std::vector<DataPoint> data_points;
-            cv::Mat feature_descriptor{};
+            cv::Mat texture_image;
+            cv::Mat depth_image;
+            cv::Mat normal_image;
             Eigen::Vector3f orientation;
         };
 
         // Main methods
         bool GetClosestView(const Transform3fA &body2camera_pose,
                             const View **closest_view) const;
-
-        // Share feature manager
-        std::shared_ptr<NetworkFeature> feature_manager_ptr() const;
-
-        // Shared Processing method
-        static std::shared_ptr<Frame> WrapFrame(cv::Mat &color_image, cv::Mat &depth_image);
-        static std::shared_ptr<Frame> WrapFrame(cv::Mat &color_image, cv::Mat &depth_image, const Eigen::Vector4f& roi);
 
     private:
         // Helper methods for model set up
@@ -81,15 +66,10 @@ namespace icg
         bool SaveModel();
 
         // Helper methods for view generation
-        bool GeneratePointData(const FullTextureRenderer &renderer,
-                               const Transform3fA &camera2body_pose,
-                               std::vector<DataPoint> *data_points,
-                               cv::Mat& descriptor);
+        bool GenerateViewData(const FullTextureRenderer &renderer, const Transform3fA &camera2body_pose,
+                              View &view);
         // Model data
         std::vector<View> views_;
-        // Feature manager
-        std::shared_ptr<NetworkFeature> feature_manager_ptr_;
-        std::string feature_config_path_;
     };
 
 }
