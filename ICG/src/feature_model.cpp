@@ -75,6 +75,38 @@ namespace icg
         return true;
     }
 
+    bool FeatureModel::GetRelativeRotDeg(const Transform3fA &body2camera_pose,
+                                         const View &view, float &relative_rot_deg) const
+    {
+        if (!set_up_)
+        {
+            std::cerr << "Set up feature model " << name_ << " first" << std::endl;
+            return false;
+        }
+
+        // Project the x-axis of the camera to the body
+        auto body_x_axis = body2camera_pose.rotation().inverse() * Eigen::Vector3f::UnitX();
+        auto view_x_axis = view.rotation.inverse() * Eigen::Vector3f::UnitX();
+
+        // Debug
+        Eigen::Vector3f body_orientation{
+            body2camera_pose.rotation().inverse() *
+            body2camera_pose.translation().matrix().normalized()};
+        std::cout << "body_orientation: " << body_orientation.transpose() << std::endl;
+        std::cout << "view_orientation: " << view.orientation.transpose() << std::endl;
+
+        // Check by printing
+        std::cout << "body rotation" << std::endl;
+        std::cout << body2camera_pose.rotation() << std::endl;
+        std::cout << "view rotation" << std::endl;
+        std::cout << view.rotation << std::endl;
+        std::cout << "body_x_axis: " << body_x_axis.transpose() << std::endl;
+        std::cout << "view_x_axis: " << view_x_axis.transpose() << std::endl;
+        float dot = body_x_axis.dot(view_x_axis);
+        relative_rot_deg = acos(dot) * 180.0f / M_PI;
+        return true;
+    }
+
     bool FeatureModel::LoadMetaData()
     {
         // Open file storage from yaml
@@ -145,6 +177,7 @@ namespace icg
             // Generate data
             views_[i].orientation =
                 camera2body_poses[i].matrix().col(2).segment(0, 3);
+            views_[i].rotation = camera2body_poses[i].matrix().block(0, 0, 3, 3);
             if (!GenerateViewData(*renderer_ptr, camera2body_poses[i], views_[i]))
                 cancel = true;
         }
@@ -198,8 +231,10 @@ namespace icg
             // Load normal image
             tv.normal_image = cv::Mat(image_height, image_width, CV_8UC4);
             ifs.read((char *)(tv.normal_image.data), tv.normal_image.elemSize() * tv.normal_image.total());
-
+            // Pose
             ifs.read((char *)(tv.orientation.data()), sizeof(tv.orientation));
+            views_.push_back(std::move(tv));
+            ifs.read((char *)(tv.rotation.data()), sizeof(tv.rotation));
             views_.push_back(std::move(tv));
         }
         ifs.close();
@@ -225,6 +260,7 @@ namespace icg
             ofs.write((const char *)v.depth_image.data, v.depth_image.total() * v.depth_image.elemSize());
             ofs.write((const char *)v.normal_image.data, v.normal_image.total() * v.normal_image.elemSize());
             ofs.write((const char *)(v.orientation.data()), sizeof(v.orientation));
+            ofs.write((const char *)(v.rotation.data()), sizeof(v.rotation));
         }
         ofs.flush();
         ofs.close();

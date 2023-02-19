@@ -5,67 +5,57 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "F-Match",
+            "name": "matcher [sp, sg]",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/cv_server/run_matching_server.py",
+            "program": "${workspaceFolder}/ICG/third_party/PointFeatureHub2/run.py",
             "args": [
-                "--type=super_point",
-                "--save_dir=${workspaceFolder}/debug/Match",
-                "--query_dir=${workspaceFolder}/debug/Scene",
-                "--train_dir=${workspaceFolder}/debug/SFM",
-                "--port=9090"
+                "task=match",
+                "detect=super_point",
+                "match=super_glue",
+                "draw_matches=true"
             ],
+            "cwd": "${workspaceFolder}/ICG/third_party/PointFeatureHub2",
             "console": "integratedTerminal",
             "justMyCode": true
         },
         {
-            "name": "S-Match",
+            "name": "ICG",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/examples/run_generated_tracker",
+            "args": [
+                "${workspaceFolder}/ICG/examples/generator_example_v2/config.yaml"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "View CAD",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/super_point/run_superglue_server.py",
+            "program": "${workspaceFolder}/utils/debug_cad.py",
             "args": [
-                "--type=super_point",
-                "--save_dir=${workspaceFolder}/debug/Match",
-                "--query_dir=${workspaceFolder}/debug/Scene",
-                "--train_dir=${workspaceFolder}/debug/SFM",
-                "--port=9090"
+                "--model_dir",
+                "${workspaceFolder}/ICG/examples/generator_example_v2",
             ],
-            "cwd": "${workspaceFolder}/super_point/",
             "console": "integratedTerminal",
             "justMyCode": true
-        },
-        {
-            "name": "AdaLAM",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/cv_server/run_adalam_server.py",
-            "args": [
-                "--type=super_point",
-                "--save_dir=${workspaceFolder}/debug/Match",
-                "--query_dir=${workspaceFolder}/debug/Scene",
-                "--train_dir=${workspaceFolder}/debug/SFM",
-                "--port=9090"
-            ],
-            "cwd": "${workspaceFolder}/cv_server/",
-            "console": "integratedTerminal",
-            "justMyCode": false
-        },
-        {
-            "name": "Loftr",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/cv_server/run_loftr_server.py",
-            "args": [
-                "--type=super_point",
-                "--save_dir=${workspaceFolder}/debug/Match",
-                "--query_dir=${workspaceFolder}/debug/Scene",
-                "--train_dir=${workspaceFolder}/debug/SFM",
-                "--port=9090"
-            ],
-            "cwd": "${workspaceFolder}/cv_server/",
-            "console": "integratedTerminal",
-            "justMyCode": false
         },
         {
             "name": "View Model",
@@ -227,59 +217,6 @@
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "justMyCode": true
-        },
-        {
-            "name": "ICG",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/examples/run_generated_tracker",
-            "args": [
-                "${workspaceFolder}/ICG/examples/generator_example_v2/config.yaml"
-            ],
-            "stopAtEntry": false,
-            "cwd": "${fileDirname}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                },
-                {
-                    "description": "Set Disassembly Flavor to Intel",
-                    "text": "-gdb-set disassembly-flavor intel",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
-            "name": "r2d2 (server)",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/r2d2/run_r2d2_server.py",
-            "args": [
-                "--port=9090",
-                "--model=models/r2d2_WASF_N16.pt",
-                "--top-k=500"
-            ],
-            "console": "integratedTerminal",
-            "justMyCode": false,
-            "cwd": "${workspaceFolder}/r2d2"
-        },
-        {
-            "name": "super_point (server)",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/super_point/run_superpoint_server.py",
-            "args": [
-                "--port=9090",
-                "--top-k=500"
-            ],
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "cwd": "${workspaceFolder}/super_point"
         }
     ]
 }

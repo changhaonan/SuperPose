@@ -52,11 +52,15 @@ namespace icg
             cv::Mat depth_image;
             cv::Mat normal_image;
             Eigen::Vector3f orientation;
+            Eigen::Matrix3f rotation; // Rotation from camera to body
         };
 
         // Main methods
         bool GetClosestView(const Transform3fA &body2camera_pose,
                             const View **closest_view) const;
+        // Helper methods to get better matching
+        bool GetRelativeRotDeg(const Transform3fA &body2camera_pose,
+                               const View &view, float &relative_rot_deg) const;
 
     private:
         // Helper methods for model set up

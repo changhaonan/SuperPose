@@ -112,20 +112,19 @@ namespace icg
         // Search closest template view
         const FeatureModel::View *view;
         feature_model_ptr_->GetClosestView(body2camera_pose_, &view);
+        // Compute relative rot_deg
+        float relative_rot_deg = 0;
+        feature_model_ptr_->GetRelativeRotDeg(body2camera_pose_, *view, relative_rot_deg);
 
-        // Compute correspondences
-        std::vector<cv::DMatch> matches;
-
+        // Do matching
         std::vector<cv::KeyPoint> keypoints1;
         std::vector<cv::KeyPoint> keypoints2;
-
         Eigen::Vector4f view_roi;
         view_roi << 0, view->texture_image.cols, 0, view->texture_image.rows;
-        // Do matching
         matcher_client_ptr_->Match(
             color_image, view->texture_image,
             current_roi_, view_roi,
-            0, 0,
+            relative_rot_deg, 0,
             keypoints1, keypoints2);
 
         return true;
