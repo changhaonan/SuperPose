@@ -7,3 +7,6 @@
 [submodule "super_point"]
 	path = super_point
 	url = git@github.com:YuqiuGan/SuperGluePretrainedNetwork.git
+[submodule "ICG/third_party/PointFeatureHub2"]
+	path = ICG/third_party/PointFeatureHub2
+	url = git@github.com:changhaonan/PointFeatureHub2.git
