@@ -17,7 +17,7 @@ namespace icg
 
         // Feature model has much less views than the full model
         // Use 12 views for the feature model
-        set_n_divides(0);
+        set_n_divides(1);
 
         if (!metafile_path_.empty())
             if (!LoadMetaData())
@@ -63,6 +63,8 @@ namespace icg
             body2camera_pose.translation().matrix().normalized()};
 
         float closest_dot = -1.0f;
+        int view_id = 0;
+        int closest_view_id = 0;
         for (auto &view : views_)
         {
             float dot = orientation.dot(view.orientation);
@@ -70,8 +72,11 @@ namespace icg
             {
                 *closest_view = &view;
                 closest_dot = dot;
+                closest_view_id = view_id;
             }
+            view_id++;
         }
+        std::cout << "Closest view is: " << closest_view_id << std::endl;
         return true;
     }
 
@@ -84,26 +89,31 @@ namespace icg
             return false;
         }
 
-        // Project the x-axis of the camera to the body
-        auto body_x_axis = body2camera_pose.rotation().inverse() * Eigen::Vector3f::UnitX();
-        auto view_x_axis = view.rotation.inverse() * Eigen::Vector3f::UnitX();
+        // Compute relative rotation between body and view
+        auto body2view_rot = view.rotation * body2camera_pose.rotation();
+        // Parse this rotation matrix to get angle and axis
+        Eigen::AngleAxisf body2view_angle_axis(body2view_rot);
+        // Get the rotation axis
+        Eigen::Vector3f body2view_axis = body2view_angle_axis.axis();
+        // Get the rotation angle
+        float body2view_angle = body2view_angle_axis.angle();
 
-        // Debug
-        Eigen::Vector3f body_orientation{
-            body2camera_pose.rotation().inverse() *
-            body2camera_pose.translation().matrix().normalized()};
-        std::cout << "body_orientation: " << body_orientation.transpose() << std::endl;
-        std::cout << "view_orientation: " << view.orientation.transpose() << std::endl;
+        // Check if the rotation axis is pointing towards the camera
+        Eigen::Vector3f axis_in_cam = view.rotation.inverse() * body2view_axis;
+        Eigen::Vector3f axis_in_cam2 = body2camera_pose.rotation() * body2view_axis;
+        if (axis_in_cam.dot(Eigen::Vector3f::UnitZ()) > 0.0f)
+            relative_rot_deg = body2view_angle * 180.0f / M_PI;
+        else
+            relative_rot_deg = -body2view_angle * 180.0f / M_PI; 
 
         // Check by printing
-        std::cout << "body rotation" << std::endl;
-        std::cout << body2camera_pose.rotation() << std::endl;
-        std::cout << "view rotation" << std::endl;
+        std::cout << "view rotation: " << std::endl;
         std::cout << view.rotation << std::endl;
-        std::cout << "body_x_axis: " << body_x_axis.transpose() << std::endl;
-        std::cout << "view_x_axis: " << view_x_axis.transpose() << std::endl;
-        float dot = body_x_axis.dot(view_x_axis);
-        relative_rot_deg = acos(dot) * 180.0f / M_PI;
+        std::cout << "body2view_axis: " << body2view_axis.transpose() << std::endl;
+        std::cout << "body2view_angle: " << body2view_angle << std::endl;
+        std::cout << "relative_rot_deg: " << relative_rot_deg << std::endl;
+        std::cout << "axis_in_cam: " << axis_in_cam.transpose() << std::endl;
+        std::cout << "axis_in_cam2: " << axis_in_cam2.transpose() << std::endl;
         return true;
     }
 
@@ -180,8 +190,20 @@ namespace icg
             views_[i].rotation = camera2body_poses[i].matrix().block(0, 0, 3, 3);
             if (!GenerateViewData(*renderer_ptr, camera2body_poses[i], views_[i]))
                 cancel = true;
-        }
 
+#define DEBUG_SFM
+#ifdef DEBUG_SFM
+            // Debug
+            std::string debug_path = "/home/robot-learning/Projects/SuperPose/debug/SFM/";
+            cv::imwrite(debug_path + "texture_" + std::to_string(i) + ".png", renderer_ptr->texture_image());
+            cv::imwrite(debug_path + "normal_" + std::to_string(i) + ".png", renderer_ptr->normal_image());
+            cv::imwrite(debug_path + "depth_" + std::to_string(i) + ".png", renderer_ptr->depth_image());
+            // Write down the current pose
+            std::ofstream ofs{debug_path + "pose_" + std::to_string(i) + ".txt"};
+            ofs << camera2body_poses[i].matrix() << std::endl;
+            ofs.close();
+#endif
+        }
         if (cancel)
             return false;
         std::cout << "Finish generating model " << name_ << std::endl;
@@ -233,7 +255,6 @@ namespace icg
             ifs.read((char *)(tv.normal_image.data), tv.normal_image.elemSize() * tv.normal_image.total());
             // Pose
             ifs.read((char *)(tv.orientation.data()), sizeof(tv.orientation));
-            views_.push_back(std::move(tv));
             ifs.read((char *)(tv.rotation.data()), sizeof(tv.rotation));
             views_.push_back(std::move(tv));
         }

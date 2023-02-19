@@ -81,6 +81,10 @@
         "variant": "cpp",
         "regex": "cpp",
         "shared_mutex": "cpp",
-        "core": "cpp"
+        "core": "cpp",
+        "*.ipp": "cpp",
+        "matrixd": "cpp",
+        "matrixf": "cpp",
+        "quat": "cpp"
     }
 }

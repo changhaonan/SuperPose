@@ -99,7 +99,7 @@ namespace icg
         std::shared_ptr<NetworkFeature> feature_manager_ptr_ = nullptr;
         std::shared_ptr<Frame> current_frame_ptr_ = nullptr;
         Eigen::Vector4f current_roi_ = Eigen::Vector4f::Zero();
-        int roi_margin_ = 20;
+        int roi_margin_ = 5;
 
         std::shared_ptr<pfh::MatcherClient> matcher_client_ptr_ = nullptr;
 

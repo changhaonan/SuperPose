@@ -20,6 +20,51 @@
             "justMyCode": true
         },
         {
+            "name": "matcher [sp, magsac]",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/ICG/third_party/PointFeatureHub2/run.py",
+            "args": [
+                "task=match",
+                "detect=super_point",
+                "match=magsac",
+                "draw_matches=true"
+            ],
+            "cwd": "${workspaceFolder}/ICG/third_party/PointFeatureHub2",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "matcher [sift, magsac]",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/ICG/third_party/PointFeatureHub2/run.py",
+            "args": [
+                "task=match",
+                "detect=sift",
+                "match=magsac",
+                "draw_matches=true"
+            ],
+            "cwd": "${workspaceFolder}/ICG/third_party/PointFeatureHub2",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "matcher [loftr]",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/ICG/third_party/PointFeatureHub2/run.py",
+            "args": [
+                "task=match",
+                "detect=base",
+                "match=loftr",
+                "draw_matches=true"
+            ],
+            "cwd": "${workspaceFolder}/ICG/third_party/PointFeatureHub2",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "ICG",
             "type": "cppdbg",
             "request": "launch",
@@ -53,6 +98,8 @@
             "args": [
                 "--model_dir",
                 "${workspaceFolder}/ICG/examples/generator_example_v2",
+                "--sfm_dir",
+                "${workspaceFolder}/debug/SFM",
             ],
             "console": "integratedTerminal",
             "justMyCode": true

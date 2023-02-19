@@ -124,7 +124,7 @@ namespace icg
         matcher_client_ptr_->Match(
             color_image, view->texture_image,
             current_roi_, view_roi,
-            relative_rot_deg, 0,
+            0, -relative_rot_deg,
             keypoints1, keypoints2);
 
         return true;
