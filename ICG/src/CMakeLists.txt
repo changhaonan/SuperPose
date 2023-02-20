@@ -20,6 +20,8 @@ if (USE_REALSENSE)
     list(APPEND SOURCES realsense_camera.cpp)
 endif ()
 
+set(PNP_SOURCES pnp/pnp_solver.cpp)
+
 # Define libraries
 # =============================================================================
 set(LIBRARIES Eigen3::Eigen OpenGL::GL GLEW::GLEW glfw ${OpenCV_LIBRARIES} zmq yaml-cpp)
@@ -35,5 +37,8 @@ endif()
 
 # Define target
 # =============================================================================
+add_library(pnp STATIC ${PNP_SOURCES})
+target_link_libraries(pnp PRIVATE Eigen3::Eigen ${OpenCV_LIBRARIES})
+
 add_library(icg STATIC ${SOURCES})
-target_link_libraries(icg PUBLIC ${LIBRARIES})
+target_link_libraries(icg PUBLIC ${LIBRARIES} pnp)

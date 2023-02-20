@@ -86,6 +86,14 @@ namespace icg
             return false;
         PrecalculateRendererVariables();
 
+        // Set up the pnp_solver
+        pnp_solver_ptr_ = std::make_shared<EPnPSolver>();
+        if (!pnp_solver_ptr_->SetUp(color_camera_ptr_->metafile_path()))
+        {
+            std::cerr << "Failed to set up pnp solver" << std::endl;
+            return false;
+        }
+
         set_up_ = true;
         return true;
     }

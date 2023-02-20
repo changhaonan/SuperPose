@@ -49,10 +49,15 @@ Feb.5th to Feb.11th
         - [x] Build the feature matching pipeline and compair the result.
         - [x] Merge the system with pfb.
             - [x] Make the image sparse model very sparse. (Just contain multiple images with poses.)
-            - [ ] I can try to improve the closestview and compute the rot-angle.
-    - [ ] Compute Jacobian. [Mon]
-    - [ ] Test the system run. [Tues]
-    - [ ] Further test the system. [Tues]
+            - [x] I can try to improve the closestview and compute the rot-angle.
+    - [ ] Combination
+        - [ ] Directly do PNP.
+            - [ ] Build PNP problem and solve it.
+            - [ ] Render it into feature viewer.
+        - [ ] Integrate into loss
+            - [ ] Compute Jacobian. 
+            - [ ] Test the system run. 
+            - [ ] Further test the system.
 
 Feb.17th
 - [ ] Finish the matching process.

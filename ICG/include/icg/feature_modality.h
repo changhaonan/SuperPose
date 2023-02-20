@@ -5,6 +5,7 @@
 #include <icg/common.h>
 #include <icg/modality.h>
 #include <icg/feature_model.h>
+#include <icg/pnp/pnp_solver.h>
 
 namespace pfh
 {
@@ -139,6 +140,9 @@ namespace icg
         Transform3fA body2camera_pose_{};
         Transform3fA camera2body_pose_{};
         Eigen::Matrix3f body2camera_rotation_{};
+
+        // PNP solver
+        std::shared_ptr<PNPSolver> pnp_solver_ptr_ = nullptr;
     };
 
 }
