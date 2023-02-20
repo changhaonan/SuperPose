@@ -308,12 +308,7 @@ def generate_icg_tracker(
     config_yaml_path = os.path.join(icg_dir, "feature_model.yaml")
     model_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
     model_s.write("model_path", "INFER_FROM_NAME")
-    model_s.write("feature_type", "R2D2")
     model_s.write("n_features", 200)
-    model_s.write(
-        "feature_config_path",
-        "/home/robot-learning/Projects/SuperPose/cfg/bundletrack/feature_config.yaml",
-    )
     model_s.release()
 
     # save the modality file
@@ -389,10 +384,7 @@ def generate_icg_tracker(
     modality_s.write("", 0.01 * OBJECT_SCALE)
     modality_s.endWriteStruct()
     modality_s.write("port", feature_port)
-    modality_s.write(
-        "config_path",
-        "/home/robot-learning/Projects/SuperPose/cfg/bundletrack/feature_config.yaml",
-    )
+    modality_s.write("roi_margin", 5)
     modality_s.release()
 
     # save the object

@@ -105,15 +105,6 @@ namespace icg
             relative_rot_deg = body2view_angle * 180.0f / M_PI;
         else
             relative_rot_deg = -body2view_angle * 180.0f / M_PI; 
-
-        // Check by printing
-        std::cout << "view rotation: " << std::endl;
-        std::cout << view.rotation << std::endl;
-        std::cout << "body2view_axis: " << body2view_axis.transpose() << std::endl;
-        std::cout << "body2view_angle: " << body2view_angle << std::endl;
-        std::cout << "relative_rot_deg: " << relative_rot_deg << std::endl;
-        std::cout << "axis_in_cam: " << axis_in_cam.transpose() << std::endl;
-        std::cout << "axis_in_cam2: " << axis_in_cam2.transpose() << std::endl;
         return true;
     }
 
@@ -191,7 +182,7 @@ namespace icg
             if (!GenerateViewData(*renderer_ptr, camera2body_poses[i], views_[i]))
                 cancel = true;
 
-#define DEBUG_SFM
+// #define DEBUG_SFM
 #ifdef DEBUG_SFM
             // Debug
             std::string debug_path = "/home/robot-learning/Projects/SuperPose/debug/SFM/";
@@ -256,6 +247,9 @@ namespace icg
             // Pose
             ifs.read((char *)(tv.orientation.data()), sizeof(tv.orientation));
             ifs.read((char *)(tv.rotation.data()), sizeof(tv.rotation));
+            // Parameters
+            ifs.read((char *)(&tv.projection_term_a), sizeof(tv.projection_term_a));
+            ifs.read((char *)(&tv.projection_term_b), sizeof(tv.projection_term_b));
             views_.push_back(std::move(tv));
         }
         ifs.close();
@@ -275,6 +269,7 @@ namespace icg
         ofs.write((const char *)(&n_views), sizeof(n_views));
         ofs.write((const char *)(&image_width), sizeof(image_width));
         ofs.write((const char *)(&image_height), sizeof(image_height));
+
         for (const auto &v : views_)
         {
             ofs.write((const char *)v.texture_image.data, v.texture_image.total() * v.texture_image.elemSize());
@@ -282,6 +277,8 @@ namespace icg
             ofs.write((const char *)v.normal_image.data, v.normal_image.total() * v.normal_image.elemSize());
             ofs.write((const char *)(v.orientation.data()), sizeof(v.orientation));
             ofs.write((const char *)(v.rotation.data()), sizeof(v.rotation));
+            ofs.write((const char *)(&v.projection_term_a), sizeof(v.projection_term_a));
+            ofs.write((const char *)(&v.projection_term_b), sizeof(v.projection_term_b));
         }
         ofs.flush();
         ofs.close();
@@ -304,6 +301,8 @@ namespace icg
         view.texture_image = texture_image.clone();
         view.depth_image = depth_image.clone();
         view.normal_image = normal_image.clone();
+        view.projection_term_a = renderer.projection_term_a();
+        view.projection_term_b = renderer.projection_term_b();
         return true;
     }
 

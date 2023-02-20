@@ -53,6 +53,9 @@ namespace icg
             cv::Mat normal_image;
             Eigen::Vector3f orientation;
             Eigen::Matrix3f rotation; // Rotation from camera to body
+            // Parameters
+            float projection_term_a = 0.0f;
+            float projection_term_b = 0.0f;
         };
 
         // Main methods

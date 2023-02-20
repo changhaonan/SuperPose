@@ -117,15 +117,23 @@ namespace icg
         feature_model_ptr_->GetRelativeRotDeg(body2camera_pose_, *view, relative_rot_deg);
 
         // Do matching
-        std::vector<cv::KeyPoint> keypoints1;
-        std::vector<cv::KeyPoint> keypoints2;
+        std::vector<cv::KeyPoint> keypoints_measure;
+        std::vector<cv::KeyPoint> keypoints_model;
         Eigen::Vector4f view_roi;
         view_roi << 0, view->texture_image.cols, 0, view->texture_image.rows;
         matcher_client_ptr_->Match(
             color_image, view->texture_image,
             current_roi_, view_roi,
             0, -relative_rot_deg,
-            keypoints1, keypoints2);
+            keypoints_measure, keypoints_model);
+
+        // Construct data_points
+        int num_matches = keypoints_model.size();
+        for (int i = 0; i < std::min(n_points_, num_matches); ++i)
+        {
+            DataPoint data_point;
+            CalculateBasicPointData(&data_point, *view, keypoints_model[i], keypoints_measure[i]);
+        }
 
         return true;
     }
@@ -140,6 +148,59 @@ namespace icg
         return true;
     }
 
+    bool FeatureModality::CalculateGradientAndHessian(int iteration,
+                                                      int corr_iteration,
+                                                      int opt_iteration)
+    {
+        if (!IsSetup())
+            return false;
+
+        PrecalculatePoseVariables();
+        gradient_.setZero();
+        hessian_.setZero();
+
+        // for (auto &data_point : data_points_)
+        // {
+        //     // Calculate correspondence point coordinates in body frame
+        //     Eigen::Vector3f correspondence_center_f_body =
+        //         camera2body_pose_ * data_point.correspondence_center_f_camera;
+
+        //     // Calculate intermediate variables
+        //     float epsilon = data_point.normal_f_body.dot(data_point.center_f_body -
+        //                                                  correspondence_center_f_body);
+        //     Eigen::Vector3f correspondence_point_cross_normal =
+        //         correspondence_center_f_body.cross(data_point.normal_f_body);
+
+        //     // Calculate weight
+        //     float correspondence_depth = data_point.correspondence_center_f_camera(2);
+        //     float weight = 1.0f / (standard_deviation_ * correspondence_depth);
+        //     float squared_weight = weight * weight;
+
+        //     // Calculate weighted vectors
+        //     Eigen::Vector3f weighted_correspondence_point_cross_normal =
+        //         weight * correspondence_point_cross_normal;
+        //     Eigen::Vector3f weighted_normal = weight * data_point.normal_f_body;
+
+        //     // Calculate gradient
+        //     gradient_.head<3>() -=
+        //         (squared_weight * epsilon) * correspondence_point_cross_normal;
+        //     gradient_.tail<3>() -=
+        //         (squared_weight * epsilon) * data_point.normal_f_body;
+
+        //     // Calculate hessian
+        //     hessian_.topLeftCorner<3, 3>().triangularView<Eigen::Upper>() -=
+        //         weighted_correspondence_point_cross_normal *
+        //         weighted_correspondence_point_cross_normal.transpose();
+        //     hessian_.topRightCorner<3, 3>() -=
+        //         weighted_correspondence_point_cross_normal *
+        //         weighted_normal.transpose();
+        //     hessian_.bottomRightCorner<3, 3>().triangularView<Eigen::Upper>() -=
+        //         weighted_normal * weighted_normal.transpose();
+        // }
+        // hessian_ = hessian_.selfadjointView<Eigen::Upper>();
+        return true;
+    }
+
     bool FeatureModality::LoadMetaData()
     {
         // Open file storage from yaml
@@ -148,9 +209,12 @@ namespace icg
             return false;
 
         // Read required parameters from yaml
-        if (!ReadRequiredValueFromYaml(fs, "port", &port_) ||
-            !ReadRequiredValueFromYaml(fs, "config_path", &feature_config_file_))
+        if (!ReadRequiredValueFromYaml(fs, "port", &port_))
             return false;
+
+        // Read Optional parameters from yaml
+        ReadOptionalValueFromYaml(fs, "roi_margin", &roi_margin_);
+        ReadOptionalValueFromYaml(fs, "n_points", &n_points_);
 
         // Read parameters from yaml for visualization
         ReadOptionalValueFromYaml(fs, "visualize_pose_result",
@@ -216,20 +280,7 @@ namespace icg
 
     void FeatureModality::VisualizePointsFeatureImage(const std::string &title, int save_idx) const
     {
-        // Visualize the current feature object
-        cv::Mat visualization_image = current_frame_ptr_->_color.clone();
-        for (auto &kpts : current_frame_ptr_->_keypts)
-        {
-            cv::circle(visualization_image, kpts.pt, 2, cv::Scalar(0, 255, 0), 2);
-        }
-
-        // Draw the current roi
-        cv::Rect2i roi = {current_roi_[0], current_roi_[2], current_roi_[1] - current_roi_[0], current_roi_[3] - current_roi_[2]};
-        cv::rectangle(visualization_image, roi, cv::Scalar(0, 0, 255), 2);
-
-        // Visualize the current feature view
-
-        ShowAndSaveImage(name_ + "_" + title, save_idx, visualization_image);
+        // Do nothing
     }
 
     void FeatureModality::ShowAndSaveImage(const std::string &title, int save_idx,
@@ -244,18 +295,6 @@ namespace icg
                 (title + "_" + std::to_string(save_idx) + "." + save_image_type_)};
             cv::imwrite(path.string(), image);
         }
-    }
-
-    bool FeatureModality::CalculateGradientAndHessian(int iteration,
-                                                      int corr_iteration,
-                                                      int opt_iteration)
-    {
-        if (!IsSetup())
-            return false;
-        gradient_.setZero();
-        hessian_.setZero();
-
-        return true;
     }
 
     bool FeatureModality::VisualizeOptimization(int save_idx)
@@ -334,6 +373,10 @@ namespace icg
         return {depth_renderer_ptr_};
     }
 
+    int FeatureModality::n_points() const { return n_points_; }
+
+    void FeatureModality::set_n_points(int n_points) { n_points_ = n_points; }
+
     // Visualization method
     bool FeatureModality::VisualizeCorrespondences(const std::string &title, int save_idx)
     {
@@ -389,6 +432,27 @@ namespace icg
         current_roi_ = Eigen::Vector4f(
             std::max(0, roi_x), std::min(image_width_minus_1_, roi_x + roi_side),
             std::max(0, roi_y), std::min(image_height_minus_1_, roi_y + roi_side));
+    }
+
+    void FeatureModality::CalculateBasicPointData(DataPoint *data_point, const FeatureModel::View &view,
+                                                  const cv::KeyPoint &keypoints_model,
+                                                  const cv::KeyPoint &keypoints_measure) const
+    {
+        // Depth
+        cv::Point2i coordinate_model{int(keypoints_model.pt.x), int(keypoints_model.pt.y)};
+        ushort depth_model{view.depth_image.at<ushort>(coordinate_model)};
+        float depth_model_real = view.projection_term_a / (view.projection_term_b - float(depth_model));
+        data_point->depth = depth_model_real;
+        Eigen::Vector3f point_model{depth_model_real * (keypoints_model.pt.x - ppu_) / fu_,
+                                    depth_model_real * (keypoints_model.pt.y - ppv_) / fv_,
+                                    depth_model_real};
+
+        // Normal
+        auto normal_image_value{view.normal_image.at<cv::Vec4b>(coordinate_model)};
+        Eigen::Vector3f normal_model{1.0f - float(normal_image_value[0]) / 127.5f,
+                                     1.0f - float(normal_image_value[1]) / 127.5f,
+                                     1.0f - float(normal_image_value[2]) / 127.5f};
+        normal_model.normalize();
     }
 
     // Helper functions

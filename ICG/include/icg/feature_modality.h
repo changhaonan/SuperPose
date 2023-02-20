@@ -4,7 +4,6 @@
 #include <icg/camera.h>
 #include <icg/common.h>
 #include <icg/modality.h>
-#include <icg/feature_manager.h>
 #include <icg/feature_model.h>
 
 namespace pfh
@@ -17,6 +16,21 @@ namespace icg
 
     class FeatureModality : public Modality
     {
+    private:
+        // Data for correspondence point calculated during `CalculateCorrespondences`
+        struct DataPoint
+        {
+            Eigen::Vector3f center_f_body{};
+            Eigen::Vector3f center_f_camera{};
+            Eigen::Vector3f normal_f_body{};
+            float center_u = 0.0f;
+            float center_v = 0.0f;
+            float depth = 0.0f;
+            float measured_depth_offset = 0.0f;
+            float modeled_depth_offset = 0.0f;
+            Eigen::Vector3f correspondence_center_f_camera{};
+        };
+
     public:
         FeatureModality(const std::string &name, const std::shared_ptr<Body> &body_ptr,
                         const std::shared_ptr<ColorCamera> &color_camera_ptr,
@@ -52,6 +66,10 @@ namespace icg
         std::vector<std::shared_ptr<Renderer>> correspondence_renderer_ptrs()
             const override;
         std::vector<std::shared_ptr<Renderer>> results_renderer_ptrs() const override;
+        int n_points() const;
+
+        // Setters
+        void set_n_points(int n_points);
 
         // Visualization method
         bool VisualizeCorrespondences(const std::string &title, int save_idx);
@@ -70,6 +88,9 @@ namespace icg
         // Helper methods for CalculateCorrespondences
         bool MatchFeatures(const cv::Mat &view_descriptor, const cv::Mat &frame_descriptor, std::vector<cv::DMatch> &matches, float ratio_thresh = 0.8f);
         void ComputeCurrentROI();
+        void CalculateBasicPointData(DataPoint *data_point, const FeatureModel::View &view,
+                                     const cv::KeyPoint &keypoints_model, 
+                                     const cv::KeyPoint &keypoints_measure) const;
 
         // Helper method for visualization
         void VisualizePointsFeatureImage(const std::string &title, int save_idx) const;
@@ -86,6 +107,9 @@ namespace icg
         std::shared_ptr<FeatureModel> feature_model_ptr_ = nullptr;
         std::shared_ptr<FocusedDepthRenderer> depth_renderer_ptr_ = nullptr;
 
+        // Parameters for general distribution
+        int n_points_ = 200;
+
         // Parameters to turn on individual visualizations
         bool visualize_correspondences_correspondence_ = false;
         bool visualize_points_correspondence_ = false;
@@ -93,14 +117,10 @@ namespace icg
         bool visualize_points_optimization_ = false;
         bool visualize_points_result_ = false;
 
-        // Feature manager related
+        // Feature matching related
         int port_;
-        std::string feature_config_file_;
-        std::shared_ptr<NetworkFeature> feature_manager_ptr_ = nullptr;
-        std::shared_ptr<Frame> current_frame_ptr_ = nullptr;
         Eigen::Vector4f current_roi_ = Eigen::Vector4f::Zero();
         int roi_margin_ = 5;
-
         std::shared_ptr<pfh::MatcherClient> matcher_client_ptr_ = nullptr;
 
         // Internal states
