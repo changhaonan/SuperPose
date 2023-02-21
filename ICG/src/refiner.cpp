@@ -79,6 +79,10 @@ bool Refiner::RefinePoses() {
     return false;
   }
 
+  // Checking
+  std::cout << "Before refine: " << std::endl;
+  std::cout << body_ptrs_[0]->body2world_pose().matrix() << std::endl;
+
   for (int corr_iteration = 0; corr_iteration < n_corr_iterations_;
        ++corr_iteration) {
     int corr_save_idx = corr_iteration;
@@ -96,6 +100,11 @@ bool Refiner::RefinePoses() {
       if (!VisualizeOptimization(update_save_idx)) return false;
     }
   }
+
+  // Checking
+  std::cout << "After refine: " << std::endl;
+  std::cout << body_ptrs_[0]->body2world_pose().matrix() << std::endl;
+
   return true;
 }
 

@@ -54,9 +54,11 @@ Feb.5th to Feb.11th
         - [ ] Directly do PNP.
             - [x] Build PNP problem and solve it.
             - [x] Render it into feature viewer.
-            - [ ] The optimization and PNP seems can not work together?
-            - [ ] Put it into the refiner step.
-            - [ ] I should try to put it at the refiner step.
+            - [x] The optimization and PNP seems can not work together?
+            - [x] Put it into the refiner step.
+            - [x] I should try to put it at the refiner step.
+            - [x] Doesn't seems to be working.
+                - [ ] Fix the PNP bug.
         - [ ] Integrate into loss
             - [ ] Compute Jacobian. 
             - [ ] Test the system run. 

@@ -383,7 +383,11 @@ namespace icg
         else
         {
             std::cout << "PNP succeeded." << std::endl;
-            body_ptr_->set_body2world_pose(body2camera_pose_);
+            // Compose transform matrix
+            icg::Transform3fA body2world_pose;
+            body2world_pose.translation() = trans_m;
+            body2world_pose.linear() = rot_m;
+            body_ptr_->set_body2world_pose(body2world_pose);
             return true;
         }
     }

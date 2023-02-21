@@ -76,8 +76,10 @@ namespace icg
         renderer_.StartRendering();
         renderer_.FetchTextureImage();
 
-        DisplayAndSaveImage(save_index, CalculateAlphaBlend(color_camera_ptr_->image(),
-                                                            renderer_.texture_image(), opacity_));
+        DisplayAndSaveImage(save_index, renderer_.texture_image());
+
+        // DisplayAndSaveImage(save_index, CalculateAlphaBlend(color_camera_ptr_->image(),
+        //                                                     renderer_.texture_image(), opacity_));
         return true;
     }
 

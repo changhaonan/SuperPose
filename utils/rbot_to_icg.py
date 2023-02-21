@@ -18,7 +18,7 @@ def generate_icg_tracker(
     feature_port=9090,
     enable_depth=False,
     enable_feature=False,
-    redo_obj=False,
+    enable_refine=False,
 ):
     # config macro
     OBJECT_SCALE = 2.0  # the size of object, influencing the accept threshold for depth modality
@@ -196,12 +196,29 @@ def generate_icg_tracker(
     modality_list = ["region_modality"]
     if enable_depth:
         modality_list.append("depth_modality")
-    if enable_feature:
+    if enable_feature and not enable_refine:
         modality_list.append("feature_modality")
     config_s.write("metafile_path", "optimizer.yaml")
     config_s.write("modalities", modality_list)
     config_s.endWriteStruct()
+    if enable_refine and enable_feature:
+        config_s.startWriteStruct("", cv2.FileNode_MAP)
+        config_s.write("name", "feature_optimizer")
+        modality_list = ["feature_modality"]
+        config_s.write("metafile_path", "optimizer.yaml")
+        config_s.write("modalities", modality_list)
+        config_s.endWriteStruct()
     config_s.endWriteStruct()
+
+    # save the refiner
+    if enable_refine and enable_feature:
+        config_s.startWriteStruct("Refiner", cv2.FileNode_SEQ)
+        config_s.startWriteStruct("", cv2.FileNode_MAP)
+        config_s.write("name", "feature_refiner")
+        config_s.write("optimizers", ["feature_optimizer"])
+        config_s.write("metafile_path", "refiner.yaml")
+        config_s.endWriteStruct()
+        config_s.endWriteStruct()
 
     # save the tracker
     config_s.startWriteStruct("Tracker", cv2.FileNode_SEQ)
@@ -215,9 +232,11 @@ def generate_icg_tracker(
     config_s.write("viewers", viewer_list)
     config_s.write("detectors", ["detector"])
     config_s.write("optimizers", ["optimizer"])
+    config_s.write("refiners", ["feature_refiner"])
     config_s.write("metafile_path", "tracker.yaml")
     config_s.endWriteStruct()
     config_s.endWriteStruct()
+
     config_s.release()
 
     # save the cam color
@@ -387,7 +406,7 @@ def generate_icg_tracker(
     # save the viewer
     config_yaml_path = os.path.join(icg_dir, "feature_viewer.yaml")
     viewer_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
-    viewer_s.write("opacity", 0.1)
+    viewer_s.write("opacity", 0.9)
     viewer_s.write("display_images", 1)
     viewer_s.write("save_images", 0)
     viewer_s.write("save_directory", os.path.join(icg_dir, "debug"))
@@ -414,6 +433,14 @@ def generate_icg_tracker(
     opt_s.write("tikhonov_parameter_rotation", 1000.0)
     opt_s.write("tikhonov_parameter_translation", 100000.0)
     opt_s.release()
+
+    # save the refiner file
+    config_yaml_path = os.path.join(icg_dir, "refiner.yaml")
+    refiner_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
+    # rbot-related param
+    refiner_s.write("n_update_iterations", 0)
+    refiner_s.write("n_corr_iterations", 1)
+    refiner_s.release()
 
     # save the tracker file
     config_yaml_path = os.path.join(icg_dir, "tracker.yaml")
@@ -443,6 +470,7 @@ if __name__ == "__main__":
     parser.add_argument("--use_network_detector", action="store_true", help="use network detector")
     parser.add_argument("--detector_port", type=int, default=8080, help="detector port")
     parser.add_argument("--feature_port", type=int, default=9090, help="feature port")
+    parser.add_argument("--enable_refine", action="store_true", help="enable refine")
     parser.add_argument("--redo_obj", action="store_true", help="redo the obj file")
     args = parser.parse_args()
     # generate the icg tracker config
@@ -456,5 +484,5 @@ if __name__ == "__main__":
         args.feature_port,
         args.enable_depth,
         args.enable_feature,
-        args.redo_obj,
+        args.enable_refine,
     )
