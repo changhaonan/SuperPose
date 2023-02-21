@@ -146,9 +146,14 @@ namespace icg
         data_points_.resize(std::min(n_points_, num_matches));
 
         // Run Pnp
-        if (num_matches > 50)
+        int min_matches = 20;
+        if (num_matches > min_matches)
         {
             RunPNP();
+        }
+        else
+        {
+            std::cout << "Not enough matches: " << num_matches << "/" << min_matches << std::endl;
         }
         return true;
     }
@@ -378,6 +383,7 @@ namespace icg
         else
         {
             std::cout << "PNP succeeded." << std::endl;
+            body_ptr_->set_body2world_pose(body2camera_pose_);
             return true;
         }
     }

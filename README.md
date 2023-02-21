@@ -52,8 +52,11 @@ Feb.5th to Feb.11th
             - [x] I can try to improve the closestview and compute the rot-angle.
     - [ ] Combination
         - [ ] Directly do PNP.
-            - [ ] Build PNP problem and solve it.
-            - [ ] Render it into feature viewer.
+            - [x] Build PNP problem and solve it.
+            - [x] Render it into feature viewer.
+            - [ ] The optimization and PNP seems can not work together?
+            - [ ] Put it into the refiner step.
+            - [ ] I should try to put it at the refiner step.
         - [ ] Integrate into loss
             - [ ] Compute Jacobian. 
             - [ ] Test the system run. 
