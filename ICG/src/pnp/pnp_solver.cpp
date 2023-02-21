@@ -50,19 +50,23 @@ namespace icg
                               Eigen::Matrix3f &rot_m, Eigen::Vector3f &trans_m, bool use_extrinsic_guess,
                               int flags)
     {
-        // Convert Eigen::Matrix3f to cv::Mat
-        cv::Mat rot_m_cv;
-        cv::eigen2cv(rot_m, rot_m_cv);
-        rot_m_cv.resize(9, 1);
-        cv::Mat trans_m_cv;
-        cv::eigen2cv(trans_m, trans_m_cv);
+        // From rotation matrix to angle axis
+        Eigen::AngleAxisf rot_vec(rot_m);
+        Eigen::Vector3f rot_vec_3 = rot_vec.angle() * rot_vec.axis();
 
-        cv::solvePnP(object_points, image_points, K_, cv::noArray(), rot_m_cv, trans_m_cv, use_extrinsic_guess, flags);
+        cv::Mat rot_vec_cv;
+        cv::eigen2cv(rot_vec_3, rot_vec_cv);
+        cv::Mat trans_vec_cv;
+        cv::eigen2cv(trans_m, trans_vec_cv);
+
+        cv::solvePnP(object_points, image_points, K_, cv::noArray(), rot_vec_cv, trans_vec_cv, use_extrinsic_guess, flags);
 
         // Convert cv::Mat to Eigen::Matrix3f
-        rot_m_cv.resize(3, 3);
-        cv::cv2eigen(rot_m_cv, rot_m);
-        cv::cv2eigen(trans_m_cv, trans_m);
+        cv::cv2eigen(rot_vec_cv, rot_vec_3);
+        cv::cv2eigen(trans_vec_cv, trans_m);
+
+        // From angle axis to rotation matrix
+        rot_m = Eigen::AngleAxisf(rot_vec_3.norm(), rot_vec_3.normalized()).toRotationMatrix();
         return true;
     }
 

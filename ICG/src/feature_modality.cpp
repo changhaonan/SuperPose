@@ -125,24 +125,31 @@ namespace icg
         feature_model_ptr_->GetRelativeRotDeg(body2camera_pose_, *view, relative_rot_deg);
 
         // Do matching
-        std::vector<cv::KeyPoint> keypoints_measure;
-        std::vector<cv::KeyPoint> keypoints_model;
+        std::vector<cv::KeyPoint> camera_kps;
+        std::vector<cv::KeyPoint> body_kps;
         Eigen::Vector4f view_roi;
         view_roi << 0, view->texture_image.cols, 0, view->texture_image.rows;
         matcher_client_ptr_->Match(
             color_image, view->texture_image,
             current_roi_, view_roi,
             0, -relative_rot_deg,
-            keypoints_measure, keypoints_model);
+            camera_kps, body_kps);
 
         // Construct data_points
-        int num_matches = keypoints_model.size();
+        int num_matches = body_kps.size();
         for (int i = 0; i < std::min(n_points_, num_matches); ++i)
         {
             DataPoint data_point;
-            CalculateBasicPointData(&data_point, *view, keypoints_model[i], keypoints_measure[i]);
+            CalculateBasicPointData(&data_point, *view, body_kps[i], camera_kps[i]);
+            data_points_.push_back(data_point);
         }
+        data_points_.resize(std::min(n_points_, num_matches));
 
+        // Run Pnp
+        if (num_matches > 50)
+        {
+            RunPNP();
+        }
         return true;
     }
 
@@ -345,6 +352,36 @@ namespace icg
         return true;
     }
 
+    bool FeatureModality::RunPNP()
+    {
+        // Get the 2D and 3D points
+        std::vector<cv::Point2f> image_points;
+        std::vector<cv::Point3f> object_points;
+        for (auto i = 0; i < data_points_.size(); ++i)
+        {
+            image_points.push_back(data_points_[i].camera_uv);
+            cv::Point3f object_point{data_points_[i].body_point.x(), data_points_[i].body_point.y(), data_points_[i].body_point.z()};
+            object_points.push_back(object_point);
+        }
+
+        // Run PNP
+        Eigen::Matrix3f rot_m;
+        Eigen::Vector3f trans_m;
+        rot_m = body2camera_rotation_;
+        trans_m = body2camera_pose_.translation();
+
+        if (!pnp_solver_ptr_->SolvePNP(object_points, image_points, rot_m, trans_m, true))
+        {
+            std::cout << "PNP failed." << std::endl;
+            return false;
+        }
+        else
+        {
+            std::cout << "PNP succeeded." << std::endl;
+            return true;
+        }
+    }
+
     // Getters data
     const std::shared_ptr<ColorCamera> &FeatureModality::color_camera_ptr() const
     {
@@ -443,24 +480,29 @@ namespace icg
     }
 
     void FeatureModality::CalculateBasicPointData(DataPoint *data_point, const FeatureModel::View &view,
-                                                  const cv::KeyPoint &keypoints_model,
-                                                  const cv::KeyPoint &keypoints_measure) const
+                                                  const cv::KeyPoint &body_kps,
+                                                  const cv::KeyPoint &camera_kps) const
     {
         // Depth
-        cv::Point2i coordinate_model{int(keypoints_model.pt.x), int(keypoints_model.pt.y)};
-        ushort depth_model{view.depth_image.at<ushort>(coordinate_model)};
-        float depth_model_real = view.projection_term_a / (view.projection_term_b - float(depth_model));
-        data_point->depth = depth_model_real;
-        Eigen::Vector3f point_model{depth_model_real * (keypoints_model.pt.x - ppu_) / fu_,
-                                    depth_model_real * (keypoints_model.pt.y - ppv_) / fv_,
-                                    depth_model_real};
+        cv::Point2i body_uv{int(body_kps.pt.x), int(body_kps.pt.y)};
+        ushort body_depth{view.depth_image.at<ushort>(body_uv)};
+        float body_depth_real = view.projection_term_a / (view.projection_term_b - float(body_depth));
+        Eigen::Vector3f body_point{body_depth_real * (body_kps.pt.x - ppu_) / fu_,
+                                   body_depth_real * (body_kps.pt.y - ppv_) / fv_,
+                                   body_depth_real};
 
         // Normal
-        auto normal_image_value{view.normal_image.at<cv::Vec4b>(coordinate_model)};
-        Eigen::Vector3f normal_model{1.0f - float(normal_image_value[0]) / 127.5f,
-                                     1.0f - float(normal_image_value[1]) / 127.5f,
-                                     1.0f - float(normal_image_value[2]) / 127.5f};
-        normal_model.normalize();
+        auto normal_image_value{view.normal_image.at<cv::Vec4b>(body_uv)};
+        Eigen::Vector3f body_normal{1.0f - float(normal_image_value[0]) / 127.5f,
+                                    1.0f - float(normal_image_value[1]) / 127.5f,
+                                    1.0f - float(normal_image_value[2]) / 127.5f};
+        body_normal.normalize();
+
+        // Set datapoint
+        data_point->body_point = body_point;
+        data_point->body_normal = body_normal;
+        data_point->body_uv = body_uv;
+        data_point->camera_uv = cv::Point2i(int(camera_kps.pt.x), (camera_kps.pt.y));
     }
 
     // Helper functions

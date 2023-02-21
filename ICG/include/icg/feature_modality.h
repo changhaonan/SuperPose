@@ -21,15 +21,19 @@ namespace icg
         // Data for correspondence point calculated during `CalculateCorrespondences`
         struct DataPoint
         {
-            Eigen::Vector3f center_f_body{};
-            Eigen::Vector3f center_f_camera{};
-            Eigen::Vector3f normal_f_body{};
-            float center_u = 0.0f;
-            float center_v = 0.0f;
-            float depth = 0.0f;
-            float measured_depth_offset = 0.0f;
-            float modeled_depth_offset = 0.0f;
-            Eigen::Vector3f correspondence_center_f_camera{};
+            // Eigen::Vector3f center_f_body{};
+            // Eigen::Vector3f center_f_camera{};
+            // Eigen::Vector3f normal_f_body{};
+            // float center_u = 0.0f;
+            // float center_v = 0.0f;
+            // float depth = 0.0f;
+            // float measured_depth_offset = 0.0f;
+            // float modeled_depth_offset = 0.0f;
+            // Eigen::Vector3f correspondence_center_f_camera{};
+            Eigen::Vector3f body_point;
+            Eigen::Vector3f body_normal;
+            cv::Point2i body_uv;
+            cv::Point2i camera_uv;
         };
 
     public:
@@ -56,6 +60,9 @@ namespace icg
         bool VisualizeOptimization(int save_idx) override;
         bool CalculateResults(int iteration) override;
         bool VisualizeResults(int save_idx) override;
+
+        // Related with how to integrate with feature matching
+        bool RunPNP();
 
         // Getters data
         const std::shared_ptr<ColorCamera> &color_camera_ptr() const;
@@ -90,8 +97,8 @@ namespace icg
         bool MatchFeatures(const cv::Mat &view_descriptor, const cv::Mat &frame_descriptor, std::vector<cv::DMatch> &matches, float ratio_thresh = 0.8f);
         void ComputeCurrentROI();
         void CalculateBasicPointData(DataPoint *data_point, const FeatureModel::View &view,
-                                     const cv::KeyPoint &keypoints_model, 
-                                     const cv::KeyPoint &keypoints_measure) const;
+                                     const cv::KeyPoint &body_kps,
+                                     const cv::KeyPoint &camera_kps) const;
 
         // Helper method for visualization
         void VisualizePointsFeatureImage(const std::string &title, int save_idx) const;
@@ -100,7 +107,7 @@ namespace icg
         bool IsSetup() const;
 
         // Internal data objects
-        // std::vector<DataPoint> data_points_;
+        std::vector<DataPoint> data_points_;
 
         // Pointers to referenced objects
         std::shared_ptr<ColorCamera> color_camera_ptr_ = nullptr;
