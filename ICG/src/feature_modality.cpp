@@ -145,6 +145,9 @@ namespace icg
         }
         data_points_.resize(std::min(n_points_, num_matches));
 
+        // FIXME: temporarily using
+        // Visualize
+        VisualizeResults(0);
         // Run Pnp
         int min_matches = 20;
         if (num_matches > min_matches)
@@ -300,7 +303,15 @@ namespace icg
 
     void FeatureModality::VisualizePointsFeatureImage(const std::string &title, int save_idx) const
     {
-        // Do nothing
+        // Show feature points
+        cv::Mat color_image = color_camera_ptr_->image().clone();
+        // Draw data_point
+        for (const auto &data_point : data_points_)
+        {
+            cv::circle(color_image, data_point.camera_uv, 2, cv::Scalar(0, 0, 255), 2);
+        }
+        cv::imshow(title, color_image);
+        cv::waitKey(0);
     }
 
     void FeatureModality::ShowAndSaveImage(const std::string &title, int save_idx,
@@ -315,6 +326,36 @@ namespace icg
                 (title + "_" + std::to_string(save_idx) + "." + save_image_type_)};
             cv::imwrite(path.string(), image);
         }
+    }
+
+    void FeatureModality::VisualizeCorrespondence(
+        const std::string &title,
+        const std::vector<cv::Point2f> &image_points,
+        const std::vector<cv::Point3f> &object_points,
+        const Eigen::Matrix3f &rot_m, const Eigen::Vector3f &trans_m) const
+    {
+        // Show feature points
+        cv::Mat color_image = color_camera_ptr_->image().clone();
+        // Project points
+        std::vector<cv::Point2f> projected_points;
+        projected_points = pnp_solver_ptr_->ProjectPoints(
+            object_points, rot_m, trans_m);
+        // Draw data_point
+        for (const auto &projected_point : projected_points)
+        {
+            cv::circle(color_image, projected_point, 2, cv::Scalar(0, 0, 255), 2);
+        }
+        for (const auto &image_point : image_points)
+        {
+            cv::circle(color_image, image_point, 2, cv::Scalar(0, 255, 0), 2);
+        }
+        // Draw lines
+        for (auto i = 0; i < projected_points.size(); ++i)
+        {
+            cv::line(color_image, projected_points[i], image_points[i], cv::Scalar(255, 0, 0), 1);
+        }
+        cv::imshow(title, color_image);
+        cv::waitKey(0);
     }
 
     bool FeatureModality::VisualizeOptimization(int save_idx)
@@ -370,24 +411,36 @@ namespace icg
         }
 
         // Run PNP
+        auto geometry2world_pose = body_ptr_->geometry2world_pose();
+        auto geometry2camera_pose = color_camera_ptr_->world2camera_pose() * geometry2world_pose;
         Eigen::Matrix3f rot_m;
         Eigen::Vector3f trans_m;
-        rot_m = body2camera_rotation_;
-        trans_m = body2camera_pose_.translation();
+        rot_m = geometry2camera_pose.rotation().matrix();
+        trans_m = geometry2camera_pose.translation();
 
-        if (!pnp_solver_ptr_->SolvePNP(object_points, image_points, rot_m, trans_m, true))
+        VisualizeCorrespondence("before_pnp", image_points, object_points, rot_m, trans_m);
+
+        if (!pnp_solver_ptr_->SolvePNP(object_points, image_points, rot_m, trans_m, false))
         {
             std::cout << "PNP failed." << std::endl;
             return false;
         }
         else
         {
+            VisualizeCorrespondence("after_pnp", image_points, object_points, rot_m, trans_m);
+
             std::cout << "PNP succeeded." << std::endl;
             // Compose transform matrix
-            icg::Transform3fA body2world_pose;
-            body2world_pose.translation() = trans_m;
-            body2world_pose.linear() = rot_m;
+            icg::Transform3fA body2camera_pose;
+            body2camera_pose.translation() = trans_m;
+            body2camera_pose.linear() = rot_m;
+
+            icg::Transform3fA body2world_pose = color_camera_ptr_->camera2world_pose() * body2camera_pose;
             body_ptr_->set_body2world_pose(body2world_pose);
+
+            // Camera poses
+            std::cout << "Camera poses" << std::endl;
+            std::cout << color_camera_ptr_->camera2world_pose().matrix() << std::endl;
             return true;
         }
     }
@@ -500,6 +553,8 @@ namespace icg
         Eigen::Vector3f body_point{body_depth_real * (body_kps.pt.x - ppu_) / fu_,
                                    body_depth_real * (body_kps.pt.y - ppv_) / fv_,
                                    body_depth_real};
+        // From camera coordinate to body coordinate
+        body_point = view.rotation * body_point + view.orientation;
 
         // Normal
         auto normal_image_value{view.normal_image.at<cv::Vec4b>(body_uv)};
@@ -507,6 +562,8 @@ namespace icg
                                     1.0f - float(normal_image_value[1]) / 127.5f,
                                     1.0f - float(normal_image_value[2]) / 127.5f};
         body_normal.normalize();
+        // From camera coordinate to body coordinate
+        body_normal = view.rotation * body_normal;
 
         // Set datapoint
         data_point->body_point = body_point;

@@ -48,8 +48,14 @@ namespace icg
                               const std::vector<cv::Point2f> &image_points,
                               Eigen::Matrix3f &rot_m, Eigen::Vector3f &trans_m, bool use_extrinsic_guess,
                               int flags = cv::SOLVEPNP_ITERATIVE) = 0;
+                              
+        // Projection
+        std::vector<cv::Point2f> ProjectPoints(const std::vector<cv::Point3f> &object_points,
+                                               const Eigen::Matrix3f &rot_m, const Eigen::Vector3f &trans_m);
 
-    protected:
+        float ProjectError(const std::vector<cv::Point3f> &object_points,
+                           const std::vector<cv::Point2f> &image_points,
+                           const Eigen::Matrix3f &rot_m, const Eigen::Vector3f &trans_m);
         cv::Mat K_;
     };
 

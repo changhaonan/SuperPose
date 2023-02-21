@@ -103,6 +103,12 @@ namespace icg
         // Helper method for visualization
         void VisualizePointsFeatureImage(const std::string &title, int save_idx) const;
         void ShowAndSaveImage(const std::string &title, int save_idx, const cv::Mat &image) const;
+        void VisualizeCorrespondence(
+            const std::string &title,
+            const std::vector<cv::Point2f> &image_points, 
+            const std::vector<cv::Point3f>& object_points,
+            const Eigen::Matrix3f& rot_m, const Eigen::Vector3f& trans_m) const;
+
         // Other helper methods
         bool IsSetup() const;
 

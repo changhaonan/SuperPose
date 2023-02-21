@@ -37,6 +37,41 @@ namespace icg
         return true;
     }
 
+    std::vector<cv::Point2f> PNPSolver::ProjectPoints(const std::vector<cv::Point3f> &object_points,
+                                                      const Eigen::Matrix3f &rot_m, const Eigen::Vector3f &trans_m)
+    {
+        std::vector<cv::Point2f> projected_points;
+
+        for (const auto &point_cv : object_points)
+        {
+            // From object to camera coordinate
+            Eigen::Vector3f point_object;
+            point_object << point_cv.x, point_cv.y, point_cv.z;
+            Eigen::Vector3f point_camera = rot_m * point_object + trans_m;
+
+            // Projection
+            Eigen::Vector3f projected_point{point_camera(0) / point_camera(2), point_camera(1) / point_camera(2), 1};
+            Eigen::Matrix3f K_m;
+            cv::cv2eigen(K_, K_m);
+            projected_point = K_m * projected_point;
+            projected_points.push_back(cv::Point2f(projected_point(0), projected_point(1)));
+        }
+        return projected_points;
+    }
+
+    float PNPSolver::ProjectError(const std::vector<cv::Point3f> &object_points,
+                                  const std::vector<cv::Point2f> &image_points,
+                                  const Eigen::Matrix3f &rot_m, const Eigen::Vector3f &trans_m)
+    {
+        auto projected_points = ProjectPoints(object_points, rot_m, trans_m);
+        float error = 0;
+        for (int i = 0; i < projected_points.size(); i++)
+        {
+            error += cv::norm(projected_points[i] - image_points[i]);
+        }
+        return error;
+    }
+
     EPnPSolver::EPnPSolver()
     {
     }
@@ -59,15 +94,27 @@ namespace icg
         cv::Mat trans_vec_cv;
         cv::eigen2cv(trans_m, trans_vec_cv);
 
-        cv::solvePnP(object_points, image_points, K_, cv::noArray(), rot_vec_cv, trans_vec_cv, use_extrinsic_guess, flags);
+        // Compute projection error
+        float projection_error_before = ProjectError(object_points, image_points, rot_m, trans_m);
 
-        // Convert cv::Mat to Eigen::Matrix3f
-        cv::cv2eigen(rot_vec_cv, rot_vec_3);
-        cv::cv2eigen(trans_vec_cv, trans_m);
+        if (cv::solvePnP(object_points, image_points, K_, cv::noArray(), rot_vec_cv, trans_vec_cv, use_extrinsic_guess, flags))
+        {
+            // Transform back
+            cv::cv2eigen(trans_vec_cv, trans_m);
+            cv::Mat rot_m_cv;
+            cv::Rodrigues(rot_vec_cv, rot_m_cv);
+            cv::cv2eigen(rot_m_cv, rot_m);
 
-        // From angle axis to rotation matrix
-        rot_m = Eigen::AngleAxisf(rot_vec_3.norm(), rot_vec_3.normalized()).toRotationMatrix();
-        return true;
+            float projection_error_after = ProjectError(object_points, image_points, rot_m, trans_m);
+            std::cout << "EPnPSolver::SolvePNP: Projection error before: " << projection_error_before << std::endl;
+            std::cout << "EPnPSolver::SolvePNP: Projection error after: " << projection_error_after << std::endl;
+            return true;
+        }
+        else
+        {
+            std::cout << "EPnPSolver::SolvePNP: Failed to solve PnP" << std::endl;
+            return false;
+        }
     }
 
 } // namespace icg
