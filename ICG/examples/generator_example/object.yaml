@@ -4,7 +4,7 @@ geometry_path: "reconstruct.obj"
 geometry_unit_in_meter: 1.
 geometry_counterclockwise: 1
 geometry_enable_culling: 1
-geometry_enable_color: 1
+geometry_enable_texture: 1
 geometry2body_pose: !!opencv-matrix
    rows: 4
    cols: 4

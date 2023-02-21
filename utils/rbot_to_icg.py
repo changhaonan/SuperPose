@@ -21,9 +21,7 @@ def generate_icg_tracker(
     redo_obj=False,
 ):
     # config macro
-    OBJECT_SCALE = (
-        2.0  # the size of object, influencing the accept threshold for depth modality
-    )
+    OBJECT_SCALE = 2.0  # the size of object, influencing the accept threshold for depth modality
 
     os.makedirs(icg_dir, exist_ok=True)
     os.system(
@@ -165,6 +163,7 @@ def generate_icg_tracker(
         config_s.write("name", "feature_viewer")
         config_s.write("color_camera", "loader_color")
         config_s.write("renderer_geometry", "renderer_geometry")
+        config_s.write("metafile_path", "feature_viewer.yaml")
         config_s.endWriteStruct()
         config_s.endWriteStruct()
 
@@ -211,8 +210,8 @@ def generate_icg_tracker(
     viewer_list = ["color_viewer"]
     if enable_depth:
         viewer_list.append("depth_viewer")
-    # if enable_feature:
-    #     viewer_list.append("feature_viewer")
+    if enable_feature:
+        viewer_list.append("feature_viewer")
     config_s.write("viewers", viewer_list)
     config_s.write("detectors", ["detector"])
     config_s.write("optimizers", ["optimizer"])
@@ -288,9 +287,7 @@ def generate_icg_tracker(
     init_pose = np.linalg.inv(init_pose)
     config_yaml_path = os.path.join(icg_dir, "detector.yaml")
     detector_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
-    detector_s.write(
-        "body2world_pose", np.linalg.inv(init_pose)
-    )  # the object init position
+    detector_s.write("body2world_pose", np.linalg.inv(init_pose))  # the object init position
     if use_network_detector:
         detector_s.write("port", detector_port)
         detector_s.write("reinit_iter", 10)  # reinit the detector every 10 frames
@@ -387,6 +384,18 @@ def generate_icg_tracker(
     modality_s.write("roi_margin", 5)
     modality_s.release()
 
+    # save the viewer
+    config_yaml_path = os.path.join(icg_dir, "feature_viewer.yaml")
+    viewer_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
+    viewer_s.write("opacity", 0.1)
+    viewer_s.write("display_images", 1)
+    viewer_s.write("save_images", 0)
+    viewer_s.write("save_directory", os.path.join(icg_dir, "debug"))
+    viewer_s.write("save_image_type", "png")
+    viewer_s.release()
+    if not os.path.exists(os.path.join(icg_dir, "debug")):
+        os.mkdir(os.path.join(icg_dir, "debug"))
+
     # save the object
     config_yaml_path = os.path.join(icg_dir, "object.yaml")
     object_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
@@ -395,9 +404,7 @@ def generate_icg_tracker(
     object_s.write("geometry_counterclockwise", 1)
     object_s.write("geometry_enable_culling", 0)
     object_s.write("geometry_enable_texture", 1)  # enable color
-    object_s.write(
-        "geometry2body_pose", np.eye(4)
-    )  # the pose of the geometry in the body frame
+    object_s.write("geometry2body_pose", np.eye(4))  # the pose of the geometry in the body frame
     object_s.release()
 
     # save the opt file
@@ -428,24 +435,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--tracker_name", type=str, default="", help="name")
-    parser.add_argument(
-        "--model_dir", type=str, default="", help="where the cad model exists"
-    )
-    parser.add_argument(
-        "--eval_dir", type=str, default="", help="where the eval data exists"
-    )
-    parser.add_argument(
-        "--icg_dir", type=str, default="", help="exported icg data folder"
-    )
-    parser.add_argument(
-        "--enable_depth", action="store_true", help="enable depth modality"
-    )
-    parser.add_argument(
-        "--enable_feature", action="store_true", help="enable feature modality"
-    )
-    parser.add_argument(
-        "--use_network_detector", action="store_true", help="use network detector"
-    )
+    parser.add_argument("--model_dir", type=str, default="", help="where the cad model exists")
+    parser.add_argument("--eval_dir", type=str, default="", help="where the eval data exists")
+    parser.add_argument("--icg_dir", type=str, default="", help="exported icg data folder")
+    parser.add_argument("--enable_depth", action="store_true", help="enable depth modality")
+    parser.add_argument("--enable_feature", action="store_true", help="enable feature modality")
+    parser.add_argument("--use_network_detector", action="store_true", help="use network detector")
     parser.add_argument("--detector_port", type=int, default=8080, help="detector port")
     parser.add_argument("--feature_port", type=int, default=9090, help="feature port")
     parser.add_argument("--redo_obj", action="store_true", help="redo the obj file")
