@@ -108,6 +108,21 @@ namespace icg
         return true;
     }
 
+    Intrinsics FeatureModel::intrinsics() const
+    {
+        return intrinsics_;
+    }
+
+    float FeatureModel::projection_term_a() const
+    {
+        return projection_term_a_;
+    }
+
+    float FeatureModel::projection_term_b() const
+    {
+        return projection_term_b_;
+    }
+
     bool FeatureModel::LoadMetaData()
     {
         // Open file storage from yaml
@@ -159,6 +174,11 @@ namespace icg
         if (!SetUpRenderer(renderer_geometry_ptr, &renderer_ptr))
             cancel = true;
 
+        // Save generation info
+        intrinsics_ = renderer_ptr->intrinsics();
+        projection_term_a_ = renderer_ptr->projection_term_a();
+        projection_term_b_ = renderer_ptr->projection_term_b();
+
         for (int i = 0; i < int(views_.size()); ++i)
         {
             if (cancel)
@@ -179,6 +199,7 @@ namespace icg
             views_[i].orientation =
                 camera2body_poses[i].matrix().col(2).segment(0, 3);
             views_[i].rotation = camera2body_poses[i].matrix().block(0, 0, 3, 3);
+            views_[i].translation = camera2body_poses[i].matrix().col(3).segment(0, 3);
             if (!GenerateViewData(*renderer_ptr, camera2body_poses[i], views_[i]))
                 cancel = true;
 
@@ -230,6 +251,9 @@ namespace icg
         ifs.read((char *)(&n_views), sizeof(n_views));
         ifs.read((char *)(&image_width), sizeof(image_width));
         ifs.read((char *)(&image_height), sizeof(image_height));
+        ifs.read((char *)(&intrinsics_), sizeof(intrinsics_));
+        ifs.read((char *)(&projection_term_a_), sizeof(projection_term_a_));
+        ifs.read((char *)(&projection_term_b_), sizeof(projection_term_b_));
         views_.clear();
         views_.reserve(n_views);
         for (size_t i = 0; i < n_views; i++)
@@ -247,9 +271,7 @@ namespace icg
             // Pose
             ifs.read((char *)(tv.orientation.data()), sizeof(tv.orientation));
             ifs.read((char *)(tv.rotation.data()), sizeof(tv.rotation));
-            // Parameters
-            ifs.read((char *)(&tv.projection_term_a), sizeof(tv.projection_term_a));
-            ifs.read((char *)(&tv.projection_term_b), sizeof(tv.projection_term_b));
+            ifs.read((char *)(tv.translation.data()), sizeof(tv.translation));
             views_.push_back(std::move(tv));
         }
         ifs.close();
@@ -269,7 +291,10 @@ namespace icg
         ofs.write((const char *)(&n_views), sizeof(n_views));
         ofs.write((const char *)(&image_width), sizeof(image_width));
         ofs.write((const char *)(&image_height), sizeof(image_height));
-
+        // Save generation info
+        ofs.write((const char *)(&intrinsics_), sizeof(intrinsics_));
+        ofs.write((const char *)(&projection_term_a_), sizeof(projection_term_a_));
+        ofs.write((const char *)(&projection_term_b_), sizeof(projection_term_b_));
         for (const auto &v : views_)
         {
             ofs.write((const char *)v.texture_image.data, v.texture_image.total() * v.texture_image.elemSize());
@@ -277,8 +302,7 @@ namespace icg
             ofs.write((const char *)v.normal_image.data, v.normal_image.total() * v.normal_image.elemSize());
             ofs.write((const char *)(v.orientation.data()), sizeof(v.orientation));
             ofs.write((const char *)(v.rotation.data()), sizeof(v.rotation));
-            ofs.write((const char *)(&v.projection_term_a), sizeof(v.projection_term_a));
-            ofs.write((const char *)(&v.projection_term_b), sizeof(v.projection_term_b));
+            ofs.write((const char *)(v.translation.data()), sizeof(v.translation));
         }
         ofs.flush();
         ofs.close();
@@ -293,16 +317,14 @@ namespace icg
         cv::Mat depth_image = renderer.depth_image();
         cv::Mat normal_image = renderer.normal_image();
         // Resize image to 400x400
-        cv::resize(texture_image, texture_image, cv::Size(600, 600));
-        cv::resize(depth_image, depth_image, cv::Size(600, 600));
-        cv::resize(normal_image, normal_image, cv::Size(600, 600));
+        // cv::resize(texture_image, texture_image, cv::Size(600, 600));
+        // cv::resize(depth_image, depth_image, cv::Size(600, 600));
+        // cv::resize(normal_image, normal_image, cv::Size(600, 600));
 
         // Save view data
         view.texture_image = texture_image.clone();
         view.depth_image = depth_image.clone();
         view.normal_image = normal_image.clone();
-        view.projection_term_a = renderer.projection_term_a();
-        view.projection_term_b = renderer.projection_term_b();
         return true;
     }
 

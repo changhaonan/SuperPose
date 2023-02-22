@@ -53,9 +53,7 @@ namespace icg
             cv::Mat normal_image;
             Eigen::Vector3f orientation;
             Eigen::Matrix3f rotation; // Rotation from camera to body
-            // Parameters
-            float projection_term_a = 0.0f;
-            float projection_term_b = 0.0f;
+            Eigen::Vector3f translation; // Translation from camera to body
         };
 
         // Main methods
@@ -64,6 +62,10 @@ namespace icg
         // Helper methods to get better matching
         bool GetRelativeRotDeg(const Transform3fA &body2camera_pose,
                                const View &view, float &relative_rot_deg) const;
+        // Getters
+        Intrinsics intrinsics() const;
+        float projection_term_a() const;
+        float projection_term_b() const;
 
     private:
         // Helper methods for model set up
@@ -77,6 +79,10 @@ namespace icg
                               View &view);
         // Model data
         std::vector<View> views_;
+        // Save generation info
+        Intrinsics intrinsics_;
+        float projection_term_a_;
+        float projection_term_b_;
     };
 
 }

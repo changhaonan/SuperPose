@@ -13,7 +13,6 @@
                 "task=match",
                 "detect=super_point",
                 "match=super_glue",
-                // "draw_matches=true"
             ],
             "cwd": "${workspaceFolder}/ICG/third_party/PointFeatureHub2",
             "console": "integratedTerminal",

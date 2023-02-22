@@ -136,6 +136,7 @@ namespace icg
             camera_kps, body_kps);
 
         // Construct data_points
+        data_points_.clear();
         int num_matches = body_kps.size();
         for (int i = 0; i < std::min(n_points_, num_matches); ++i)
         {
@@ -308,10 +309,10 @@ namespace icg
         // Draw data_point
         for (const auto &data_point : data_points_)
         {
-            cv::circle(color_image, data_point.camera_uv, 2, cv::Scalar(0, 0, 255), 2);
+            cv::circle(color_image, data_point.camera_uv, 2, cv::Scalar(255, 255, 255), 2);
         }
         cv::imshow(title, color_image);
-        cv::waitKey(0);
+        cv::waitKey(1);
     }
 
     void FeatureModality::ShowAndSaveImage(const std::string &title, int save_idx,
@@ -347,7 +348,7 @@ namespace icg
         }
         for (const auto &image_point : image_points)
         {
-            cv::circle(color_image, image_point, 2, cv::Scalar(0, 255, 0), 2);
+            cv::circle(color_image, image_point, 2, cv::Scalar(255, 255, 255), 2);
         }
         // Draw lines
         for (auto i = 0; i < projected_points.size(); ++i)
@@ -355,7 +356,7 @@ namespace icg
             cv::line(color_image, projected_points[i], image_points[i], cv::Scalar(255, 0, 0), 1);
         }
         cv::imshow(title, color_image);
-        cv::waitKey(0);
+        cv::waitKey(1);
     }
 
     bool FeatureModality::VisualizeOptimization(int save_idx)
@@ -420,7 +421,7 @@ namespace icg
 
         VisualizeCorrespondence("before_pnp", image_points, object_points, rot_m, trans_m);
 
-        if (!pnp_solver_ptr_->SolvePNP(object_points, image_points, rot_m, trans_m, false))
+        if (!pnp_solver_ptr_->SolvePNP(object_points, image_points, rot_m, trans_m, true))
         {
             std::cout << "PNP failed." << std::endl;
             return false;
@@ -537,24 +538,32 @@ namespace icg
         int roi_y = center_y - max_body_radius_in_image - roi_margin_;
         int roi_side = 2 * max_body_radius_in_image + 2 * roi_margin_;
 
+        roi_x = std::max(0, roi_x);
+        roi_y = std::max(0, roi_y);
         current_roi_ = Eigen::Vector4f(
-            std::max(0, roi_x), std::min(image_width_minus_1_, roi_x + roi_side),
-            std::max(0, roi_y), std::min(image_height_minus_1_, roi_y + roi_side));
+            roi_x, std::min(image_width_minus_1_, roi_x + roi_side),
+            roi_y, std::min(image_height_minus_1_, roi_y + roi_side));
+        std::cout << "Current ROI: " << std::endl;
+        std::cout << current_roi_ << std::endl;
     }
 
     void FeatureModality::CalculateBasicPointData(DataPoint *data_point, const FeatureModel::View &view,
                                                   const cv::KeyPoint &body_kps,
                                                   const cv::KeyPoint &camera_kps) const
     {
+        // Generation info
+        float projection_term_a = feature_model_ptr_->projection_term_a();
+        float projection_term_b = feature_model_ptr_->projection_term_b();
+        auto intrinsics_g = feature_model_ptr_->intrinsics();
         // Depth
         cv::Point2i body_uv{int(body_kps.pt.x), int(body_kps.pt.y)};
         ushort body_depth{view.depth_image.at<ushort>(body_uv)};
-        float body_depth_real = view.projection_term_a / (view.projection_term_b - float(body_depth));
-        Eigen::Vector3f body_point{body_depth_real * (body_kps.pt.x - ppu_) / fu_,
-                                   body_depth_real * (body_kps.pt.y - ppv_) / fv_,
+        float body_depth_real = projection_term_a / (projection_term_b - float(body_depth));
+        Eigen::Vector3f body_point{body_depth_real * (body_kps.pt.x - intrinsics_g.ppu) / intrinsics_g.fu,
+                                   body_depth_real * (body_kps.pt.y - intrinsics_g.ppv) / intrinsics_g.fv,
                                    body_depth_real};
         // From camera coordinate to body coordinate
-        body_point = view.rotation * body_point + view.orientation;
+        body_point = view.rotation * body_point + view.translation;
 
         // Normal
         auto normal_image_value{view.normal_image.at<cv::Vec4b>(body_uv)};

@@ -228,6 +228,8 @@ bool Tracker::RunRobustTrackerProcess(bool execute_detection, bool start_trackin
   quit_tracker_process_ = false;
   execute_detection_ = execute_detection;
   start_tracking_ = start_tracking;
+  // Refinement related
+  bool enable_refine_ = true;
   for (int iteration = 0;; ++iteration) {
     auto begin{std::chrono::high_resolution_clock::now()};
     if (!UpdateCameras(execute_detection_)) return false;
@@ -264,7 +266,8 @@ void Tracker::StopTracking() { tracking_started_ = false; }
 
 bool Tracker::ExecuteDetectionCycle(int iteration) {
   if (!DetectBodies(iteration)) return false;
-  return RefinePoses();
+  // return RefinePoses();
+  return true;
 }
 
 bool Tracker::StartModalities(int iteration) {
@@ -297,6 +300,7 @@ bool Tracker::ExecuteTrackingCycle(int iteration) {
   }
   if (!CalculateResults(iteration)) return false;
   if (!VisualizeResults(iteration)) return false;
+  if (!RefinePoses()) return false;
   return UpdatePublishers(iteration);
 }
 
