@@ -69,7 +69,19 @@ namespace icg
         {
             error += cv::norm(projected_points[i] - image_points[i]);
         }
-        return error;
+        return error / float(projected_points.size());
+    }
+
+    bool PNPSolver::PNPValid(const float &projection_error_before_pnp, const float &projection_error_after_pnp)
+    {
+        if ((projection_error_after_pnp < projection_error_before_pnp) && (projection_error_after_pnp < 5))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     EPnPSolver::EPnPSolver()
@@ -108,7 +120,8 @@ namespace icg
             float projection_error_after = ProjectError(object_points, image_points, rot_m, trans_m);
             std::cout << "EPnPSolver::SolvePNP: Projection error before: " << projection_error_before << std::endl;
             std::cout << "EPnPSolver::SolvePNP: Projection error after: " << projection_error_after << std::endl;
-            return true;
+            // Do PNP rejection
+            return PNPValid(projection_error_before, projection_error_after);
         }
         else
         {

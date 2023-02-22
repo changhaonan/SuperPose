@@ -56,6 +56,8 @@ namespace icg
         float ProjectError(const std::vector<cv::Point3f> &object_points,
                            const std::vector<cv::Point2f> &image_points,
                            const Eigen::Matrix3f &rot_m, const Eigen::Vector3f &trans_m);
+        bool PNPValid(const float & projection_error_before_pnp, const float & projection_error_after_pnp);
+
         cv::Mat K_;
     };
 
