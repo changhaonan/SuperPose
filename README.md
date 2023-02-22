@@ -58,7 +58,8 @@ Feb.5th to Feb.11th
             - [x] Put it into the refiner step.
             - [x] I should try to put it at the refiner step.
             - [x] Doesn't seems to be working.
-                - [ ] Fix the PNP bug.
+                - [x] Fix the PNP bug.
+            - [ ] Integrate OnePose into the system.
         - [ ] Integrate into loss
             - [ ] Compute Jacobian. 
             - [ ] Test the system run. 

@@ -223,7 +223,6 @@ bool Tracker::RunRobustTrackerProcess(bool execute_detection, bool start_trackin
     std::cerr << "Set up tracker " << name_ << " first" << std::endl;
     return false;
   }
-
   tracking_started_ = false;
   quit_tracker_process_ = false;
   execute_detection_ = execute_detection;
@@ -235,8 +234,6 @@ bool Tracker::RunRobustTrackerProcess(bool execute_detection, bool start_trackin
     if (!UpdateCameras(execute_detection_)) return false;
     if (execute_detection_) {
       if (!ExecuteDetectionCycle(iteration)) return false;
-      // tracking_started_ = false;
-      // execute_detection_ = false;
     }
     if (start_tracking_) {
       if (!StartModalities(iteration)) return false;
@@ -245,6 +242,7 @@ bool Tracker::RunRobustTrackerProcess(bool execute_detection, bool start_trackin
     }
     if (tracking_started_) {
       if (!ExecuteTrackingCycle(iteration)) return false;
+      if (!RefinePoses()) return false;
     }
     if (!UpdateViewers(iteration)) return false;
     if (quit_tracker_process_) return true;
@@ -266,7 +264,6 @@ void Tracker::StopTracking() { tracking_started_ = false; }
 
 bool Tracker::ExecuteDetectionCycle(int iteration) {
   if (!DetectBodies(iteration)) return false;
-  // return RefinePoses();
   return true;
 }
 
@@ -300,7 +297,6 @@ bool Tracker::ExecuteTrackingCycle(int iteration) {
   }
   if (!CalculateResults(iteration)) return false;
   if (!VisualizeResults(iteration)) return false;
-  if (!RefinePoses()) return false;
   return UpdatePublishers(iteration);
 }
 
