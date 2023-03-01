@@ -2,13 +2,12 @@ work_dir: ${hydra:runtime.cwd}
 data_dir: ${work_dir}/data
 print_config: true
 type: inference
-task_name: one_pose_prior
+task_name: test_onepose
 num_leaf: 8
 suffix: ''
 save_demo: false
-save_wis3d: false
+save_wis3d: true
 demo_root: ${data_dir}/runs/demo
-video_mode: image
 model:
   onepose_model_path: ${data_dir}/models/checkpoints/onepose/GATsSPG.ckpt
   extractor_model_path: ${data_dir}/models/extractors/SuperPoint/superpoint_v1.pth
@@ -21,11 +20,9 @@ scan_data_dir: ${data_dir}
 sfm_model_dir: ${data_dir}/sfm_model
 input:
   data_dirs:
-  - ${scan_data_dir}/cracker_box cracker_box_1
+  - ${scan_data_dir}/cracker_box cracker_box_1 cracker_box_3
   sfm_model_dirs:
   - ${sfm_model_dir}/cracker_box
-  eval_dirs:
-  - /home/robot-learning/Projects/SuperPose/data/cracker_box/cracker_box_4
 output:
   vis_dir: ${work_dir}/runs/vis/GATsSPG
   eval_dir: ${work_dir}/runs/eval/GATsSPG

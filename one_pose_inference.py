@@ -199,7 +199,7 @@ def main(cfg):
         video_mode = "web_camera"
     
     # hard-code
-    video_mode = "realsense"
+    video_mode = "web_camera"
     if video_mode == "video":
         cap = cv2.VideoCapture(f"{test_data_dir}/color.avi")
         while True:
