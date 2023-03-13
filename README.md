@@ -59,7 +59,8 @@ Feb.5th to Feb.11th
             - [x] I should try to put it at the refiner step.
             - [x] Doesn't seems to be working.
                 - [x] Fix the PNP bug.
-            - [ ] Integrate OnePose into the system.
+            - [x] Integrate OnePose into the system.
+            - [ ] SFM from CAD. This a small module. But we need to integrate it to make be able to run in test scene. Finish the demo this week.
         - [ ] Integrate into loss
             - [ ] Compute Jacobian. 
             - [ ] Test the system run. 
