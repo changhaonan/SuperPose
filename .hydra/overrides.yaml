@@ -1,3 +1,0 @@
-- +experiment=test_GATsSPG_custom.yaml
-- object_detect_mode=GT_box
-- save_wis3d=True
