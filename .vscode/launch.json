@@ -5,6 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "CAD2RGBR",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/cad2rgbr.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "matcher [sp, sg]",
             "type": "python",
             "request": "launch",
@@ -58,6 +67,23 @@
                 "detect=base",
                 "match=loftr",
                 "draw_matches=true"
+            ],
+            "cwd": "${workspaceFolder}/ICG/third_party/PointFeatureHub2",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "matcher32d [onepose]",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/ICG/third_party/PointFeatureHub2/run.py",
+            "args": [
+                "task=match32D",
+                "detect=super_point",
+                "match=one_pose",
+                "draw_matches=true",
+                "publish_to_network=true",
+                "load_from_network=true",
             ],
             "cwd": "${workspaceFolder}/ICG/third_party/PointFeatureHub2",
             "console": "integratedTerminal",
@@ -264,6 +290,6 @@
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "justMyCode": true
-        }
+        },
     ]
 }
