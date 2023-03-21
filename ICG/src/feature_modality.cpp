@@ -85,15 +85,14 @@ namespace icg
 // Set up the matcher_clinet
 #ifndef USE_MATCHER32D
         matcher_client_ptr_ = std::make_shared<pfh::MatcherClient>(port_, 400);
+#else
+        matcher_client_ptr_ = std::make_shared<pfh::Matcher32DClient>(port_, 400);
+#endif
         if (!matcher_client_ptr_->SetUp())
         {
             std::cerr << "Failed to set up matcher client" << std::endl;
             return false;
         }
-#else
-        matcher_client_ptr_ = std::make_shared<pfh::Matcher32DClient>(port_, 400);
-#endif
-
         PrecalculateCameraVariables();
         if (!PrecalculateModelVariables())
             return false;
