@@ -7,9 +7,12 @@
 #include <icg/feature_model.h>
 #include <icg/pnp/pnp_solver.h>
 
+#define USE_MATCHER32D
+
 namespace pfh
 {
     class MatcherClient;
+    class Matcher32DClient;
 }
 
 namespace icg
@@ -99,15 +102,18 @@ namespace icg
         void CalculateBasicPointData(DataPoint *data_point, const FeatureModel::View &view,
                                      const cv::KeyPoint &body_kps,
                                      const cv::KeyPoint &camera_kps) const;
+        void CalculateBasicPointData(DataPoint *data_point, const FeatureModel::View &view,
+                                     const Eigen::Vector3f &body_kps,
+                                     const cv::KeyPoint &camera_kps) const;
 
         // Helper method for visualization
         void VisualizePointsFeatureImage(const std::string &title, int save_idx) const;
         void ShowAndSaveImage(const std::string &title, int save_idx, const cv::Mat &image) const;
         void VisualizeCorrespondence(
             const std::string &title,
-            const std::vector<cv::Point2f> &image_points, 
-            const std::vector<cv::Point3f>& object_points,
-            const Eigen::Matrix3f& rot_m, const Eigen::Vector3f& trans_m) const;
+            const std::vector<cv::Point2f> &image_points,
+            const std::vector<cv::Point3f> &object_points,
+            const Eigen::Matrix3f &rot_m, const Eigen::Vector3f &trans_m) const;
 
         // Other helper methods
         bool IsSetup() const;
@@ -135,7 +141,13 @@ namespace icg
         int port_;
         Eigen::Vector4f current_roi_ = Eigen::Vector4f::Zero();
         int roi_margin_ = 5;
+        // Two types of matcher
+#ifndef USE_MATCHER32D
         std::shared_ptr<pfh::MatcherClient> matcher_client_ptr_ = nullptr;
+#else
+        std::shared_ptr<pfh::Matcher32DClient> matcher_client_ptr_ = nullptr;
+        std::string sfm_path_;
+#endif
 
         // Internal states
         bool depth_enabled_ = false;
@@ -148,6 +160,7 @@ namespace icg
         int image_width_minus_1_{};
         int image_height_minus_1_{};
         float depth_scale_{};
+        Eigen::Matrix3f camera_intrinsic_{};
 
         // Precalculated variables for poses (continuously changing)
         Transform3fA body2camera_pose_{};

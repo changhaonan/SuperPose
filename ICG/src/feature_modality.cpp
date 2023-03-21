@@ -1,7 +1,16 @@
 #include <icg/feature_modality.h>
 
+#ifndef USE_MATCHER32D
+
 #define MATCHER_CLIENT_IMPLEMENTATION
 #include <matcher_client.hpp>
+
+#else
+
+#define MATCHER32D_CLIENT_IMPLEMENTATION
+#include <matcher32d_client.hpp>
+
+#endif
 
 namespace icg
 {
@@ -73,13 +82,17 @@ namespace icg
             return false;
         }
 
-        // Set up the matcher_clinet
+// Set up the matcher_clinet
+#ifndef USE_MATCHER32D
         matcher_client_ptr_ = std::make_shared<pfh::MatcherClient>(port_, 400);
         if (!matcher_client_ptr_->SetUp())
         {
             std::cerr << "Failed to set up matcher client" << std::endl;
             return false;
         }
+#else
+        matcher_client_ptr_ = std::make_shared<pfh::Matcher32DClient>(port_, 400);
+#endif
 
         PrecalculateCameraVariables();
         if (!PrecalculateModelVariables())
@@ -125,15 +138,24 @@ namespace icg
         feature_model_ptr_->GetRelativeRotDeg(body2camera_pose_, *view, relative_rot_deg);
 
         // Do matching
-        std::vector<cv::KeyPoint> camera_kps;
-        std::vector<cv::KeyPoint> body_kps;
+
         Eigen::Vector4f view_roi;
         view_roi << 0, view->texture_image.cols, 0, view->texture_image.rows;
+
+#ifndef USE_MATCHER32D
+        std::vector<cv::KeyPoint> camera_kps;
+        std::vector<cv::KeyPoint> body_kps;
         matcher_client_ptr_->Match(
             color_image, view->texture_image,
             current_roi_, view_roi,
             0, -relative_rot_deg,
             camera_kps, body_kps);
+#else
+        std::vector<cv::KeyPoint> camera_kps;
+        std::vector<Eigen::Vector3f> body_kps;
+        matcher_client_ptr_->Match32D(
+            sfm_path_, color_image, current_roi_, -relative_rot_deg, camera_intrinsic_, camera_kps, body_kps);
+#endif
 
         // Construct data_points
         data_points_.clear();
@@ -233,7 +255,11 @@ namespace icg
             return false;
 
         // Read required parameters from yaml
-        if (!ReadRequiredValueFromYaml(fs, "port", &port_))
+        if (!ReadRequiredValueFromYaml(fs, "port", &port_)
+#ifdef USE_MATCHER32D
+            || !ReadRequiredValueFromYaml(fs, "sfm_path", &sfm_path_)
+#endif
+        )
             return false;
 
         // Read Optional parameters from yaml
@@ -276,6 +302,7 @@ namespace icg
         ppv_ = color_camera_ptr_->intrinsics().ppv;
         image_width_minus_1_ = color_camera_ptr_->intrinsics().width - 1;
         image_height_minus_1_ = color_camera_ptr_->intrinsics().height - 1;
+        camera_intrinsic_ << fu_, 0, ppu_, 0, fv_, ppv_, 0, 0, 1;
     }
 
     bool FeatureModality::PrecalculateModelVariables()
@@ -577,6 +604,28 @@ namespace icg
         // Set datapoint
         data_point->body_point = body_point;
         data_point->body_normal = body_normal;
+        data_point->body_uv = body_uv;
+        data_point->camera_uv = cv::Point2i(int(camera_kps.pt.x), (camera_kps.pt.y));
+    }
+
+    void FeatureModality::CalculateBasicPointData(DataPoint *data_point, const FeatureModel::View &view,
+                                                  const Eigen::Vector3f &body_kps,
+                                                  const cv::KeyPoint &camera_kps) const
+    {
+        // Generation info
+        float projection_term_a = feature_model_ptr_->projection_term_a();
+        float projection_term_b = feature_model_ptr_->projection_term_b();
+        auto intrinsics_g = feature_model_ptr_->intrinsics();
+        // Project body point to image plane
+        Eigen::Vector3f body_point_camera = view.rotation.inverse() * (body_kps - view.translation);
+        float body_depth_real = body_point_camera.z();
+        float body_depth = projection_term_a / body_depth_real + projection_term_b;
+        cv::Point2f body_uv{body_point_camera.x() / body_point_camera.z() * intrinsics_g.fu + intrinsics_g.ppu,
+                            body_point_camera.y() / body_point_camera.z() * intrinsics_g.fv + intrinsics_g.ppv};
+
+        // Set datapoint
+        data_point->body_point = body_kps;
+        // data_point->body_normal = body_normal;
         data_point->body_uv = body_uv;
         data_point->camera_uv = cv::Point2i(int(camera_kps.pt.x), (camera_kps.pt.y));
     }

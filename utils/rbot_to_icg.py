@@ -401,6 +401,8 @@ def generate_icg_tracker(
     modality_s.endWriteStruct()
     modality_s.write("port", feature_port)
     modality_s.write("roi_margin", 5)
+    # match config
+    modality_s.write("sfm_path", "/home/robot-learning/Projects/SuperPose/data/sfm_model/bakingsoda")
     modality_s.release()
 
     # save the viewer
