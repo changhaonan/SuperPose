@@ -382,7 +382,7 @@ namespace icg
             cv::line(color_image, projected_points[i], image_points[i], cv::Scalar(255, 0, 0), 1);
         }
         cv::imshow(title, color_image);
-        cv::waitKey(1);
+        cv::waitKey(0);
     }
 
     bool FeatureModality::VisualizeOptimization(int save_idx)

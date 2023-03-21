@@ -11,6 +11,7 @@ import cv2
 def generate_icg_tracker(
     tracker_name,
     model_dir,
+    sfm_dir,
     eval_dir,
     icg_dir,
     use_network_detector=False,
@@ -26,19 +27,19 @@ def generate_icg_tracker(
     os.makedirs(icg_dir, exist_ok=True)
     os.system(
         "cp {} {}".format(
-            os.path.join(model_dir, f"{tracker_name}.obj"),
+            os.path.join(model_dir, tracker_name, f"{tracker_name}.obj"),
             os.path.join(icg_dir, f"{tracker_name}.obj"),
         )
     )
     os.system(
         "cp {} {}".format(
-            os.path.join(model_dir, f"{tracker_name}_tex.png"),
+            os.path.join(model_dir, tracker_name, f"{tracker_name}_tex.png"),
             os.path.join(icg_dir, f"{tracker_name}_tex.png"),
         )
     )
     os.system(
         "cp {} {}".format(
-            os.path.join(model_dir, f"{tracker_name}.obj.mtl"),
+            os.path.join(model_dir, tracker_name, f"{tracker_name}.obj.mtl"),
             os.path.join(icg_dir, f"{tracker_name}.obj.mtl"),
         )
     )
@@ -241,7 +242,7 @@ def generate_icg_tracker(
 
     # save the cam color
     # load camera info
-    camera_config_file = os.path.join(model_dir, "../camera_calibration.txt")
+    camera_config_file = os.path.join(model_dir, "camera_calibration.txt")
     with open(camera_config_file, "r") as f:
         camera_data = f.readlines()
     fx = float(camera_data[1].split("\t")[0])
@@ -250,7 +251,7 @@ def generate_icg_tracker(
     cy = float(camera_data[1].split("\t")[3])
     config_yaml_path = os.path.join(icg_dir, "camera_color.yaml")
     cam_color_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
-    cam_color_s.write("load_directory", os.path.join(eval_dir, "frames"))
+    cam_color_s.write("load_directory", os.path.join(eval_dir, tracker_name, "frames"))
     cam_color_s.startWriteStruct("intrinsics", cv2.FileNode_MAP)
     cam_color_s.write("f_u", fx)
     cam_color_s.write("f_v", fy)
@@ -271,7 +272,7 @@ def generate_icg_tracker(
     # save the cam depth
     config_yaml_path = os.path.join(icg_dir, "camera_depth.yaml")
     cam_depth_s = cv2.FileStorage(config_yaml_path, cv2.FileStorage_WRITE)
-    cam_depth_s.write("load_directory", os.path.join(eval_dir, "frames"))
+    cam_depth_s.write("load_directory", os.path.join(eval_dir, tracker_name, "frames"))
     cam_depth_s.startWriteStruct("intrinsics", cv2.FileNode_MAP)
     cam_depth_s.write("f_u", fx)
     cam_depth_s.write("f_v", fy)
@@ -291,7 +292,7 @@ def generate_icg_tracker(
 
     # save the detector
     # load the init pose
-    pose_file = os.path.join(eval_dir, "../poses_first.txt")
+    pose_file = os.path.join(eval_dir, "poses_first.txt")
     with open(pose_file, "r") as f:
         pose_data = f.readlines()
     init_pose_list = [float(x) for x in pose_data[1].split("\t")]
@@ -402,7 +403,8 @@ def generate_icg_tracker(
     modality_s.write("port", feature_port)
     modality_s.write("roi_margin", 5)
     # match config
-    modality_s.write("sfm_path", "/home/robot-learning/Projects/SuperPose/data/sfm_model/bakingsoda/outputs_superpoint_superglue")
+    sfm_path = os.path.join(sfm_dir, tracker_name, "outputs_superpoint_superglue")
+    modality_s.write("sfm_path", sfm_path)
     modality_s.release()
 
     # save the viewer
@@ -467,6 +469,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_dir", type=str, default="", help="where the cad model exists")
     parser.add_argument("--eval_dir", type=str, default="", help="where the eval data exists")
     parser.add_argument("--icg_dir", type=str, default="", help="exported icg data folder")
+    parser.add_argument("--sfm_dir", type=str, default="", help="sfm data folder")
     parser.add_argument("--enable_depth", action="store_true", help="enable depth modality")
     parser.add_argument("--enable_feature", action="store_true", help="enable feature modality")
     parser.add_argument("--use_network_detector", action="store_true", help="use network detector")
@@ -479,6 +482,7 @@ if __name__ == "__main__":
     generate_icg_tracker(
         args.tracker_name,
         args.model_dir,
+        args.sfm_dir,
         args.eval_dir,
         args.icg_dir,
         args.use_network_detector,
