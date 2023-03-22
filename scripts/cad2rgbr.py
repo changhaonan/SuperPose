@@ -87,13 +87,18 @@ def cad2video(cad_path, sfm_path):
     cad_model.transform(init_pose)
     # prepare the sfm
     color_dir = os.path.join(sfm_path, "color")
+    depth_dir = os.path.join(sfm_path, "depth")
     poses_dir = os.path.join(sfm_path, "poses_ba")
     intrin_dir = os.path.join(sfm_path, "intrin_ba")
     os.makedirs(color_dir, exist_ok=True)
+    os.makedirs(depth_dir, exist_ok=True)
     os.makedirs(poses_dir, exist_ok=True)
     os.makedirs(intrin_dir, exist_ok=True)
+
     # clean
     for f in glob.glob(os.path.join(color_dir, "*.png")):
+        os.remove(f)
+    for f in glob.glob(os.path.join(depth_dir, "*.png")):
         os.remove(f)
     for f in glob.glob(os.path.join(poses_dir, "*.txt")):
         os.remove(f)
@@ -105,7 +110,7 @@ def cad2video(cad_path, sfm_path):
     camera_poses = generate_camera_poses(K, radius)
     camera_poses = sort_camera_poses_by_rotation(camera_poses)
     # set up the intrinsic camera parameters
-    width, height = 640, 480
+    width, height = 500, 500  # Image size
     focal = 500  # Focal lengths
     cx, cy = width / 2 - 0.5, height / 2 - 0.5  # Principal point
     intrinsic_params = o3d.camera.PinholeCameraIntrinsic(width, height, focal, focal, cx, cy)
@@ -115,6 +120,7 @@ def cad2video(cad_path, sfm_path):
     for i, pose in tqdm.tqdm(enumerate(pose_list)):
         new_pose = np.linalg.inv(pose)
         # flip the z axis
+        new_pose[0, :] *= -1
         new_pose[2, :] *= -1
         camera_params.extrinsic = new_pose
         # set the scene with the point cloud
@@ -122,27 +128,33 @@ def cad2video(cad_path, sfm_path):
         vis.create_window(width=width, height=height, visible=False)
         vis.add_geometry(cad_model)
         # visualize coordinate
-        frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.1, origin=[0, 0, 0])
-        frame.transform(pose)
-        vis.add_geometry(frame)
+        # frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.1, origin=[0, 0, 0])
+        # frame.transform(np.linalg.inv(new_pose))
+        # vis.add_geometry(frame)
         vis.get_view_control().convert_from_pinhole_camera_parameters(camera_params)
+        # vis.run()
         # capture the image and close the visualizer
         image = vis.capture_screen_float_buffer(do_render=True)
+        depth_image = vis.capture_depth_float_buffer(do_render=True)  # Capture depth buffer
         vis.destroy_window()
         # convert the image to a numpy array
         image = np.asarray(image)
+        depth_image = (np.asarray(depth_image) * 1000).astype(np.uint16)  # Convert depth image to numpy array
         # convert the image to RGB
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         # save the images
         image_name = os.path.join(color_dir, f"{i}.png")
+        depth_image_name = os.path.join(depth_dir, f"{i}.png")  # Depth image name
         cv2.imwrite(image_name, image * 255)
+        cv2.imwrite(depth_image_name, depth_image)  # Save depth image
+
         # save the pose
-        output_pose = np.linalg.inv(pose)
-        output_pose[1, :] *= -1
-        output_pose[2, :] *= -1
-        np.savetxt(os.path.join(poses_dir, f"{i}.txt"), output_pose)
+        np.savetxt(os.path.join(poses_dir, f"{i}.txt"), new_pose)
         # save the intrinsic matrix
-        np.savetxt(os.path.join(intrin_dir, f"{i}.txt"), intrinsic_params.intrinsic_matrix)
+        intrinsic_matrix = intrinsic_params.intrinsic_matrix.copy()
+        intrinsic_matrix[0, 2] += 0.5
+        intrinsic_matrix[1, 2] += 0.5
+        np.savetxt(os.path.join(intrin_dir, f"{i}.txt"), intrinsic_matrix)
 
 
 if __name__ == "__main__":

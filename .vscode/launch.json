@@ -135,12 +135,21 @@
             "request": "launch",
             "program": "${workspaceFolder}/utils/model_viewer.py",
             "args": [
-                "--model_dir",
-                "${workspaceFolder}/data/cracker_box/cracker_box_1/star",
-                "--eval_dir",
-                "${workspaceFolder}/data/cracker_box/cracker_box_4",
-                "--sparse_model_path",
-                "${workspaceFolder}/data/sfm_model/cracker_box/outputs_superpoint_superglue/tkl_model"
+                "--model_dir=${workspaceFolder}/data/cracker_box/cracker_box_1/star",
+                "--eval_dir=${workspaceFolder}/data/cracker_box/cracker_box_4",
+                "--sparse_model_path=${workspaceFolder}/data/sfm_model/cracker_box/outputs_superpoint_superglue/tkl_model"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "View cad-sfm",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/utils/cad_sfm_model_viewer.py",
+            "args": [
+                "--model_file=${workspaceFolder}/data/RBOT_dataset/bakingsoda/bakingsoda.obj",
+                "--sparse_model_path=${workspaceFolder}/data/sfm_model/bakingsoda/"
             ],
             "console": "integratedTerminal",
             "justMyCode": true
