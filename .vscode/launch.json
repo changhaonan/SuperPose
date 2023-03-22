@@ -241,6 +241,7 @@
             "program": "${workspaceFolder}/one_pose_sfm.py",
             "args": [
                 "+preprocess=sfm_spp_spg_custom.yaml",
+                "dataset.data_dir=['${workspaceFolder}/data/sfm_model/bakingsoda']",
                 "redo=True"
             ],
             "cwd": "${workspaceFolder}",
